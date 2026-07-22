@@ -9,6 +9,14 @@ export const USD_TO_BDT = 120
 /** Free-shipping threshold, quoted in each currency. */
 export const FREE_SHIPPING_USD = 100
 
+/** Flat delivery charge on orders below the free-shipping threshold. */
+export const SHIPPING_FLAT_USD = 5
+
+export function getShippingCost(subtotalUsd: number): number {
+  if (subtotalUsd === 0 || subtotalUsd >= FREE_SHIPPING_USD) return 0
+  return SHIPPING_FLAT_USD
+}
+
 export function toBdt(usd: number): number {
   return Math.round(usd * USD_TO_BDT)
 }

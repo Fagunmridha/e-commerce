@@ -9,6 +9,7 @@ import {
   useState,
 } from 'react'
 import { getProductById, type Product } from '@/lib/data'
+import { getShippingCost } from '@/lib/currency'
 
 const CART_KEY = 'cp_cart'
 const WISHLIST_KEY = 'cp_wishlist'
@@ -51,9 +52,13 @@ type StoreContextValue = {
   lines: ResolvedCartLine[]
   itemCount: number
   subtotal: number
+  /** Delivery charge in USD — free above the threshold. */
+  shipping: number
+  total: number
   addToCart: (line: CartLine) => void
   setQuantity: (key: string, quantity: number) => void
   removeLine: (key: string) => void
+  clearCart: () => void
   wishlist: Product[]
   isWishlisted: (productId: string) => boolean
   /** Returns true when the product ended up in the wishlist. */
@@ -114,6 +119,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setCart((current) => current.filter((item) => lineKey(item) !== key))
   }, [])
 
+  const clearCart = useCallback(() => setCart([]), [])
+
   const toggleWishlist = useCallback((productId: string) => {
     let added = false
 
@@ -150,14 +157,20 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     [wishlistIds],
   )
 
+  const subtotal = lines.reduce((sum, line) => sum + line.lineTotal, 0)
+  const shipping = getShippingCost(subtotal)
+
   const value: StoreContextValue = {
     hydrated,
     lines,
     itemCount: lines.reduce((sum, line) => sum + line.quantity, 0),
-    subtotal: lines.reduce((sum, line) => sum + line.lineTotal, 0),
+    subtotal,
+    shipping,
+    total: subtotal + shipping,
     addToCart,
     setQuantity,
     removeLine,
+    clearCart,
     wishlist,
     isWishlisted: (productId) => wishlistIds.includes(productId),
     toggleWishlist,

@@ -1,0 +1,401 @@
+'use client'
+
+import { useState } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { Banknote, CreditCard, ShoppingBag, Smartphone } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
+import { PageHeader } from '@/components/page-header'
+import { useLanguage } from '@/components/language-provider'
+import { useStore } from '@/components/store-provider'
+import type { Dictionary } from '@/lib/dictionaries'
+import { LAST_ORDER_KEY, createOrderNumber, type PaymentMethod } from '@/lib/order'
+import { cn } from '@/lib/utils'
+
+/** Bangladeshi mobile: 11 digits starting 013–019, optional +88 prefix. */
+const BD_PHONE = /^(?:\+?88)?01[3-9]\d{8}$/
+
+function buildSchema(errors: Dictionary['checkout']['errors']) {
+  return z.object({
+    name: z.string().min(2, errors.name),
+    phone: z.string().regex(BD_PHONE, errors.phone),
+    email: z.string().email(errors.email),
+    address: z.string().min(5, errors.address),
+    city: z.string().min(2, errors.city),
+    postcode: z.string().optional(),
+    notes: z.string().optional(),
+  })
+}
+
+type CheckoutValues = z.infer<ReturnType<typeof buildSchema>>
+
+const METHOD_ICONS: Record<PaymentMethod, typeof Banknote> = {
+  cod: Banknote,
+  mobile: Smartphone,
+  card: CreditCard,
+}
+
+export function CheckoutContent() {
+  const router = useRouter()
+  const { t, pick, price } = useLanguage()
+  const { hydrated, lines, itemCount, subtotal, shipping, total, clearCart } =
+    useStore()
+  const [method, setMethod] = useState<PaymentMethod>('cod')
+  const [submitting, setSubmitting] = useState(false)
+
+  const form = useForm<CheckoutValues>({
+    resolver: zodResolver(buildSchema(t.checkout.errors)),
+    defaultValues: {
+      name: '',
+      phone: '',
+      email: '',
+      address: '',
+      city: '',
+      postcode: '',
+      notes: '',
+    },
+  })
+
+  // No orders API yet — the order is stashed locally so the confirmation page
+  // has something real to show. This is the seam the backend will replace.
+  function onSubmit(values: CheckoutValues) {
+    setSubmitting(true)
+
+    window.localStorage.setItem(
+      LAST_ORDER_KEY,
+      JSON.stringify({
+        orderNumber: createOrderNumber(),
+        placedAt: new Date().toISOString(),
+        name: values.name,
+        phone: values.phone,
+        address: values.address,
+        city: values.city,
+        paymentMethod: method,
+        subtotal,
+        shipping,
+        total,
+        itemCount,
+      }),
+    )
+
+    clearCart()
+    router.push('/checkout/success')
+  }
+
+  if (!hydrated) {
+    return <PageHeader pageKey="checkout" />
+  }
+
+  if (lines.length === 0) {
+    return (
+      <>
+        <PageHeader pageKey="checkout" />
+        <section className="mx-auto flex max-w-md flex-col items-center gap-4 px-4 py-20 text-center">
+          <ShoppingBag
+            className="size-14 text-muted-foreground/40"
+            strokeWidth={1.25}
+          />
+          <div>
+            <p className="font-medium text-foreground">{t.checkout.emptyTitle}</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t.checkout.emptyHint}
+            </p>
+          </div>
+          <Button asChild>
+            <Link href="/shop">{t.checkout.emptyCta}</Link>
+          </Button>
+        </section>
+      </>
+    )
+  }
+
+  const methods: { value: PaymentMethod; label: string; hint: string }[] = [
+    { value: 'cod', label: t.checkout.methods.cod, hint: t.checkout.methods.codHint },
+    {
+      value: 'mobile',
+      label: t.checkout.methods.mobile,
+      hint: t.checkout.methods.mobileHint,
+    },
+    {
+      value: 'card',
+      label: t.checkout.methods.card,
+      hint: t.checkout.methods.cardHint,
+    },
+  ]
+
+  return (
+    <>
+      <PageHeader pageKey="checkout" />
+
+      <section className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-5 lg:px-8">
+        <div className="lg:col-span-3">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+              <div className="space-y-5">
+                <h2 className="text-lg font-semibold text-foreground">
+                  {t.checkout.deliveryDetails}
+                </h2>
+
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t.checkout.fullName}</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder={t.checkout.fullNamePlaceholder}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t.checkout.phone}</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="tel"
+                            inputMode="tel"
+                            placeholder={t.checkout.phonePlaceholder}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t.checkout.email}</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          placeholder={t.checkout.emailPlaceholder}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t.checkout.address}</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder={t.checkout.addressPlaceholder}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="city"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t.checkout.city}</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder={t.checkout.cityPlaceholder}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="postcode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t.checkout.postcode}</FormLabel>
+                        <FormControl>
+                          <Input
+                            inputMode="numeric"
+                            placeholder={t.checkout.postcodePlaceholder}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="notes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t.checkout.notes}</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          rows={3}
+                          placeholder={t.checkout.notesPlaceholder}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <fieldset className="space-y-3">
+                <legend className="mb-3 text-lg font-semibold text-foreground">
+                  {t.checkout.paymentMethod}
+                </legend>
+
+                {methods.map((option) => {
+                  const Icon = METHOD_ICONS[option.value]
+                  const checked = method === option.value
+
+                  return (
+                    <label
+                      key={option.value}
+                      className={cn(
+                        'flex cursor-pointer items-center gap-3 rounded-lg border p-4 transition-colors',
+                        checked
+                          ? 'border-primary bg-accent'
+                          : 'border-border hover:border-primary',
+                      )}
+                    >
+                      <input
+                        type="radio"
+                        name="payment-method"
+                        value={option.value}
+                        checked={checked}
+                        onChange={() => setMethod(option.value)}
+                        className="size-4 accent-primary"
+                      />
+                      <Icon
+                        className={cn(
+                          'size-5',
+                          checked ? 'text-primary' : 'text-muted-foreground',
+                        )}
+                      />
+                      <span className="min-w-0">
+                        <span className="block text-sm font-medium text-foreground">
+                          {option.label}
+                        </span>
+                        <span className="block text-xs text-muted-foreground">
+                          {option.hint}
+                        </span>
+                      </span>
+                    </label>
+                  )
+                })}
+              </fieldset>
+
+              <Button
+                type="submit"
+                size="lg"
+                className="w-full"
+                disabled={submitting}
+              >
+                {submitting ? t.checkout.placing : t.checkout.placeOrder}
+              </Button>
+            </form>
+          </Form>
+        </div>
+
+        {/* Order summary */}
+        <aside className="lg:col-span-2">
+          <div className="rounded-lg border border-border bg-card p-5 lg:sticky lg:top-24">
+            <h2 className="text-lg font-semibold text-foreground">
+              {t.checkout.orderSummary}
+            </h2>
+
+            <ul className="mt-4 space-y-3 border-b border-border pb-4">
+              {lines.map((line) => {
+                const name = pick(line.product.name)
+                const color = line.product.colors?.find(
+                  (item) => item.en === line.colorEn,
+                )
+
+                return (
+                  <li key={line.key} className="flex gap-3">
+                    <img
+                      src={line.product.image || '/placeholder.svg'}
+                      alt={name}
+                      className="size-14 shrink-0 rounded-md object-cover"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="line-clamp-1 text-sm font-medium text-foreground">
+                        {name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {line.size && `${t.cart.size}: ${line.size}`}
+                        {line.size && color && ' • '}
+                        {color && pick(color)}
+                        {' • '}
+                        {t.checkout.quantityShort}: {line.quantity}
+                      </p>
+                    </div>
+                    <p className="text-sm font-semibold whitespace-nowrap text-foreground">
+                      {price(line.lineTotal)}
+                    </p>
+                  </li>
+                )
+              })}
+            </ul>
+
+            <dl className="mt-4 space-y-2 text-sm">
+              <div className="flex justify-between text-muted-foreground">
+                <dt>{t.checkout.subtotal}</dt>
+                <dd>{price(subtotal)}</dd>
+              </div>
+              <div className="flex justify-between text-muted-foreground">
+                <dt>{t.checkout.shipping}</dt>
+                <dd
+                  className={cn(shipping === 0 && 'font-medium text-badge-new')}
+                >
+                  {shipping === 0 ? t.checkout.free : price(shipping)}
+                </dd>
+              </div>
+              <div className="flex justify-between border-t border-border pt-3 text-base font-semibold text-foreground">
+                <dt>{t.checkout.total}</dt>
+                <dd>{price(total)}</dd>
+              </div>
+            </dl>
+          </div>
+        </aside>
+      </section>
+    </>
+  )
+}

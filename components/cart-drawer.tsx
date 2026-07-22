@@ -19,8 +19,16 @@ const RECOMMENDATIONS = getRecommendedProducts(undefined, 2)
 
 export function CartDrawer() {
   const { t, pick, price } = useLanguage()
-  const { hydrated, lines, itemCount, subtotal, setQuantity, removeLine } =
-    useStore()
+  const {
+    hydrated,
+    lines,
+    itemCount,
+    subtotal,
+    shipping,
+    total,
+    setQuantity,
+    removeLine,
+  } = useStore()
 
   return (
     <Sheet>
@@ -173,16 +181,22 @@ export function CartDrawer() {
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>{t.cart.shipping}</span>
-                  <span className="font-medium text-badge-new">{t.cart.free}</span>
+                  {shipping === 0 ? (
+                    <span className="font-medium text-badge-new">{t.cart.free}</span>
+                  ) : (
+                    <span>{price(shipping)}</span>
+                  )}
                 </div>
               </div>
               <div className="flex justify-between border-t border-border pt-3 text-base font-semibold">
                 <span>{t.cart.total}</span>
-                <span>{price(subtotal)}</span>
+                <span>{price(total)}</span>
               </div>
-              <Button className="w-full" size="lg">
-                {t.cart.checkout}
-              </Button>
+              <SheetClose asChild>
+                <Button asChild className="w-full" size="lg">
+                  <Link href="/checkout">{t.cart.checkout}</Link>
+                </Button>
+              </SheetClose>
               <SheetClose asChild>
                 <Button variant="outline" className="w-full">
                   {t.cart.continueShopping}
