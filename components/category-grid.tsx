@@ -12,12 +12,14 @@ export function CategoryGrid() {
 
   return (
     <section className="mx-auto max-w-page px-4 py-14 sm:px-6 lg:px-10 lg:py-20">
-      <SectionHeading
-        eyebrow={t.home.categoriesEyebrow}
-        title={t.home.categoriesTitle}
-        linkLabel={t.sections.viewAll}
-        linkHref="/shop"
-      />
+      <Reveal>
+        <SectionHeading
+          eyebrow={t.home.categoriesEyebrow}
+          title={t.home.categoriesTitle}
+          linkLabel={t.sections.viewAll}
+          linkHref="/shop"
+        />
+      </Reveal>
 
       {/* First tile spans two columns on large screens so the grid has a focal point. */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">

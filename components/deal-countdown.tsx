@@ -4,16 +4,23 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { Rating } from '@/components/rating'
+import { Reveal } from '@/components/reveal'
 import { useLanguage } from '@/components/language-provider'
 import { PRODUCTS } from '@/lib/data'
 
 /** The steepest discount in the catalogue is this week's deal. */
 const DEAL = PRODUCTS.filter((product) => product.oldPrice).sort(
   (a, b) =>
-    (b.oldPrice! - b.price) / b.oldPrice! - (a.oldPrice! - a.price) / a.oldPrice!,
+    (b.oldPrice! - b.price) / b.oldPrice! -
+    (a.oldPrice! - a.price) / a.oldPrice!,
 )[0]
 
-type Remaining = { days: number; hours: number; minutes: number; seconds: number }
+type Remaining = {
+  days: number
+  hours: number
+  minutes: number
+  seconds: number
+}
 
 /** Counts down to the end of the current week (next Sunday, local midnight). */
 function timeToWeekEnd(): Remaining {
@@ -56,14 +63,16 @@ export function DealCountdown() {
   return (
     <section className="bg-foreground text-background">
       <div className="mx-auto grid max-w-page items-center gap-10 px-4 py-14 sm:px-6 lg:grid-cols-2 lg:px-10 lg:py-20">
-        <div>
+        <Reveal>
           <p className="text-[11px] font-bold tracking-[0.18em] text-primary uppercase">
             {copy.eyebrow}
           </p>
           <h2 className="mt-3 text-display-sm text-background">
             {pick(DEAL.name)}
           </h2>
-          <p className="mt-3 max-w-md text-sm text-background/70">{copy.title}</p>
+          <p className="mt-3 max-w-md text-sm text-background/70">
+            {copy.title}
+          </p>
 
           <Rating value={DEAL.rating} reviews={DEAL.reviews} className="mt-4" />
 
@@ -109,16 +118,16 @@ export function DealCountdown() {
             {copy.cta}
             <ArrowRight className="size-4" />
           </Link>
-        </div>
+        </Reveal>
 
-        <div className="relative">
+        <Reveal delay={120} className="relative">
           <img
             src={DEAL.image}
             alt={pick(DEAL.name)}
             loading="lazy"
             className="aspect-4/5 w-full rounded-2xl object-cover shadow-2xl lg:ml-auto lg:max-w-md"
           />
-        </div>
+        </Reveal>
       </div>
     </section>
   )

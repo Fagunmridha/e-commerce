@@ -1,6 +1,7 @@
 'use client'
 
 import { Headphones, RotateCcw, ShieldCheck, Truck } from 'lucide-react'
+import { Reveal } from '@/components/reveal'
 import { useLanguage } from '@/components/language-provider'
 
 const ICONS = [Truck, RotateCcw, ShieldCheck, Headphones]
@@ -15,22 +16,21 @@ export function FeatureBar() {
           const Icon = ICONS[index]
 
           return (
-            <div
-              key={feature.title}
-              className="group flex items-center gap-4 px-2 py-6 lg:px-6"
-            >
-              <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                <Icon className="size-5" />
-              </span>
-              <div>
-                <h3 className="text-sm font-bold tracking-wide text-foreground uppercase">
-                  {feature.title}
-                </h3>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  {feature.description}
-                </p>
+            <Reveal key={feature.title} delay={index * 80}>
+              <div className="group flex items-center gap-4 px-2 py-6 lg:px-6">
+                <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                  <Icon className="size-5" />
+                </span>
+                <div>
+                  <h3 className="text-sm font-bold tracking-wide text-foreground uppercase">
+                    {feature.title}
+                  </h3>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {feature.description}
+                  </p>
+                </div>
               </div>
-            </div>
+            </Reveal>
           )
         })}
       </div>

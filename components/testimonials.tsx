@@ -17,11 +17,13 @@ export function Testimonials() {
 
   return (
     <section className="mx-auto max-w-page px-4 py-14 sm:px-6 lg:px-10 lg:py-20">
-      <SectionHeading
-        eyebrow={t.home.reviewsEyebrow}
-        title={t.home.reviewsTitle}
-        align="center"
-      />
+      <Reveal>
+        <SectionHeading
+          eyebrow={t.home.reviewsEyebrow}
+          title={t.home.reviewsTitle}
+          align="center"
+        />
+      </Reveal>
 
       <div className="grid gap-5 md:grid-cols-3">
         {t.home.testimonials.map((review, index) => (

@@ -32,12 +32,14 @@ export function PopularProducts() {
 
   return (
     <section className="mx-auto max-w-page px-4 py-14 sm:px-6 lg:px-10 lg:py-20">
-      <SectionHeading
-        eyebrow={t.home.popularEyebrow}
-        title={t.home.popularTitle}
-        linkLabel={t.sections.viewAll}
-        linkHref="/shop"
-      />
+      <Reveal>
+        <SectionHeading
+          eyebrow={t.home.popularEyebrow}
+          title={t.home.popularTitle}
+          linkLabel={t.sections.viewAll}
+          linkHref="/shop"
+        />
+      </Reveal>
 
       <div
         role="tablist"
