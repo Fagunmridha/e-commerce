@@ -14,6 +14,9 @@ export type Product = {
   sizes?: string[]
   colors?: Localized[]
   description?: Localized
+  /** Shown as stars on cards and the detail page. */
+  rating: number
+  reviews: number
 }
 
 export type Category = {
@@ -95,6 +98,8 @@ export const PRODUCTS: Product[] = [
     price: 49.99,
     image: u('1586790170083-2f9ceadc732d'),
     category: 'men',
+    rating: 4.6,
+    reviews: 128,
     badge: 'new',
     sizes: DEFAULT_SIZES,
     colors: [COLOR.grey, COLOR.black, COLOR.navy],
@@ -110,6 +115,8 @@ export const PRODUCTS: Product[] = [
     oldPrice: 119.99,
     image: u('1551028719-00167b16eac5'),
     category: 'men',
+    rating: 4.8,
+    reviews: 96,
     badge: 'sale',
     sizes: DEFAULT_SIZES,
     colors: [COLOR.indigo, COLOR.washedBlue],
@@ -124,6 +131,8 @@ export const PRODUCTS: Product[] = [
     price: 59.99,
     image: u('1596755094514-f87e34085b2c'),
     category: 'men',
+    rating: 4.4,
+    reviews: 61,
     sizes: DEFAULT_SIZES,
     colors: [COLOR.white, COLOR.sky, COLOR.sand],
     description: {
@@ -138,6 +147,8 @@ export const PRODUCTS: Product[] = [
     oldPrice: 139.99,
     image: u('1620799140408-edc6dcb6d633'),
     category: 'men',
+    rating: 4.9,
+    reviews: 74,
     badge: 'sale',
     sizes: DEFAULT_SIZES,
     colors: [COLOR.camel, COLOR.charcoal],
@@ -152,6 +163,8 @@ export const PRODUCTS: Product[] = [
     price: 69.99,
     image: u('1473966968600-fa801b869a1a'),
     category: 'men',
+    rating: 4.3,
+    reviews: 45,
     sizes: DEFAULT_SIZES,
     colors: [COLOR.stone, COLOR.olive, COLOR.black],
     description: {
@@ -165,6 +178,8 @@ export const PRODUCTS: Product[] = [
     price: 129.99,
     image: u('1496747611176-843222e1e57c'),
     category: 'women',
+    rating: 4.7,
+    reviews: 152,
     badge: 'new',
     sizes: DEFAULT_SIZES,
     colors: [COLOR.sand, COLOR.sage, COLOR.white],
@@ -180,6 +195,8 @@ export const PRODUCTS: Product[] = [
     oldPrice: 109.99,
     image: u('1434389677669-e08b4cac3105'),
     category: 'women',
+    rating: 4.5,
+    reviews: 83,
     badge: 'sale',
     sizes: DEFAULT_SIZES,
     colors: [COLOR.cream, COLOR.blush, COLOR.black],
@@ -197,6 +214,8 @@ export const PRODUCTS: Product[] = [
     price: 94.99,
     image: u('1594633312681-425c7b97ccd1'),
     category: 'women',
+    rating: 4.6,
+    reviews: 57,
     sizes: DEFAULT_SIZES,
     colors: [COLOR.black, COLOR.ivory],
     description: {
@@ -210,6 +229,8 @@ export const PRODUCTS: Product[] = [
     price: 64.99,
     image: u('1485462537746-965f33f7f6a7'),
     category: 'women',
+    rating: 4.2,
+    reviews: 39,
     badge: 'new',
     sizes: DEFAULT_SIZES,
     colors: [COLOR.white, COLOR.sky],
@@ -225,6 +246,8 @@ export const PRODUCTS: Product[] = [
     oldPrice: 99.99,
     image: u('1572804013309-59a88b7e92f1'),
     category: 'women',
+    rating: 4.8,
+    reviews: 111,
     badge: 'sale',
     sizes: DEFAULT_SIZES,
     colors: [COLOR.print],
@@ -239,6 +262,8 @@ export const PRODUCTS: Product[] = [
     price: 24.99,
     image: u('1519278409-1f56fdda7fe5'),
     category: 'kids',
+    rating: 4.9,
+    reviews: 204,
     badge: 'new',
     sizes: KIDS_SIZES,
     colors: [COLOR.yellow, COLOR.white, COLOR.red],
@@ -253,6 +278,8 @@ export const PRODUCTS: Product[] = [
     price: 39.99,
     image: u('1622290291468-a28f7a7dc6a8'),
     category: 'kids',
+    rating: 4.5,
+    reviews: 88,
     sizes: KIDS_SIZES,
     colors: [COLOR.grey, COLOR.navy],
     description: {
@@ -267,6 +294,8 @@ export const PRODUCTS: Product[] = [
     oldPrice: 59.99,
     image: u('1503944583220-79d8926ad5e2'),
     category: 'kids',
+    rating: 4.7,
+    reviews: 66,
     badge: 'sale',
     sizes: ['2Y', '4Y', '6Y', '8Y'],
     colors: [COLOR.blue],
@@ -281,6 +310,8 @@ export const PRODUCTS: Product[] = [
     price: 149.99,
     image: u('1548036328-c9fa89d128fa'),
     category: 'accessories',
+    rating: 4.9,
+    reviews: 143,
     badge: 'new',
     colors: [COLOR.tan, COLOR.black],
     description: {
@@ -295,6 +326,8 @@ export const PRODUCTS: Product[] = [
     oldPrice: 119.99,
     image: u('1511499767150-a48a237f0083'),
     category: 'accessories',
+    rating: 4.4,
+    reviews: 52,
     badge: 'sale',
     colors: [COLOR.gold, COLOR.silver],
     description: {
@@ -308,6 +341,8 @@ export const PRODUCTS: Product[] = [
     price: 54.99,
     image: u('1624222247344-550fb60583dc'),
     category: 'accessories',
+    rating: 4.6,
+    reviews: 71,
     sizes: ['S', 'M', 'L'],
     colors: [COLOR.brown, COLOR.black],
     description: {

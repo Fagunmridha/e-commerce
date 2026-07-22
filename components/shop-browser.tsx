@@ -1,7 +1,8 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { ProductGrid } from '@/components/product-grid'
+import { ProductCard } from '@/components/product-card'
+import { Reveal } from '@/components/reveal'
 import { useLanguage } from '@/components/language-provider'
 import { cn } from '@/lib/utils'
 import { CATEGORIES, PRODUCTS, type CategorySlug } from '@/lib/data'
@@ -41,7 +42,7 @@ export function ShopBrowser({ initialFilter = 'all' }: { initialFilter?: Filter 
 
   return (
     <div className="py-10">
-      <div className="mx-auto mb-8 flex max-w-7xl flex-col gap-4 px-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+      <div className="mx-auto mb-8 flex max-w-page flex-col gap-4 px-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-10">
         <div className="flex flex-wrap gap-2">
           {filters.map((item) => (
             <button
@@ -49,10 +50,10 @@ export function ShopBrowser({ initialFilter = 'all' }: { initialFilter?: Filter 
               onClick={() => setFilter(item.value)}
               aria-pressed={filter === item.value}
               className={cn(
-                'rounded-full border px-4 py-1.5 text-sm font-medium transition-colors',
+                'rounded-full border px-5 py-2 text-xs font-bold tracking-wide uppercase transition-colors',
                 filter === item.value
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'border-border text-foreground hover:border-primary hover:text-primary',
+                  ? 'border-foreground bg-foreground text-background'
+                  : 'border-border text-muted-foreground hover:border-foreground hover:text-foreground',
               )}
             >
               {item.label}
@@ -79,11 +80,24 @@ export function ShopBrowser({ initialFilter = 'all' }: { initialFilter?: Filter 
         </div>
       </div>
 
-      <ProductGrid
-        countTitle
-        products={products}
-        emptyMessage={t.sections.noProductsForFilter}
-      />
+      <section className="mx-auto max-w-page px-4 pb-16 sm:px-6 lg:px-10">
+        <p className="mb-6 text-sm text-muted-foreground">
+          {products.length} {t.category.itemsFound}
+        </p>
+        {products.length === 0 ? (
+          <p className="py-16 text-center text-sm text-muted-foreground">
+            {t.sections.noProductsForFilter}
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {products.map((product, index) => (
+              <Reveal key={product.id} delay={(index % 4) * 80}>
+                <ProductCard product={product} />
+              </Reveal>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   )
 }

@@ -27,11 +27,11 @@ export function ProductGrid({
     : title
 
   return (
-    <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+    <section className="mx-auto max-w-page px-4 pb-16 sm:px-6 lg:px-10">
       {(heading || viewAllHref) && (
         <div className="mb-6 flex items-baseline justify-between gap-4">
           {heading && (
-            <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+            <h2 className="text-display-sm text-foreground">
               {heading}
             </h2>
           )}
@@ -51,7 +51,7 @@ export function ProductGrid({
           {emptyMessage ?? t.sections.noProducts}
         </p>
       ) : (
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

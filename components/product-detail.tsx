@@ -2,9 +2,20 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ChevronRight, Heart, Minus, Plus, Share2 } from 'lucide-react'
+import {
+  ChevronRight,
+  Headphones,
+  Heart,
+  Minus,
+  Plus,
+  RotateCcw,
+  Share2,
+  ShieldCheck,
+  Truck,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { Rating } from '@/components/rating'
 import { useLanguage } from '@/components/language-provider'
 import { useStore } from '@/components/store-provider'
 import { cn } from '@/lib/utils'
@@ -55,7 +66,7 @@ export function ProductDetail({
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+    <div className="mx-auto max-w-page px-4 py-8 sm:px-6 sm:py-12 lg:px-10">
       <nav
         aria-label="Breadcrumb"
         className="mb-6 flex items-center gap-1 text-xs text-muted-foreground"
@@ -126,6 +137,12 @@ export function ProductDetail({
                 <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                   {name}
                 </h1>
+                <Rating
+                  value={product.rating}
+                  reviews={product.reviews}
+                  size="md"
+                  className="mt-2"
+                />
               </div>
               <button
                 onClick={onToggleWishlist}
@@ -248,6 +265,24 @@ export function ProductDetail({
               {t.product.share}
             </Button>
           </div>
+
+          {/* Trust strip — the same four promises as the site-wide feature bar. */}
+          <ul className="grid grid-cols-2 gap-3 border-t border-border pt-6">
+            {t.features.map((feature, index) => {
+              const Icon = [Truck, RotateCcw, ShieldCheck, Headphones][index]
+
+              return (
+                <li key={feature.title} className="flex items-center gap-2.5">
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <Icon className="size-4" />
+                  </span>
+                  <span className="text-xs font-medium text-foreground">
+                    {feature.title}
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
         </div>
       </div>
 

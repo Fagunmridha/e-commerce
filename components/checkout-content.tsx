@@ -140,7 +140,7 @@ export function CheckoutContent() {
     <>
       <PageHeader pageKey="checkout" />
 
-      <section className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-5 lg:px-8">
+      <section className="mx-auto grid max-w-page gap-10 px-4 py-12 sm:px-6 lg:grid-cols-5 lg:px-10">
         <div className="lg:col-span-3">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">

@@ -82,6 +82,50 @@
   --sidebar-ring: oklch(0.439 0 0);
 }
 
+@theme {
+  /* Page gutter width — every section uses `max-w-page`, so the whole site
+     widens or narrows from this one value. */
+  --container-page: 100rem;
+
+  /* Bold-retail display sizes: much larger and tighter than the body scale,
+     so headlines read as headlines instead of big paragraphs. */
+  --text-display-sm: 2.25rem;
+  --text-display-sm--line-height: 1.05;
+  --text-display-sm--letter-spacing: -0.03em;
+  --text-display-sm--font-weight: 800;
+  --text-display: 3.25rem;
+  --text-display--line-height: 0.98;
+  --text-display--letter-spacing: -0.035em;
+  --text-display--font-weight: 800;
+  --text-display-lg: 4.5rem;
+  --text-display-lg--line-height: 0.94;
+  --text-display-lg--letter-spacing: -0.04em;
+  --text-display-lg--font-weight: 800;
+
+  --animate-marquee: marquee 28s linear infinite;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    /* The strip renders its content twice, so half a loop is a seamless cycle. */
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @theme inline {
   --font-sans: 'Geist', 'Geist Fallback';
   --font-mono: 'Geist Mono', 'Geist Mono Fallback';
@@ -133,5 +177,27 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /* Sections fade up as they enter the viewport. `data-revealed` is set by the
+     Reveal component; without JS the content simply stays visible. */
+  [data-reveal] {
+    opacity: 0;
+  }
+  [data-reveal][data-revealed='true'] {
+    animation: reveal-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-reveal],
+    [data-reveal][data-revealed='true'] {
+      opacity: 1;
+      animation: none;
+    }
+    .animate-marquee {
+      animation: none;
+    }
   }
 }

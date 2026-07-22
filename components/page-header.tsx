@@ -19,7 +19,7 @@ export function PageHeader(props: PageHeaderProps) {
 
   return (
     <div className="border-b border-border bg-muted/60">
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
+      <div className="mx-auto max-w-page px-4 py-10 sm:px-6 sm:py-12 lg:px-10">
         {breadcrumb && (
           <nav
             aria-label="Breadcrumb"
@@ -32,7 +32,7 @@ export function PageHeader(props: PageHeaderProps) {
             <span className="text-foreground">{breadcrumb}</span>
           </nav>
         )}
-        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+        <h1 className="text-display-sm text-foreground sm:text-display">
           {title}
         </h1>
         {description && (

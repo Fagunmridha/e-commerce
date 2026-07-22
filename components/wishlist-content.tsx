@@ -16,7 +16,7 @@ export function WishlistContent() {
     <>
       <PageHeader pageKey="wishlist" />
 
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <section className="mx-auto max-w-page px-4 py-12 sm:px-6 lg:px-10">
         {!hydrated ? null : wishlist.length === 0 ? (
           <div className="flex flex-col items-center gap-4 py-16 text-center">
             <Heart className="size-14 text-muted-foreground/40" strokeWidth={1.25} />

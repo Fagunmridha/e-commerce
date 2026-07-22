@@ -9,21 +9,24 @@ export function FeatureBar() {
   const { t } = useLanguage()
 
   return (
-    <section className="border-y border-border bg-background">
-      <div className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
+    <section className="border-y border-border bg-muted/40">
+      <div className="mx-auto grid max-w-page divide-y divide-border px-4 sm:grid-cols-2 sm:divide-y-0 sm:px-6 lg:grid-cols-4 lg:divide-x lg:px-10">
         {t.features.map((feature, index) => {
           const Icon = ICONS[index]
 
           return (
-            <div key={feature.title} className="flex items-center gap-3">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
+            <div
+              key={feature.title}
+              className="group flex items-center gap-4 px-2 py-6 lg:px-6"
+            >
+              <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                 <Icon className="size-5" />
               </span>
               <div>
-                <h3 className="text-sm font-semibold text-foreground">
+                <h3 className="text-sm font-bold tracking-wide text-foreground uppercase">
                   {feature.title}
                 </h3>
-                <p className="text-xs text-muted-foreground">
+                <p className="mt-0.5 text-xs text-muted-foreground">
                   {feature.description}
                 </p>
               </div>

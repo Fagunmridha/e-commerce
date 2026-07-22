@@ -46,7 +46,7 @@ export function SiteFooter() {
 
   return (
     <footer className="border-t border-border bg-muted/40" role="contentinfo">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+      <div className="mx-auto max-w-page px-4 py-12 sm:px-6 sm:py-16 lg:px-10">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-5">
           <div className="col-span-2 md:col-span-1">
             <p className="text-xl font-bold tracking-tight">

@@ -15,9 +15,9 @@ export function AboutContent() {
     <>
       <PageHeader pageKey="about" />
 
-      <section className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-14 sm:px-6 lg:grid-cols-2 lg:px-8 lg:py-20">
+      <section className="mx-auto grid max-w-page items-center gap-10 px-4 py-14 sm:px-6 lg:grid-cols-2 lg:px-10 lg:py-20">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          <h2 className="text-display-sm text-foreground">
             {t.about.storyTitle}
           </h2>
           <div className="mt-5 space-y-4 text-sm leading-relaxed text-muted-foreground">
@@ -41,8 +41,8 @@ export function AboutContent() {
       </section>
 
       <section className="border-y border-border bg-muted/40">
-        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold tracking-tight text-foreground">
+        <div className="mx-auto max-w-page px-4 py-14 sm:px-6 lg:px-10">
+          <h2 className="text-display-sm text-foreground">
             {t.about.valuesTitle}
           </h2>
           <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -70,7 +70,7 @@ export function AboutContent() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+      <section className="mx-auto max-w-page px-4 py-14 sm:px-6 lg:px-10">
         <div className="grid grid-cols-2 gap-6 lg:grid-cols-4">
           {t.about.stats.map((stat) => (
             <div key={stat.label} className="text-center">
