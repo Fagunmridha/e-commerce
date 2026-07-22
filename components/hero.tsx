@@ -1,48 +1,108 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
+import useEmblaCarousel from 'embla-carousel-react'
+import { Button } from '@/components/ui/button'
+import { useLanguage } from '@/components/language-provider'
+import { cn } from '@/lib/utils'
+
+/** Slide artwork is language-independent; the copy comes from the dictionary. */
+const SLIDE_MEDIA = [
+  {
+    href: '/shop',
+    image:
+      'https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?w=1200&h=900&fit=crop',
+    alt: 'A rail of neatly hung shirts and jackets beside potted plants',
+  },
+  {
+    href: '/shop',
+    image:
+      'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=1200&h=900&fit=crop',
+    alt: 'A bright boutique interior with folded clothing on display',
+  },
+  {
+    href: '/kids',
+    image:
+      'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?w=1200&h=900&fit=crop',
+    alt: 'Children in colourful casual clothing',
+  },
+]
 
 export function Hero() {
+  const { t } = useLanguage()
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true })
+  const [selectedIndex, setSelectedIndex] = useState(0)
+
+  const onSelect = useCallback(() => {
+    if (emblaApi) setSelectedIndex(emblaApi.selectedScrollSnap())
+  }, [emblaApi])
+
+  useEffect(() => {
+    if (!emblaApi) return
+    onSelect()
+    emblaApi.on('select', onSelect)
+    return () => {
+      emblaApi.off('select', onSelect)
+    }
+  }, [emblaApi, onSelect])
+
   return (
-    <section className="relative overflow-hidden" aria-label="Hero section">
-      {/* Liquid Glass Background Effect */}
-      <div className="absolute inset-0 bg-gradient-to-br from-muted via-background to-muted opacity-60" />
-      <div className="absolute inset-0">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full mix-blend-screen filter blur-3xl" />
-        <div className="absolute bottom-40 right-20 w-96 h-96 bg-accent/5 rounded-full mix-blend-screen filter blur-3xl" />
-        <div className="absolute top-1/2 right-1/4 w-80 h-80 bg-primary/3 rounded-full mix-blend-screen filter blur-3xl" />
+    <section className="bg-muted/60" aria-label={t.sections.topCategories}>
+      <div className="overflow-hidden" ref={emblaRef}>
+        <div className="flex">
+          {SLIDE_MEDIA.map((media, index) => {
+            const slide = t.hero.slides[index]
+
+            return (
+              <div className="min-w-0 shrink-0 grow-0 basis-full" key={media.image}>
+                <div className="mx-auto grid max-w-7xl items-center gap-8 px-4 py-12 sm:px-6 sm:py-16 lg:grid-cols-2 lg:gap-12 lg:px-8 lg:py-20">
+                  <div className="max-w-lg">
+                    <p className="text-sm font-semibold text-primary">
+                      {slide.label}
+                    </p>
+                    <h1 className="mt-3 text-3xl leading-tight font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
+                      {slide.title}
+                      <span className="block">{slide.highlight}</span>
+                    </h1>
+                    <p className="mt-4 text-base text-muted-foreground">
+                      {slide.subtitle}
+                    </p>
+                    <Button asChild size="lg" className="mt-7">
+                      <Link href={media.href}>{slide.cta}</Link>
+                    </Button>
+                  </div>
+
+                  <div className="overflow-hidden rounded-xl lg:rounded-2xl">
+                    <img
+                      src={media.image}
+                      alt={media.alt}
+                      loading={index === 0 ? 'eager' : 'lazy'}
+                      className="aspect-4/3 w-full object-cover"
+                    />
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
       </div>
 
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 sm:py-32 lg:py-48">
-        <div className="mx-auto max-w-2xl text-center">
-          <div className="inline-flex items-center justify-center gap-2 rounded-full bg-primary/10 px-4 py-2 mb-6">
-            <span className="h-2 w-2 rounded-full bg-primary" />
-            <span className="text-sm font-medium text-primary">Conscious Fashion</span>
-          </div>
-
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground mb-6 text-balance">
-            Sustainable Luxury,{' '}
-            <span className="block text-primary mt-2">Authentically Crafted</span>
-          </h1>
-
-          <p className="text-lg sm:text-xl text-muted-foreground mb-8 leading-relaxed text-pretty">
-            Discover premium, eco-conscious fashion that doesn't compromise on elegance. Every piece tells a story of sustainable craftsmanship and transparent production.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/shop">
-              <Button size="lg" className="w-full sm:w-auto">
-                Shop Now
-              </Button>
-            </Link>
-            <Link href="#sustainability">
-              <Button variant="outline" size="lg" className="w-full sm:w-auto bg-transparent">
-                Learn More
-              </Button>
-            </Link>
-          </div>
-        </div>
+      <div className="flex justify-center gap-2 pb-6">
+        {SLIDE_MEDIA.map((media, index) => (
+          <button
+            key={media.image}
+            onClick={() => emblaApi?.scrollTo(index)}
+            aria-label={`${t.hero.goToSlide} ${index + 1}`}
+            aria-current={index === selectedIndex}
+            className={cn(
+              'h-2 rounded-full transition-all',
+              index === selectedIndex
+                ? 'w-6 bg-primary'
+                : 'w-2 bg-foreground/20 hover:bg-foreground/40',
+            )}
+          />
+        ))}
       </div>
     </section>
   )

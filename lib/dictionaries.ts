@@ -1,0 +1,563 @@
+import type { Locale } from '@/lib/i18n'
+
+const en = {
+  nav: {
+    home: 'Home',
+    shop: 'Shop',
+    men: 'Men',
+    women: 'Women',
+    kids: 'Kids',
+    about: 'About Us',
+    contact: 'Contact',
+  },
+  header: {
+    openMenu: 'Open menu',
+    search: 'Search products…',
+    searchLabel: 'Search products',
+    account: 'My account',
+    language: 'Language',
+  },
+  hero: {
+    slides: [
+      {
+        label: 'New Collection',
+        title: 'Discover Your Style',
+        highlight: 'With Our Premium Clothing',
+        subtitle: 'High quality fashion for men, women and kids.',
+        cta: 'Shop Now',
+      },
+      {
+        label: 'Summer Sale',
+        title: 'Up To 50% Off',
+        highlight: 'On Selected Styles',
+        subtitle: 'Linen, cotton and everything else you want in July.',
+        cta: 'Shop Sale',
+      },
+      {
+        label: 'For The Little Ones',
+        title: 'Kids Wear',
+        highlight: 'Built For Playtime',
+        subtitle: 'Soft, durable and easy to wash. Sizes 2Y to 10Y.',
+        cta: 'Shop Kids',
+      },
+    ],
+    goToSlide: 'Go to slide',
+  },
+  features: [
+    { title: 'Free Shipping', description: 'On all orders over $100' },
+    { title: 'Easy Returns', description: '30 days return policy' },
+    { title: 'Secure Payment', description: '100% secure payment' },
+    { title: '24/7 Support', description: 'Dedicated support' },
+  ],
+  sections: {
+    topCategories: 'Top Categories',
+    popularProducts: 'Popular Products',
+    youMayAlsoLike: 'You May Also Like',
+    viewAll: 'View All',
+    items: 'Items',
+    products: 'Products',
+    noProducts: 'No products found.',
+    noProductsInCategory: 'Nothing in this category yet — check back soon.',
+    noProductsForFilter: 'No products match this filter.',
+  },
+  badges: {
+    new: 'New',
+    sale: 'Sale',
+  },
+  cart: {
+    open: 'Open cart',
+    items: 'items',
+    title: 'Shopping Bag',
+    empty: 'Your bag is empty',
+    continueShopping: 'Continue Shopping',
+    checkout: 'Proceed to Checkout',
+    subtotal: 'Subtotal',
+    shipping: 'Shipping',
+    free: 'Free',
+    total: 'Total',
+    increase: 'Increase quantity of',
+    decrease: 'Decrease quantity of',
+    remove: 'Remove',
+    size: 'Size',
+    removed: 'Removed from bag',
+  },
+  wishlist: {
+    open: 'Wishlist',
+    added: 'Added to wishlist',
+    removed: 'Removed from wishlist',
+    empty: 'Your wishlist is empty',
+    emptyHint: 'Tap the heart on any product to save it here.',
+    emptyCta: 'Start Shopping',
+    moveToBag: 'Add to Bag',
+    remove: 'Remove from wishlist',
+  },
+  product: {
+    addToBag: 'Add to Bag',
+    added: 'Added to bag',
+    share: 'Share',
+    quantity: 'Quantity',
+    size: 'Size',
+    color: 'Color',
+    freeShippingNote: 'Free shipping on orders over $100',
+    favorite: 'Add to favorites',
+    showView: 'Show view',
+    view: 'view',
+    care: 'Care Instructions',
+    careItems: [
+      'Wash in cold water with like colors',
+      'Use a mild, eco-friendly detergent',
+      'Dry flat or hang dry for best results',
+      'Avoid bleach and fabric softener',
+    ],
+    specs: 'Specifications',
+    specCategory: 'Category',
+    specSku: 'SKU',
+    specAvailability: 'Availability',
+    inStock: 'In stock',
+  },
+  shop: {
+    all: 'All',
+    sortBy: 'Sort by',
+    sortFeatured: 'Featured',
+    sortPriceAsc: 'Price: Low to High',
+    sortPriceDesc: 'Price: High to Low',
+  },
+  pages: {
+    shop: {
+      title: 'Shop All',
+      description:
+        'Every piece in the collection — filter by category or sort by price.',
+      breadcrumb: 'Shop',
+    },
+    about: {
+      title: 'About CP Market',
+      description:
+        'We make everyday clothing that fits well, lasts long and costs what it should.',
+      breadcrumb: 'About Us',
+    },
+    contact: {
+      title: 'Contact Us',
+      description:
+        'Questions about an order, a size or a return? We usually reply within 24 hours.',
+      breadcrumb: 'Contact',
+    },
+    account: {
+      title: 'My Account',
+      description:
+        'Sign in to track orders, save addresses and manage your wishlist.',
+      breadcrumb: 'Account',
+    },
+    wishlist: {
+      title: 'My Wishlist',
+      description: 'Everything you have saved for later, in one place.',
+      breadcrumb: 'Wishlist',
+    },
+  },
+  categoryDescriptions: {
+    men: 'Shirts, knitwear and trousers cut for everyday wear — built to last past the season.',
+    women:
+      'Linen, cotton and knits in shapes that move with you, from workwear to weekends.',
+    kids: 'Soft, durable and easy to wash. Made for climbing, spilling and growing.',
+    accessories:
+      'Leather, metal and canvas — the finishing pieces that pull an outfit together.',
+  },
+  about: {
+    storyTitle: 'Our Story',
+    storyParagraphs: [
+      'CP Market started in 2019 with a simple frustration: good basics were either badly made or absurdly expensive. There was very little in between.',
+      'So we started small — one shirt, one mill, one run of 200 pieces. We sold out in a week, reinvested everything, and kept going. Today we make over 200 styles across men’s, women’s and kids’ wear, and we still work with that first mill.',
+      'We don’t chase trends or run twelve drops a year. We design a piece, make it properly, and keep it in stock — so when you find something you love, it’s still there next season.',
+    ],
+    storyCta: 'Browse the Collection',
+    storyImageAlt: 'The interior of a CP Market store',
+    valuesTitle: 'What We Stand For',
+    values: [
+      {
+        title: 'Made to Last',
+        description:
+          'We pick fabrics for how they hold up after fifty washes, not how they photograph on day one.',
+      },
+      {
+        title: 'Responsible Sourcing',
+        description:
+          'Organic cotton, recycled wool and linen from mills we visit and can name.',
+      },
+      {
+        title: 'Fair Pricing',
+        description:
+          'We sell direct, so you pay for the garment — not for four layers of markup.',
+      },
+      {
+        title: 'People First',
+        description:
+          'Every partner factory pays a living wage and is audited twice a year.',
+      },
+    ],
+    stats: [
+      { value: '120K+', label: 'Happy customers' },
+      { value: '35', label: 'Countries shipped to' },
+      { value: '12', label: 'Partner mills' },
+      { value: '4.8/5', label: 'Average rating' },
+    ],
+  },
+  contact: {
+    formTitle: 'Send us a message',
+    formSubtitle: 'Fill in the form and our team will get back to you.',
+    name: 'Name',
+    namePlaceholder: 'Your full name',
+    email: 'Email',
+    emailPlaceholder: 'you@example.com',
+    subject: 'Subject',
+    subjectPlaceholder: 'What is this about?',
+    message: 'Message',
+    messagePlaceholder: 'Tell us how we can help…',
+    submit: 'Send Message',
+    sent: 'Message sent',
+    sentDescription: 'Thanks {name}, we’ll reply to {email} within 24 hours.',
+    errors: {
+      name: 'Please enter your name.',
+      email: 'Please enter a valid email address.',
+      subject: 'Please add a subject.',
+      message: 'Please write at least 10 characters.',
+    },
+    details: [
+      { title: 'Email', lines: ['support@cpmarket.com', 'orders@cpmarket.com'] },
+      { title: 'Phone', lines: ['+880 1700 000000', 'Mon–Sat'] },
+      { title: 'Store', lines: ['House 12, Road 5', 'Dhanmondi, Dhaka 1205'] },
+      { title: 'Hours', lines: ['Mon–Sat: 10am – 8pm', 'Sunday: closed'] },
+    ],
+  },
+  account: {
+    email: 'Email',
+    emailPlaceholder: 'you@example.com',
+    password: 'Password',
+    signIn: 'Sign In',
+    notLiveBefore: 'Accounts aren’t live yet. In the meantime you can',
+    keepShopping: 'keep shopping',
+    or: 'or',
+    contactUs: 'contact us',
+  },
+  footer: {
+    tagline:
+      'High quality fashion for men, women and kids — delivered worldwide.',
+    columns: {
+      shop: 'Shop',
+      support: 'Support',
+      company: 'Company',
+      connect: 'Connect',
+    },
+    links: {
+      menswear: 'Men’s Wear',
+      womenswear: 'Women’s Wear',
+      kidswear: 'Kids Wear',
+      accessories: 'Accessories',
+      contactUs: 'Contact Us',
+      shippingInfo: 'Shipping Info',
+      returns: 'Returns',
+      faqs: 'FAQs',
+      aboutUs: 'About Us',
+      ourStory: 'Our Story',
+      careers: 'Careers',
+      blog: 'Blog',
+    },
+    copyright: '© 2026 CP Market. All rights reserved.',
+    privacy: 'Privacy Policy',
+    terms: 'Terms of Service',
+  },
+  common: {
+    home: 'Home',
+    skipToContent: 'Skip to content',
+  },
+  meta: {
+    suffix: '| CP Market',
+    siteTitle: 'CP Market — Premium Clothing for Men, Women & Kids',
+    siteDescription:
+      'Discover your style with our premium clothing. High quality fashion for men, women and kids, with free shipping on orders over $100.',
+    productNotFound: 'Product not found',
+  },
+}
+
+export type Dictionary = typeof en
+
+const bn: Dictionary = {
+  nav: {
+    home: 'হোম',
+    shop: 'শপ',
+    men: 'পুরুষ',
+    women: 'নারী',
+    kids: 'শিশু',
+    about: 'আমাদের সম্পর্কে',
+    contact: 'যোগাযোগ',
+  },
+  header: {
+    openMenu: 'মেনু খুলুন',
+    search: 'পণ্য খুঁজুন…',
+    searchLabel: 'পণ্য খুঁজুন',
+    account: 'আমার অ্যাকাউন্ট',
+    language: 'ভাষা',
+  },
+  hero: {
+    slides: [
+      {
+        label: 'নতুন কালেকশন',
+        title: 'খুঁজে নিন নিজের স্টাইল',
+        highlight: 'আমাদের প্রিমিয়াম পোশাকে',
+        subtitle: 'পুরুষ, নারী ও শিশুদের জন্য উন্নত মানের ফ্যাশন।',
+        cta: 'এখনই কিনুন',
+      },
+      {
+        label: 'গ্রীষ্মের সেল',
+        title: '50% পর্যন্ত ছাড়',
+        highlight: 'নির্বাচিত পোশাকে',
+        subtitle: 'লিনেন, কটন — গরমের জন্য যা যা দরকার।',
+        cta: 'সেল দেখুন',
+      },
+      {
+        label: 'ছোটদের জন্য',
+        title: 'শিশুদের পোশাক',
+        highlight: 'খেলার জন্যই তৈরি',
+        subtitle: 'নরম, টেকসই ও সহজে ধোয়া যায়। সাইজ ২ থেকে ১০ বছর।',
+        cta: 'শিশুদের পোশাক দেখুন',
+      },
+    ],
+    goToSlide: 'স্লাইডে যান',
+  },
+  features: [
+    { title: 'ফ্রি ডেলিভারি', description: '৳12,000-এর বেশি সব অর্ডারে' },
+    { title: 'সহজ রিটার্ন', description: '৩০ দিনের রিটার্ন সুবিধা' },
+    { title: 'নিরাপদ পেমেন্ট', description: '১০০% নিরাপদ পেমেন্ট' },
+    { title: '২৪/৭ সাপোর্ট', description: 'সার্বক্ষণিক সহায়তা' },
+  ],
+  sections: {
+    topCategories: 'জনপ্রিয় ক্যাটাগরি',
+    popularProducts: 'জনপ্রিয় পণ্য',
+    youMayAlsoLike: 'এগুলোও পছন্দ হতে পারে',
+    viewAll: 'সব দেখুন',
+    items: 'আইটেম',
+    products: 'পণ্য',
+    noProducts: 'কোনো পণ্য পাওয়া যায়নি।',
+    noProductsInCategory: 'এই ক্যাটাগরিতে এখনো কিছু নেই — শিগগিরই আসছে।',
+    noProductsForFilter: 'এই ফিল্টারে কোনো পণ্য নেই।',
+  },
+  badges: {
+    new: 'নতুন',
+    sale: 'ছাড়',
+  },
+  cart: {
+    open: 'কার্ট খুলুন',
+    items: 'আইটেম',
+    title: 'শপিং ব্যাগ',
+    empty: 'আপনার ব্যাগ খালি',
+    continueShopping: 'কেনাকাটা চালিয়ে যান',
+    checkout: 'চেকআউটে যান',
+    subtotal: 'সাবটোটাল',
+    shipping: 'ডেলিভারি',
+    free: 'ফ্রি',
+    total: 'সর্বমোট',
+    increase: 'পরিমাণ বাড়ান —',
+    decrease: 'পরিমাণ কমান —',
+    remove: 'সরান',
+    size: 'সাইজ',
+    removed: 'ব্যাগ থেকে সরানো হয়েছে',
+  },
+  wishlist: {
+    open: 'পছন্দের তালিকা',
+    added: 'পছন্দের তালিকায় যোগ হয়েছে',
+    removed: 'পছন্দের তালিকা থেকে সরানো হয়েছে',
+    empty: 'আপনার পছন্দের তালিকা খালি',
+    emptyHint: 'যেকোনো পণ্যের হার্ট আইকনে চাপ দিলে সেটি এখানে জমা হবে।',
+    emptyCta: 'কেনাকাটা শুরু করুন',
+    moveToBag: 'কার্টে যোগ করুন',
+    remove: 'পছন্দের তালিকা থেকে সরান',
+  },
+  product: {
+    addToBag: 'কার্টে যোগ করুন',
+    added: 'কার্টে যোগ হয়েছে',
+    share: 'শেয়ার',
+    quantity: 'পরিমাণ',
+    size: 'সাইজ',
+    color: 'রঙ',
+    freeShippingNote: '৳12,000-এর বেশি অর্ডারে ফ্রি ডেলিভারি',
+    favorite: 'পছন্দের তালিকায় যোগ করুন',
+    showView: 'ছবি দেখুন',
+    view: 'ছবি',
+    care: 'যত্নের নির্দেশনা',
+    careItems: [
+      'একই রঙের কাপড়ের সাথে ঠান্ডা পানিতে ধুয়ে নিন',
+      'মৃদু, পরিবেশবান্ধব ডিটারজেন্ট ব্যবহার করুন',
+      'ছায়ায় বিছিয়ে বা ঝুলিয়ে শুকান',
+      'ব্লিচ ও ফ্যাব্রিক সফটনার এড়িয়ে চলুন',
+    ],
+    specs: 'বিস্তারিত তথ্য',
+    specCategory: 'ক্যাটাগরি',
+    specSku: 'এসকেইউ',
+    specAvailability: 'স্টক',
+    inStock: 'স্টকে আছে',
+  },
+  shop: {
+    all: 'সব',
+    sortBy: 'সাজান',
+    sortFeatured: 'ফিচার্ড',
+    sortPriceAsc: 'দাম: কম থেকে বেশি',
+    sortPriceDesc: 'দাম: বেশি থেকে কম',
+  },
+  pages: {
+    shop: {
+      title: 'সব পণ্য',
+      description: 'কালেকশনের সব পণ্য — ক্যাটাগরি বা দাম অনুযায়ী সাজিয়ে নিন।',
+      breadcrumb: 'শপ',
+    },
+    about: {
+      title: 'CP Market সম্পর্কে',
+      description:
+        'আমরা এমন পোশাক বানাই যা ভালো ফিট হয়, দীর্ঘদিন টেকে, আর দাম থাকে যুক্তিসঙ্গত।',
+      breadcrumb: 'আমাদের সম্পর্কে',
+    },
+    contact: {
+      title: 'যোগাযোগ করুন',
+      description:
+        'অর্ডার, সাইজ বা রিটার্ন নিয়ে প্রশ্ন? আমরা সাধারণত ২৪ ঘণ্টার মধ্যে উত্তর দিই।',
+      breadcrumb: 'যোগাযোগ',
+    },
+    account: {
+      title: 'আমার অ্যাকাউন্ট',
+      description:
+        'অর্ডার ট্র্যাক করতে, ঠিকানা সেভ করতে ও উইশলিস্ট দেখতে সাইন ইন করুন।',
+      breadcrumb: 'অ্যাকাউন্ট',
+    },
+    wishlist: {
+      title: 'আমার পছন্দের তালিকা',
+      description: 'পরে কিনবেন বলে যা যা রেখেছেন, সব এক জায়গায়।',
+      breadcrumb: 'পছন্দের তালিকা',
+    },
+  },
+  categoryDescriptions: {
+    men: 'শার্ট, নিটওয়্যার ও ট্রাউজার — প্রতিদিনের জন্য, বহুদিন টেকার মতো করে বানানো।',
+    women:
+      'লিনেন, কটন ও নিট — অফিস থেকে ছুটির দিন, সব সময়ের জন্য আরামদায়ক কাট।',
+    kids: 'নরম, টেকসই ও সহজে ধোয়া যায়। দৌড়ঝাঁপ আর বেড়ে ওঠার জন্য তৈরি।',
+    accessories:
+      'চামড়া, ধাতু ও ক্যানভাস — যে জিনিসগুলো পুরো সাজটাকে সম্পূর্ণ করে।',
+  },
+  about: {
+    storyTitle: 'আমাদের গল্প',
+    storyParagraphs: [
+      'CP Market-এর শুরু ২০১৯ সালে, একটা সাধারণ অভিযোগ থেকে: ভালো বেসিক পোশাক হয় খারাপভাবে বানানো, নয়তো অস্বাভাবিক দামি। মাঝামাঝি কিছু প্রায় ছিলই না।',
+      'তাই আমরা ছোট করে শুরু করি — একটা শার্ট, একটা মিল, ২০০ পিসের একটা রান। এক সপ্তাহেই সব বিক্রি হয়ে যায়, পুরো টাকাটা আবার লাগিয়ে দিই। আজ আমরা পুরুষ, নারী ও শিশুদের ২০০-এর বেশি স্টাইল বানাই — আর সেই প্রথম মিলটার সাথেই এখনো কাজ করি।',
+      'আমরা ট্রেন্ডের পেছনে ছুটি না, বছরে বারোটা ড্রপও করি না। একটা পোশাক ডিজাইন করি, ঠিকভাবে বানাই, আর স্টকে রাখি — যাতে যেটা আপনার পছন্দ হয়েছে, পরের সিজনেও সেটা পান।',
+    ],
+    storyCta: 'কালেকশন দেখুন',
+    storyImageAlt: 'CP Market স্টোরের ভেতরের ছবি',
+    valuesTitle: 'আমরা যা বিশ্বাস করি',
+    values: [
+      {
+        title: 'টেকসই পোশাক',
+        description:
+          'আমরা কাপড় বাছি পঞ্চাশবার ধোয়ার পর কেমন থাকে তা দেখে — প্রথম দিনের ছবিতে কেমন লাগে তা দেখে নয়।',
+      },
+      {
+        title: 'দায়িত্বশীল সোর্সিং',
+        description:
+          'অর্গানিক কটন, রিসাইকেল করা উল ও লিনেন — এমন মিল থেকে, যেগুলোতে আমরা নিজে যাই।',
+      },
+      {
+        title: 'ন্যায্য দাম',
+        description:
+          'আমরা সরাসরি বিক্রি করি, তাই আপনি পোশাকের দাম দেন — চার স্তরের মার্কআপের নয়।',
+      },
+      {
+        title: 'মানুষ আগে',
+        description:
+          'প্রতিটি পার্টনার কারখানা ন্যায্য মজুরি দেয় এবং বছরে দুইবার অডিট হয়।',
+      },
+    ],
+    stats: [
+      { value: '120K+', label: 'সন্তুষ্ট ক্রেতা' },
+      { value: '35', label: 'দেশে ডেলিভারি' },
+      { value: '12', label: 'পার্টনার মিল' },
+      { value: '4.8/5', label: 'গড় রেটিং' },
+    ],
+  },
+  contact: {
+    formTitle: 'আমাদের বার্তা পাঠান',
+    formSubtitle: 'ফর্মটি পূরণ করুন, আমাদের টিম আপনার সাথে যোগাযোগ করবে।',
+    name: 'নাম',
+    namePlaceholder: 'আপনার পুরো নাম',
+    email: 'ইমেইল',
+    emailPlaceholder: 'you@example.com',
+    subject: 'বিষয়',
+    subjectPlaceholder: 'কী নিয়ে বলতে চান?',
+    message: 'বার্তা',
+    messagePlaceholder: 'আমরা কীভাবে সাহায্য করতে পারি লিখুন…',
+    submit: 'বার্তা পাঠান',
+    sent: 'বার্তা পাঠানো হয়েছে',
+    sentDescription:
+      'ধন্যবাদ {name}, আমরা ২৪ ঘণ্টার মধ্যে {email}-এ উত্তর দেব।',
+    errors: {
+      name: 'অনুগ্রহ করে আপনার নাম লিখুন।',
+      email: 'সঠিক ইমেইল ঠিকানা লিখুন।',
+      subject: 'একটি বিষয় লিখুন।',
+      message: 'অন্তত ১০ অক্ষর লিখুন।',
+    },
+    details: [
+      { title: 'ইমেইল', lines: ['support@cpmarket.com', 'orders@cpmarket.com'] },
+      { title: 'ফোন', lines: ['+880 1700 000000', 'শনি–শুক্র'] },
+      { title: 'স্টোর', lines: ['বাড়ি ১২, রোড ৫', 'ধানমন্ডি, ঢাকা ১২০৫'] },
+      { title: 'সময়', lines: ['শনি–শুক্র: সকাল ১০টা – রাত ৮টা', 'রবিবার: বন্ধ'] },
+    ],
+  },
+  account: {
+    email: 'ইমেইল',
+    emailPlaceholder: 'you@example.com',
+    password: 'পাসওয়ার্ড',
+    signIn: 'সাইন ইন',
+    notLiveBefore: 'অ্যাকাউন্ট সুবিধা এখনো চালু হয়নি। ততক্ষণ আপনি',
+    keepShopping: 'কেনাকাটা চালিয়ে যেতে পারেন',
+    or: 'অথবা',
+    contactUs: 'আমাদের সাথে যোগাযোগ করুন',
+  },
+  footer: {
+    tagline:
+      'পুরুষ, নারী ও শিশুদের জন্য উন্নত মানের ফ্যাশন — সারা বিশ্বে ডেলিভারি।',
+    columns: {
+      shop: 'শপ',
+      support: 'সহায়তা',
+      company: 'কোম্পানি',
+      connect: 'যুক্ত থাকুন',
+    },
+    links: {
+      menswear: 'পুরুষদের পোশাক',
+      womenswear: 'নারীদের পোশাক',
+      kidswear: 'শিশুদের পোশাক',
+      accessories: 'অ্যাক্সেসরিজ',
+      contactUs: 'যোগাযোগ করুন',
+      shippingInfo: 'ডেলিভারি তথ্য',
+      returns: 'রিটার্ন',
+      faqs: 'সাধারণ প্রশ্ন',
+      aboutUs: 'আমাদের সম্পর্কে',
+      ourStory: 'আমাদের গল্প',
+      careers: 'ক্যারিয়ার',
+      blog: 'ব্লগ',
+    },
+    copyright: '© ২০২৬ CP Market। সর্বস্বত্ব সংরক্ষিত।',
+    privacy: 'প্রাইভেসি পলিসি',
+    terms: 'সেবার শর্তাবলি',
+  },
+  common: {
+    home: 'হোম',
+    skipToContent: 'মূল কনটেন্টে যান',
+  },
+  meta: {
+    suffix: '| CP Market',
+    siteTitle: 'CP Market — পুরুষ, নারী ও শিশুদের প্রিমিয়াম পোশাক',
+    siteDescription:
+      'আমাদের প্রিমিয়াম পোশাকে খুঁজে নিন নিজের স্টাইল। পুরুষ, নারী ও শিশুদের জন্য উন্নত মানের ফ্যাশন, ৳12,000-এর বেশি অর্ডারে ফ্রি ডেলিভারি।',
+    productNotFound: 'পণ্যটি পাওয়া যায়নি',
+  },
+}
+
+export const DICTIONARIES: Record<Locale, Dictionary> = { en, bn }
+
+export function getDictionary(locale: Locale): Dictionary {
+  return DICTIONARIES[locale]
+}

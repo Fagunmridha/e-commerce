@@ -1,50 +1,57 @@
+'use client'
+
 import Link from 'next/link'
-import { Card } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Leaf, Award } from 'lucide-react'
+import { useLanguage } from '@/components/language-provider'
+import { cn } from '@/lib/utils'
+import type { Product } from '@/lib/data'
 
-export interface ProductCardProps {
-  id: string
-  name: string
-  price: number
-  image: string
-  badges: Array<'eco-friendly' | 'sustainable'>
-}
+const BADGE_STYLES = {
+  new: 'bg-badge-new text-badge-new-foreground',
+  sale: 'bg-badge-sale text-badge-sale-foreground',
+} as const
 
-export function ProductCard({ id, name, price, image, badges }: ProductCardProps) {
+export function ProductCard({ product }: { product: Product }) {
+  const { t, pick, price: formatPrice } = useLanguage()
+  const { id, name, price, oldPrice, image, badge } = product
+  const label = pick(name)
+
   return (
-    <Link href={`/product/${id}`}>
-      <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 h-full">
-        <div className="relative aspect-square overflow-hidden bg-muted">
-          <img
-            src={image || "/placeholder.svg"}
-            alt={name}
-            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-          />
-          <div className="absolute top-3 right-3 flex gap-2">
-            {badges.includes('eco-friendly') && (
-              <Badge className="bg-green-600 hover:bg-green-700 flex items-center gap-1">
-                <Leaf className="w-3 h-3" />
-                Eco-friendly
-              </Badge>
+    <Link
+      href={`/product/${id}`}
+      className="group block overflow-hidden rounded-lg border border-border bg-card transition-shadow hover:shadow-md"
+    >
+      <div className="relative aspect-square overflow-hidden bg-muted">
+        <img
+          src={image || '/placeholder.svg'}
+          alt={label}
+          loading="lazy"
+          className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
+        />
+        {badge && (
+          <span
+            className={cn(
+              'absolute top-3 left-3 rounded px-2 py-0.5 text-[11px] font-semibold',
+              BADGE_STYLES[badge],
             )}
-            {badges.includes('sustainable') && (
-              <Badge className="bg-accent hover:bg-accent/90 flex items-center gap-1">
-                <Award className="w-3 h-3" />
-                Sustainable
-              </Badge>
-            )}
-          </div>
+          >
+            {t.badges[badge]}
+          </span>
+        )}
+      </div>
+
+      <div className="p-4">
+        <h3 className="line-clamp-1 text-sm font-medium text-foreground">{label}</h3>
+        <div className="mt-1.5 flex items-baseline gap-2">
+          <span className="text-base font-bold text-foreground">
+            {formatPrice(price)}
+          </span>
+          {oldPrice && (
+            <span className="text-sm text-muted-foreground line-through">
+              {formatPrice(oldPrice)}
+            </span>
+          )}
         </div>
-        <div className="p-4">
-          <h3 className="font-semibold text-foreground text-sm sm:text-base line-clamp-2 mb-2">
-            {name}
-          </h3>
-          <p className="text-lg font-bold text-primary">
-            ${price.toFixed(2)}
-          </p>
-        </div>
-      </Card>
+      </div>
     </Link>
   )
 }
