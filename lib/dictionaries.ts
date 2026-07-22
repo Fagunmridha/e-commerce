@@ -74,8 +74,8 @@ const en = {
   cart: {
     open: 'Open cart',
     items: 'items',
-    title: 'Shopping Bag',
-    empty: 'Your bag is empty',
+    title: 'Shopping Cart',
+    empty: 'Your cart is empty',
     continueShopping: 'Continue Shopping',
     checkout: 'Proceed to Checkout',
     subtotal: 'Subtotal',
@@ -86,7 +86,7 @@ const en = {
     decrease: 'Decrease quantity of',
     remove: 'Remove',
     size: 'Size',
-    removed: 'Removed from bag',
+    removed: 'Removed from cart',
   },
   wishlist: {
     open: 'Wishlist',
@@ -95,12 +95,12 @@ const en = {
     empty: 'Your wishlist is empty',
     emptyHint: 'Tap the heart on any product to save it here.',
     emptyCta: 'Start Shopping',
-    moveToBag: 'Add to Bag',
+    moveToBag: 'Add to Cart',
     remove: 'Remove from wishlist',
   },
   product: {
-    addToBag: 'Add to Bag',
-    added: 'Added to bag',
+    addToBag: 'Add to Cart',
+    added: 'Added to cart',
     share: 'Share',
     quantity: 'Quantity',
     size: 'Size',
@@ -167,7 +167,7 @@ const en = {
   },
   checkout: {
     emptyTitle: 'There is nothing to check out',
-    emptyHint: 'Add something to your bag first.',
+    emptyHint: 'Add something to your cart first.',
     emptyCta: 'Start Shopping',
     deliveryDetails: 'Delivery Details',
     fullName: 'Full name',
@@ -398,7 +398,7 @@ const en = {
     },
   },
   card: {
-    addToBag: 'Add to Bag',
+    addToBag: 'Add to Cart',
     quickAdd: 'Quick add',
     off: 'OFF',
   },
