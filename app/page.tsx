@@ -2,6 +2,7 @@ import { CpMarketHero } from '@/components/cp-market-hero'
 import { CpMarketFeatures } from '@/components/cp-market-features'
 import { CpMarketCategories } from '@/components/cp-market-categories'
 import { CpMarketPopular } from '@/components/cp-market-popular'
+import { CpMarketFuture } from '@/components/cp-market-future'
 import { CpMarketNewsletter } from '@/components/cp-market-newsletter'
 
 export default function Home() {
@@ -11,6 +12,7 @@ export default function Home() {
       <CpMarketFeatures />
       <CpMarketCategories />
       <CpMarketPopular />
+      <CpMarketFuture />
       <CpMarketNewsletter />
     </div>
   )
