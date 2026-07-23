@@ -5,26 +5,28 @@ import { ProductCard } from '@/components/product-card'
 import { Reveal } from '@/components/reveal'
 import { SectionHeading } from '@/components/section-heading'
 import { useLanguage } from '@/components/language-provider'
-import { CATEGORIES, PRODUCTS, type CategorySlug } from '@/lib/data'
+import { useCatalogue } from '@/components/catalogue-provider'
+import type { CategorySlug } from '@/lib/types'
 
 type Tab = CategorySlug | 'all'
 
 export function PopularProducts() {
   const { t, pick } = useLanguage()
+  const { products: allProducts, categories } = useCatalogue()
   const [tab, setTab] = useState<Tab>('all')
 
   const products = useMemo(() => {
     const list =
       tab === 'all'
-        ? PRODUCTS.filter((product) => product.badge)
-        : PRODUCTS.filter((product) => product.category === tab)
+        ? allProducts.filter((product) => product.badge)
+        : allProducts.filter((product) => product.category === tab)
 
     return list.slice(0, 8)
-  }, [tab])
+  }, [tab, allProducts])
 
   const tabs: { value: Tab; label: string }[] = [
     { value: 'all', label: t.home.tabAll },
-    ...CATEGORIES.map((category) => ({
+    ...categories.map((category) => ({
       value: category.slug as Tab,
       label: pick(category.name),
     })),

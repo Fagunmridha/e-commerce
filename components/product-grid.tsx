@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { ProductCard } from '@/components/product-card'
 import { useLanguage } from '@/components/language-provider'
-import type { Product } from '@/lib/data'
+import type { Product } from '@/lib/types'
 
 type ProductGridProps = {
   /** Already-translated heading. Pass `countTitle` instead for an "N Products" heading. */

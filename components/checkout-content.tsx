@@ -18,11 +18,13 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
+import { toast } from 'sonner'
 import { PageHeader } from '@/components/page-header'
 import { useLanguage } from '@/components/language-provider'
 import { useStore } from '@/components/store-provider'
+import { placeOrder } from '@/app/actions/orders'
 import type { Dictionary } from '@/lib/dictionaries'
-import { LAST_ORDER_KEY, createOrderNumber, type PaymentMethod } from '@/lib/order'
+import type { PaymentMethod } from '@/lib/order'
 import { cn } from '@/lib/utils'
 
 /** Bangladeshi mobile: 11 digits starting 013–019, optional +88 prefix. */
@@ -51,8 +53,7 @@ const METHOD_ICONS: Record<PaymentMethod, typeof Banknote> = {
 export function CheckoutContent() {
   const router = useRouter()
   const { t, pick, price } = useLanguage()
-  const { hydrated, lines, itemCount, subtotal, shipping, total, clearCart } =
-    useStore()
+  const { hydrated, lines, subtotal, shipping, total, clearCart } = useStore()
   const [method, setMethod] = useState<PaymentMethod>('cod')
   const [submitting, setSubmitting] = useState(false)
 
@@ -69,30 +70,35 @@ export function CheckoutContent() {
     },
   })
 
-  // No orders API yet — the order is stashed locally so the confirmation page
-  // has something real to show. This is the seam the backend will replace.
-  function onSubmit(values: CheckoutValues) {
+  // Persist the order in the database via a server action. Prices are
+  // recomputed server-side, so the confirmation page shows authoritative totals.
+  async function onSubmit(values: CheckoutValues) {
     setSubmitting(true)
 
-    window.localStorage.setItem(
-      LAST_ORDER_KEY,
-      JSON.stringify({
-        orderNumber: createOrderNumber(),
-        placedAt: new Date().toISOString(),
+    try {
+      const { orderNumber } = await placeOrder({
         name: values.name,
         phone: values.phone,
+        email: values.email,
         address: values.address,
         city: values.city,
+        postcode: values.postcode || undefined,
+        notes: values.notes || undefined,
         paymentMethod: method,
-        subtotal,
-        shipping,
-        total,
-        itemCount,
-      }),
-    )
+        items: lines.map((line) => ({
+          productId: line.productId,
+          quantity: line.quantity,
+          size: line.size,
+          colorEn: line.colorEn,
+        })),
+      })
 
-    clearCart()
-    router.push('/checkout/success')
+      clearCart()
+      router.push(`/checkout/success?order=${orderNumber}`)
+    } catch {
+      setSubmitting(false)
+      toast.error(t.checkout.placeOrder)
+    }
   }
 
   if (!hydrated) {

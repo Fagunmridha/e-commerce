@@ -1,34 +1,47 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { ProductCard } from '@/components/product-card'
 import { Reveal } from '@/components/reveal'
 import { useLanguage } from '@/components/language-provider'
+import { useCatalogue } from '@/components/catalogue-provider'
 import { cn } from '@/lib/utils'
-import { CATEGORIES, PRODUCTS, type CategorySlug } from '@/lib/data'
+import type { CategorySlug } from '@/lib/types'
 
 type Filter = CategorySlug | 'all'
 type SortKey = 'featured' | 'price-asc' | 'price-desc'
 
 export function ShopBrowser({ initialFilter = 'all' }: { initialFilter?: Filter }) {
   const { t, pick } = useLanguage()
+  const { products: allProducts, categories } = useCatalogue()
+  const searchParams = useSearchParams()
+  const query = (searchParams.get('q') ?? '').trim().toLowerCase()
   const [filter, setFilter] = useState<Filter>(initialFilter)
   const [sort, setSort] = useState<SortKey>('featured')
 
   const products = useMemo(() => {
-    const list =
+    let list =
       filter === 'all'
-        ? PRODUCTS
-        : PRODUCTS.filter((product) => product.category === filter)
+        ? allProducts
+        : allProducts.filter((product) => product.category === filter)
+
+    if (query) {
+      list = list.filter(
+        (product) =>
+          product.name.en.toLowerCase().includes(query) ||
+          product.name.bn.toLowerCase().includes(query),
+      )
+    }
 
     if (sort === 'price-asc') return [...list].sort((a, b) => a.price - b.price)
     if (sort === 'price-desc') return [...list].sort((a, b) => b.price - a.price)
     return list
-  }, [filter, sort])
+  }, [filter, sort, query, allProducts])
 
   const filters: { value: Filter; label: string }[] = [
     { value: 'all', label: t.shop.all },
-    ...CATEGORIES.map((category) => ({
+    ...categories.map((category) => ({
       value: category.slug as Filter,
       label: pick(category.name),
     })),

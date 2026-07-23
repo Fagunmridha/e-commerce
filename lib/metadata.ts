@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
-import { getCategory, type CategorySlug } from '@/lib/data'
+import { getCategory } from '@/lib/products'
+import type { CategorySlug } from '@/lib/types'
 import type { Dictionary } from '@/lib/dictionaries'
 import { getServerDictionary, getServerLocale } from '@/lib/server-locale'
 
@@ -20,7 +21,7 @@ export async function pageMetadata(
 export async function categoryMetadata(slug: CategorySlug): Promise<Metadata> {
   const locale = await getServerLocale()
   const t = await getServerDictionary()
-  const category = getCategory(slug)
+  const category = await getCategory(slug)
 
   return {
     title: `${category ? category.name[locale] : slug} ${t.meta.suffix}`,

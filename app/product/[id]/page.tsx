@@ -2,20 +2,17 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { ProductDetail } from '@/components/product-detail'
 import { RelatedProducts } from '@/components/related-products'
+import { ProductReviews } from '@/components/product-reviews'
 import {
-  PRODUCTS,
   getProductById,
   getProductImages,
   getProductsByCategory,
-} from '@/lib/data'
+} from '@/lib/products'
+import { getProductReviews } from '@/lib/reviews'
 import { getDictionary } from '@/lib/dictionaries'
 import { getServerLocale } from '@/lib/server-locale'
 
 type ProductPageProps = { params: Promise<{ id: string }> }
-
-export function generateStaticParams() {
-  return PRODUCTS.map((product) => ({ id: product.id }))
-}
 
 export async function generateMetadata({
   params,
@@ -23,7 +20,7 @@ export async function generateMetadata({
   const { id } = await params
   const locale = await getServerLocale()
   const t = getDictionary(locale)
-  const product = getProductById(id)
+  const product = await getProductById(id)
 
   if (!product) {
     return { title: `${t.meta.productNotFound} ${t.meta.suffix}` }
@@ -32,22 +29,34 @@ export async function generateMetadata({
   return {
     title: `${product.name[locale]} ${t.meta.suffix}`,
     description: product.description?.[locale],
+    openGraph: {
+      title: `${product.name[locale]} ${t.meta.suffix}`,
+      description: product.description?.[locale],
+      images: [{ url: product.image }],
+    },
   }
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { id } = await params
-  const product = getProductById(id)
+  const product = await getProductById(id)
 
   if (!product) notFound()
 
-  const related = getProductsByCategory(product.category)
+  const [images, categoryProducts, reviews] = await Promise.all([
+    getProductImages(product),
+    getProductsByCategory(product.category),
+    getProductReviews(product.id),
+  ])
+
+  const related = categoryProducts
     .filter((item) => item.id !== product.id)
     .slice(0, 4)
 
   return (
     <>
-      <ProductDetail product={product} images={getProductImages(product)} />
+      <ProductDetail product={product} images={images} />
+      <ProductReviews productId={product.id} reviews={reviews} />
       <RelatedProducts products={related} viewAllHref={`/${product.category}`} />
     </>
   )

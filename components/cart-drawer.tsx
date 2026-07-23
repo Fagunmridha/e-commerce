@@ -13,12 +13,12 @@ import {
 } from '@/components/ui/sheet'
 import { useLanguage } from '@/components/language-provider'
 import { useStore } from '@/components/store-provider'
-import { getRecommendedProducts } from '@/lib/data'
-
-const RECOMMENDATIONS = getRecommendedProducts(undefined, 2)
+import { useCatalogue } from '@/components/catalogue-provider'
 
 export function CartDrawer() {
   const { t, pick, price } = useLanguage()
+  const { getRecommendedProducts } = useCatalogue()
+  const RECOMMENDATIONS = getRecommendedProducts(undefined, 2)
   const {
     hydrated,
     lines,

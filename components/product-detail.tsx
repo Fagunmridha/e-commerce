@@ -18,8 +18,9 @@ import { Button } from '@/components/ui/button'
 import { Rating } from '@/components/rating'
 import { useLanguage } from '@/components/language-provider'
 import { useStore } from '@/components/store-provider'
+import { useCatalogue } from '@/components/catalogue-provider'
 import { cn } from '@/lib/utils'
-import { getCategory, type Product } from '@/lib/data'
+import type { Product } from '@/lib/types'
 
 const BADGE_STYLES = {
   new: 'bg-badge-new text-badge-new-foreground',
@@ -35,6 +36,7 @@ export function ProductDetail({
 }) {
   const { t, pick, price: formatPrice } = useLanguage()
   const { addToCart, isWishlisted, toggleWishlist } = useStore()
+  const { getCategory } = useCatalogue()
   const [selectedImage, setSelectedImage] = useState(0)
   const [selectedSize, setSelectedSize] = useState(product.sizes?.[0] ?? '')
   const [selectedColorIndex, setSelectedColorIndex] = useState(0)

@@ -1,23 +1,23 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { CheckCircle2, Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useLanguage } from '@/components/language-provider'
-import { readLastOrder, type PlacedOrder } from '@/lib/order'
+import type { PaymentMethod } from '@/lib/order'
 
-export function OrderSuccessContent() {
+export type OrderSummary = {
+  orderNumber: string
+  paymentMethod: PaymentMethod
+  name: string
+  address: string
+  city: string
+  phone: string
+  total: number
+}
+
+export function OrderSuccessContent({ order }: { order: OrderSummary | null }) {
   const { t, price } = useLanguage()
-  const [order, setOrder] = useState<PlacedOrder | null>(null)
-  const [loaded, setLoaded] = useState(false)
-
-  useEffect(() => {
-    setOrder(readLastOrder())
-    setLoaded(true)
-  }, [])
-
-  if (!loaded) return null
 
   if (!order) {
     return (

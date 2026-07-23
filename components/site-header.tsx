@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Menu, Search, User } from 'lucide-react'
+import { UserButton, useUser } from '@clerk/nextjs'
 import { Input } from '@/components/ui/input'
 import {
   Sheet,
@@ -41,11 +42,23 @@ function Logo() {
 
 export function SiteHeader() {
   const pathname = usePathname()
+  const router = useRouter()
   const { t } = useLanguage()
+  const { isSignedIn } = useUser()
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
 
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname.startsWith(href)
+
+  const submitSearch = (event: React.FormEvent) => {
+    event.preventDefault()
+    const term = searchTerm.trim()
+    if (!term) return
+    router.push(`/shop?q=${encodeURIComponent(term)}`)
+    setIsSearchOpen(false)
+    setSearchTerm('')
+  }
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -116,13 +129,17 @@ export function SiteHeader() {
         <div className="flex items-center gap-0.5">
           <div className="hidden sm:block">
             {isSearchOpen ? (
-              <Input
-                type="search"
-                placeholder={t.header.search}
-                className="h-9 w-36 lg:w-48"
-                onBlur={() => setIsSearchOpen(false)}
-                autoFocus
-              />
+              <form onSubmit={submitSearch}>
+                <Input
+                  type="search"
+                  placeholder={t.header.search}
+                  className="h-9 w-36 lg:w-48"
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  onBlur={() => !searchTerm && setIsSearchOpen(false)}
+                  autoFocus
+                />
+              </form>
             ) : (
               <button
                 onClick={() => setIsSearchOpen(true)}
@@ -136,13 +153,28 @@ export function SiteHeader() {
 
           <WishlistButton />
 
-          <Link
-            href="/account"
-            className="hidden rounded-md p-2 text-foreground transition-colors hover:bg-muted sm:block"
-            aria-label={t.header.account}
-          >
-            <User className="size-5" />
-          </Link>
+          {isSignedIn ? (
+            <>
+              <Link
+                href="/account"
+                className="hidden rounded-md p-2 text-foreground transition-colors hover:bg-muted sm:block"
+                aria-label={t.header.account}
+              >
+                <User className="size-5" />
+              </Link>
+              <div className="ml-0.5 hidden items-center sm:flex">
+                <UserButton />
+              </div>
+            </>
+          ) : (
+            <Link
+              href="/sign-in"
+              className="hidden rounded-md p-2 text-foreground transition-colors hover:bg-muted sm:block"
+              aria-label={t.header.account}
+            >
+              <User className="size-5" />
+            </Link>
+          )}
 
           <CartDrawer />
 

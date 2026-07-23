@@ -8,7 +8,8 @@ import {
   useMemo,
   useState,
 } from 'react'
-import { getProductById, type Product } from '@/lib/data'
+import type { Product } from '@/lib/types'
+import { useCatalogue } from '@/components/catalogue-provider'
 import { getShippingCost } from '@/lib/currency'
 
 const CART_KEY = 'cp_cart'
@@ -68,6 +69,7 @@ type StoreContextValue = {
 const StoreContext = createContext<StoreContextValue | null>(null)
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
+  const { getProductById } = useCatalogue()
   const [hydrated, setHydrated] = useState(false)
   const [cart, setCart] = useState<CartLine[]>([])
   const [wishlistIds, setWishlistIds] = useState<string[]>([])
@@ -149,12 +151,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           },
         ]
       }),
-    [cart],
+    [cart, getProductById],
   )
 
   const wishlist = useMemo(
     () => wishlistIds.flatMap((id) => getProductById(id) ?? []),
-    [wishlistIds],
+    [wishlistIds, getProductById],
   )
 
   const subtotal = lines.reduce((sum, line) => sum + line.lineTotal, 0)

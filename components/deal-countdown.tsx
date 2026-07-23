@@ -6,14 +6,7 @@ import { ArrowRight } from 'lucide-react'
 import { Rating } from '@/components/rating'
 import { Reveal } from '@/components/reveal'
 import { useLanguage } from '@/components/language-provider'
-import { PRODUCTS } from '@/lib/data'
-
-/** The steepest discount in the catalogue is this week's deal. */
-const DEAL = PRODUCTS.filter((product) => product.oldPrice).sort(
-  (a, b) =>
-    (b.oldPrice! - b.price) / b.oldPrice! -
-    (a.oldPrice! - a.price) / a.oldPrice!,
-)[0]
+import { useCatalogue } from '@/components/catalogue-provider'
 
 type Remaining = {
   days: number
@@ -40,6 +33,15 @@ function timeToWeekEnd(): Remaining {
 
 export function DealCountdown() {
   const { t, pick, price } = useLanguage()
+  const { products } = useCatalogue()
+  // The steepest discount in the catalogue is this week's deal.
+  const DEAL = products
+    .filter((product) => product.oldPrice)
+    .sort(
+      (a, b) =>
+        (b.oldPrice! - b.price) / b.oldPrice! -
+        (a.oldPrice! - a.price) / a.oldPrice!,
+    )[0]
   // Starts null so the server and the first client render agree; the clock
   // only appears once we are safely on the client.
   const [remaining, setRemaining] = useState<Remaining | null>(null)

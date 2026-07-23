@@ -5,10 +5,11 @@ import { ArrowUpRight } from 'lucide-react'
 import { Reveal } from '@/components/reveal'
 import { SectionHeading } from '@/components/section-heading'
 import { useLanguage } from '@/components/language-provider'
-import { CATEGORIES } from '@/lib/data'
+import { useCatalogue } from '@/components/catalogue-provider'
 
 export function CategoryGrid() {
   const { t, pick } = useLanguage()
+  const { categories } = useCatalogue()
 
   return (
     <section className="mx-auto max-w-page px-4 py-14 sm:px-6 lg:px-10 lg:py-20">
@@ -23,7 +24,7 @@ export function CategoryGrid() {
 
       {/* First tile spans two columns on large screens so the grid has a focal point. */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
-        {CATEGORIES.map((category, index) => (
+        {categories.map((category, index) => (
           <Reveal
             key={category.slug}
             delay={index * 90}

@@ -2,7 +2,7 @@
 
 import { ProductGrid } from '@/components/product-grid'
 import { useLanguage } from '@/components/language-provider'
-import type { Product } from '@/lib/data'
+import type { Product } from '@/lib/types'
 
 export function RelatedProducts({
   products,

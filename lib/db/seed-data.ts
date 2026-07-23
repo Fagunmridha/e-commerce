@@ -1,62 +1,54 @@
 import type { Localized } from '@/lib/i18n'
+import type { CategorySlug } from '@/lib/types'
 
-export type CategorySlug = 'men' | 'women' | 'kids' | 'accessories'
+/**
+ * The initial catalogue. This file is the SOURCE used only by the seed script
+ * (`pnpm db:seed`) — it never ships to the client. At runtime every product is
+ * read from the database via lib/products.ts.
+ */
 
-export type Product = {
+export type SeedCategory = {
+  slug: CategorySlug
+  name: Localized
+  image: string
+}
+
+export type SeedProduct = {
   id: string
   name: Localized
   price: number
   oldPrice?: number
   image: string
-  images?: string[]
   category: CategorySlug
   badge?: 'new' | 'sale'
   sizes?: string[]
   colors?: Localized[]
   description?: Localized
-  /** Shown as stars on cards and the detail page. */
-  rating: number
-  reviews: number
-}
-
-export type Category = {
-  slug: CategorySlug
-  name: Localized
-  href: string
-  itemCount: number
-  image: string
+  stock: number
 }
 
 const u = (id: string, w = 600) =>
   `https://images.unsplash.com/photo-${id}?w=${w}&h=${w}&fit=crop`
 
-export const CATEGORIES: Category[] = [
+export const SEED_CATEGORIES: SeedCategory[] = [
   {
     slug: 'men',
     name: { en: "Men's Wear", bn: 'পুরুষদের পোশাক' },
-    href: '/men',
-    itemCount: 35,
     image: u('1516257984-b1b4d707412e', 800),
   },
   {
     slug: 'women',
     name: { en: "Women's Wear", bn: 'নারীদের পোশাক' },
-    href: '/women',
-    itemCount: 42,
     image: u('1483985988355-763728e1935b', 800),
   },
   {
     slug: 'kids',
     name: { en: 'Kids Wear', bn: 'শিশুদের পোশাক' },
-    href: '/kids',
-    itemCount: 28,
     image: u('1519238263530-99bdd11df2ea', 800),
   },
   {
     slug: 'accessories',
     name: { en: 'Accessories', bn: 'অ্যাক্সেসরিজ' },
-    href: '/accessories',
-    itemCount: 18,
     image: u('1590874103328-eac38a683ce7', 800),
   },
 ]
@@ -91,18 +83,17 @@ const COLOR = {
   brown: { en: 'Brown', bn: 'বাদামি' },
 } satisfies Record<string, Localized>
 
-export const PRODUCTS: Product[] = [
+export const SEED_PRODUCTS: SeedProduct[] = [
   {
     id: '1',
     name: { en: 'Classic Cotton Polo Shirt', bn: 'ক্লাসিক কটন পোলো শার্ট' },
     price: 49.99,
     image: u('1586790170083-2f9ceadc732d'),
     category: 'men',
-    rating: 4.6,
-    reviews: 128,
     badge: 'new',
     sizes: DEFAULT_SIZES,
     colors: [COLOR.grey, COLOR.black, COLOR.navy],
+    stock: 40,
     description: {
       en: 'A breathable pique cotton polo with a clean ribbed collar — an easy layer that works from desk to weekend.',
       bn: 'আরামদায়ক পিকে কটনের পোলো, পরিপাটি রিব কলারসহ — অফিস থেকে ছুটির দিন, সবখানেই মানানসই।',
@@ -115,11 +106,10 @@ export const PRODUCTS: Product[] = [
     oldPrice: 119.99,
     image: u('1551028719-00167b16eac5'),
     category: 'men',
-    rating: 4.8,
-    reviews: 96,
     badge: 'sale',
     sizes: DEFAULT_SIZES,
     colors: [COLOR.indigo, COLOR.washedBlue],
+    stock: 25,
     description: {
       en: 'Rigid selvedge-style denim with a tailored shoulder, built to fade beautifully with wear.',
       bn: 'শক্ত সেলভেজ-ধাঁচের ডেনিম, মাপা কাঁধ — যত পরবেন, রঙটা তত সুন্দর হয়ে উঠবে।',
@@ -131,10 +121,9 @@ export const PRODUCTS: Product[] = [
     price: 59.99,
     image: u('1596755094514-f87e34085b2c'),
     category: 'men',
-    rating: 4.4,
-    reviews: 61,
     sizes: DEFAULT_SIZES,
     colors: [COLOR.white, COLOR.sky, COLOR.sand],
+    stock: 33,
     description: {
       en: 'Mid-weight oxford cotton with a soft roll collar and a relaxed, tuck-friendly cut.',
       bn: 'মাঝারি ওজনের অক্সফোর্ড কটন, নরম রোল কলার আর আরামদায়ক কাট — সহজেই ইন করা যায়।',
@@ -147,11 +136,10 @@ export const PRODUCTS: Product[] = [
     oldPrice: 139.99,
     image: u('1620799140408-edc6dcb6d633'),
     category: 'men',
-    rating: 4.9,
-    reviews: 74,
     badge: 'sale',
     sizes: DEFAULT_SIZES,
     colors: [COLOR.camel, COLOR.charcoal],
+    stock: 18,
     description: {
       en: 'Fine-gauge merino that holds warmth without bulk. Wear it alone or under a coat.',
       bn: 'পাতলা বুননের মেরিনো উল — ভারী না হয়েও উষ্ণ। একা পরুন বা কোটের নিচে।',
@@ -163,10 +151,9 @@ export const PRODUCTS: Product[] = [
     price: 69.99,
     image: u('1473966968600-fa801b869a1a'),
     category: 'men',
-    rating: 4.3,
-    reviews: 45,
     sizes: DEFAULT_SIZES,
     colors: [COLOR.stone, COLOR.olive, COLOR.black],
+    stock: 30,
     description: {
       en: 'A straight-leg chino in brushed twill with just enough stretch to move in.',
       bn: 'ব্রাশড টুইলের সোজা কাটের চিনো, হালকা স্ট্রেচসহ — চলাফেরায় স্বচ্ছন্দ।',
@@ -178,11 +165,10 @@ export const PRODUCTS: Product[] = [
     price: 129.99,
     image: u('1496747611176-843222e1e57c'),
     category: 'women',
-    rating: 4.7,
-    reviews: 152,
     badge: 'new',
     sizes: DEFAULT_SIZES,
     colors: [COLOR.sand, COLOR.sage, COLOR.white],
+    stock: 22,
     description: {
       en: 'Airy washed linen with a gentle A-line drape — the easiest thing to reach for in July.',
       bn: 'হালকা ওয়াশড লিনেন, নরম এ-লাইন ড্রেপ — গরমের দিনে সবচেয়ে আরামের পছন্দ।',
@@ -195,11 +181,10 @@ export const PRODUCTS: Product[] = [
     oldPrice: 109.99,
     image: u('1434389677669-e08b4cac3105'),
     category: 'women',
-    rating: 4.5,
-    reviews: 83,
     badge: 'sale',
     sizes: DEFAULT_SIZES,
     colors: [COLOR.cream, COLOR.blush, COLOR.black],
+    stock: 27,
     description: {
       en: 'A soft ribbed cardigan with mother-of-pearl buttons and a slightly cropped hem.',
       bn: 'নরম রিব বুননের কার্ডিগান, ঝিনুকের বোতাম আর একটু ছোট হেমসহ।',
@@ -214,10 +199,9 @@ export const PRODUCTS: Product[] = [
     price: 94.99,
     image: u('1594633312681-425c7b97ccd1'),
     category: 'women',
-    rating: 4.6,
-    reviews: 57,
     sizes: DEFAULT_SIZES,
     colors: [COLOR.black, COLOR.ivory],
+    stock: 19,
     description: {
       en: 'Fluid wide-leg trousers with a clean high waistband and a pressed front crease.',
       bn: 'ঝরঝরে ওয়াইড-লেগ ট্রাউজার, উঁচু কোমরবন্ধ আর সামনে ইস্ত্রি করা ভাঁজসহ।',
@@ -229,11 +213,10 @@ export const PRODUCTS: Product[] = [
     price: 64.99,
     image: u('1485462537746-965f33f7f6a7'),
     category: 'women',
-    rating: 4.2,
-    reviews: 39,
     badge: 'new',
     sizes: DEFAULT_SIZES,
     colors: [COLOR.white, COLOR.sky],
+    stock: 24,
     description: {
       en: 'A relaxed poplin blouse with dropped shoulders and a hidden placket.',
       bn: 'ঢিলেঢালা পপলিন ব্লাউজ, নামানো কাঁধ আর লুকানো প্ল্যাকেটসহ।',
@@ -246,11 +229,10 @@ export const PRODUCTS: Product[] = [
     oldPrice: 99.99,
     image: u('1572804013309-59a88b7e92f1'),
     category: 'women',
-    rating: 4.8,
-    reviews: 111,
     badge: 'sale',
     sizes: DEFAULT_SIZES,
     colors: [COLOR.print],
+    stock: 21,
     description: {
       en: 'A bias-cut midi with a soft floral print that moves as you walk.',
       bn: 'বায়াস-কাট মিডি স্কার্ট, নরম ফুলেল প্রিন্ট — হাঁটার সাথে সুন্দরভাবে দোলে।',
@@ -262,11 +244,10 @@ export const PRODUCTS: Product[] = [
     price: 24.99,
     image: u('1519278409-1f56fdda7fe5'),
     category: 'kids',
-    rating: 4.9,
-    reviews: 204,
     badge: 'new',
     sizes: KIDS_SIZES,
     colors: [COLOR.yellow, COLOR.white, COLOR.red],
+    stock: 60,
     description: {
       en: 'Soft combed cotton with a print that survives the wash — and the playground.',
       bn: 'নরম কম্বড কটন, এমন প্রিন্ট যা ধোয়ার পরও টেকে — খেলার মাঠেও।',
@@ -278,10 +259,9 @@ export const PRODUCTS: Product[] = [
     price: 39.99,
     image: u('1622290291468-a28f7a7dc6a8'),
     category: 'kids',
-    rating: 4.5,
-    reviews: 88,
     sizes: KIDS_SIZES,
     colors: [COLOR.grey, COLOR.navy],
+    stock: 35,
     description: {
       en: 'A brushed-back fleece hoodie with a kangaroo pocket and roomy sleeves.',
       bn: 'ভেতরে ব্রাশ করা ফ্লিস হুডি, ক্যাঙ্গারু পকেট আর ঢিলেঢালা হাতাসহ।',
@@ -294,11 +274,10 @@ export const PRODUCTS: Product[] = [
     oldPrice: 59.99,
     image: u('1503944583220-79d8926ad5e2'),
     category: 'kids',
-    rating: 4.7,
-    reviews: 66,
     badge: 'sale',
     sizes: ['2Y', '4Y', '6Y', '8Y'],
     colors: [COLOR.blue],
+    stock: 28,
     description: {
       en: 'Adjustable straps, reinforced knees, and pockets for whatever gets collected.',
       bn: 'অ্যাডজাস্টেবল স্ট্র্যাপ, মজবুত হাঁটু আর পকেট — যা কিছু কুড়িয়ে আনে, সব রাখার জন্য।',
@@ -310,10 +289,9 @@ export const PRODUCTS: Product[] = [
     price: 149.99,
     image: u('1548036328-c9fa89d128fa'),
     category: 'accessories',
-    rating: 4.9,
-    reviews: 143,
     badge: 'new',
     colors: [COLOR.tan, COLOR.black],
+    stock: 15,
     description: {
       en: 'Full-grain leather with a suede-lined interior and an adjustable webbing strap.',
       bn: 'ফুল-গ্রেইন চামড়া, ভেতরে সুয়েড লাইনিং আর অ্যাডজাস্টেবল স্ট্র্যাপ।',
@@ -326,10 +304,9 @@ export const PRODUCTS: Product[] = [
     oldPrice: 119.99,
     image: u('1511499767150-a48a237f0083'),
     category: 'accessories',
-    rating: 4.4,
-    reviews: 52,
     badge: 'sale',
     colors: [COLOR.gold, COLOR.silver],
+    stock: 32,
     description: {
       en: 'Thin metal frames with polarised lenses and adjustable nose pads.',
       bn: 'পাতলা ধাতব ফ্রেম, পোলারাইজড লেন্স আর অ্যাডজাস্টেবল নোজ প্যাড।',
@@ -341,44 +318,12 @@ export const PRODUCTS: Product[] = [
     price: 54.99,
     image: u('1624222247344-550fb60583dc'),
     category: 'accessories',
-    rating: 4.6,
-    reviews: 71,
     sizes: ['S', 'M', 'L'],
     colors: [COLOR.brown, COLOR.black],
+    stock: 45,
     description: {
       en: 'A hand-woven leather belt with a brushed brass buckle that ages well.',
       bn: 'হাতে বোনা চামড়ার বেল্ট, ব্রাশড ব্রাস বাকলসহ — সময়ের সাথে আরও সুন্দর হয়।',
     },
   },
 ]
-
-export function getProductsByCategory(slug: CategorySlug): Product[] {
-  return PRODUCTS.filter((product) => product.category === slug)
-}
-
-export function getProductById(id: string): Product | undefined {
-  return PRODUCTS.find((product) => product.id === id)
-}
-
-/** Homepage "Popular Products" — a spread across every category. */
-export function getPopularProducts(limit = 8): Product[] {
-  return PRODUCTS.filter((product) => product.badge).slice(0, limit)
-}
-
-/** Cart drawer / product page suggestions — anything but the item being viewed. */
-export function getRecommendedProducts(excludeId?: string, limit = 2): Product[] {
-  return PRODUCTS.filter((product) => product.id !== excludeId).slice(0, limit)
-}
-
-/** Detail-page gallery: pads out with siblings when a product has one shot. */
-export function getProductImages(product: Product): string[] {
-  if (product.images?.length) return product.images
-  const others = PRODUCTS.filter(
-    (p) => p.category === product.category && p.id !== product.id,
-  ).slice(0, 3)
-  return [product.image, ...others.map((p) => p.image)]
-}
-
-export function getCategory(slug: CategorySlug): Category | undefined {
-  return CATEGORIES.find((category) => category.slug === slug)
-}

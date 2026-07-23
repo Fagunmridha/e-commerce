@@ -7,7 +7,7 @@ import { Rating } from '@/components/rating'
 import { useLanguage } from '@/components/language-provider'
 import { useStore } from '@/components/store-provider'
 import { cn } from '@/lib/utils'
-import type { Product } from '@/lib/data'
+import type { Product } from '@/lib/types'
 
 const BADGE_STYLES = {
   new: 'bg-badge-new text-badge-new-foreground',

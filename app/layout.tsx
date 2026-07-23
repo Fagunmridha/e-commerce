@@ -1,8 +1,10 @@
 import React from "react"
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
+import { ClerkProvider } from '@clerk/nextjs'
 import { Analytics } from '@vercel/analytics/next'
 import { LanguageProvider } from '@/components/language-provider'
+import { CatalogueProvider } from '@/components/catalogue-provider'
 import { StoreProvider } from '@/components/store-provider'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
@@ -10,6 +12,7 @@ import { SkipLink } from '@/components/skip-link'
 import { Toaster } from '@/components/ui/sonner'
 import { getDictionary } from '@/lib/dictionaries'
 import { getServerLocale } from '@/lib/server-locale'
+import { getAllProducts, getAllCategories } from '@/lib/products'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -42,6 +45,11 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
+// Every page reads the live catalogue / auth state from the database, so render
+// on request rather than baking pages at build time. Keeps the store in sync
+// with admin edits without a redeploy.
+export const dynamic = 'force-dynamic'
+
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
@@ -60,20 +68,31 @@ export default async function RootLayout({
   // right language — no English flash before the client picks it up.
   const locale = await getServerLocale()
 
+  // Fetch the catalogue once on the server and hydrate the client context, so
+  // every client component reads products from the real database.
+  const [products, categories] = await Promise.all([
+    getAllProducts(),
+    getAllCategories(),
+  ])
+
   return (
-    <html lang={locale}>
-      <body className={`font-sans antialiased`}>
-        <LanguageProvider initialLocale={locale}>
-          <StoreProvider>
-            <SkipLink />
-            <SiteHeader />
-            <main id="main-content">{children}</main>
-            <SiteFooter />
-          </StoreProvider>
-        </LanguageProvider>
-        <Toaster />
-        <Analytics />
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang={locale}>
+        <body className={`font-sans antialiased`}>
+          <LanguageProvider initialLocale={locale}>
+            <CatalogueProvider products={products} categories={categories}>
+              <StoreProvider>
+                <SkipLink />
+                <SiteHeader />
+                <main id="main-content">{children}</main>
+                <SiteFooter />
+              </StoreProvider>
+            </CatalogueProvider>
+          </LanguageProvider>
+          <Toaster />
+          <Analytics />
+        </body>
+      </html>
+    </ClerkProvider>
   )
 }

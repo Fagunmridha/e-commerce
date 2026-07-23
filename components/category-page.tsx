@@ -9,8 +9,9 @@ import { Reveal } from '@/components/reveal'
 import { FeatureBar } from '@/components/feature-bar'
 import { Newsletter } from '@/components/newsletter'
 import { useLanguage } from '@/components/language-provider'
+import { useCatalogue } from '@/components/catalogue-provider'
 import { cn } from '@/lib/utils'
-import { getCategory, getProductsByCategory, type CategorySlug } from '@/lib/data'
+import type { CategorySlug } from '@/lib/types'
 
 type SortKey = 'featured' | 'price-asc' | 'price-desc' | 'rating'
 
@@ -24,12 +25,16 @@ const BANNER_TINT: Record<CategorySlug, string> = {
 
 export function CategoryPage({ slug }: { slug: CategorySlug }) {
   const { t, pick } = useLanguage()
+  const { getCategory, getProductsByCategory } = useCatalogue()
   const category = getCategory(slug)
 
   const [size, setSize] = useState<string>('all')
   const [sort, setSort] = useState<SortKey>('featured')
 
-  const all = useMemo(() => getProductsByCategory(slug), [slug])
+  const all = useMemo(
+    () => getProductsByCategory(slug),
+    [slug, getProductsByCategory],
+  )
 
   const sizes = useMemo(() => {
     const found = new Set<string>()

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { PageHeader } from '@/components/page-header'
 import { ShopBrowser } from '@/components/shop-browser'
 import { FeatureBar } from '@/components/feature-bar'
@@ -12,7 +13,9 @@ export default function ShopPage() {
   return (
     <>
       <PageHeader pageKey="shop" />
-      <ShopBrowser />
+      <Suspense>
+        <ShopBrowser />
+      </Suspense>
       <FeatureBar />
     </>
   )
