@@ -1,25 +1,17 @@
-import { Hero } from '@/components/hero'
-import { Ticker } from '@/components/ticker'
-import { FeatureBar } from '@/components/feature-bar'
-import { CategoryGrid } from '@/components/category-grid'
-import { PopularProducts } from '@/components/popular-products'
-import { PromoBanners } from '@/components/promo-banners'
-import { DealCountdown } from '@/components/deal-countdown'
-import { Testimonials } from '@/components/testimonials'
-import { Newsletter } from '@/components/newsletter'
+import { CpMarketHero } from '@/components/cp-market-hero'
+import { CpMarketFeatures } from '@/components/cp-market-features'
+import { CpMarketCategories } from '@/components/cp-market-categories'
+import { CpMarketPopular } from '@/components/cp-market-popular'
+import { CpMarketNewsletter } from '@/components/cp-market-newsletter'
 
 export default function Home() {
   return (
-    <>
-      <Hero />
-      <Ticker />
-      <CategoryGrid />
-      <PopularProducts />
-      <PromoBanners />
-      <DealCountdown />
-      <FeatureBar />
-      <Testimonials />
-      <Newsletter />
-    </>
+    <div className="bg-white min-h-screen">
+      <CpMarketHero />
+      <CpMarketFeatures />
+      <CpMarketCategories />
+      <CpMarketPopular />
+      <CpMarketNewsletter />
+    </div>
   )
 }
