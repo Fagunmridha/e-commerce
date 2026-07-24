@@ -9,6 +9,7 @@ import { StoreProvider } from '@/components/store-provider'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { ConditionalChrome } from '@/components/conditional-chrome'
+import { FloatingWhatsApp } from '@/components/floating-whatsapp'
 import { SkipLink } from '@/components/skip-link'
 import { Toaster } from '@/components/ui/sonner'
 import { getDictionary } from '@/lib/dictionaries'
@@ -91,6 +92,7 @@ export default async function RootLayout({
                 <ConditionalChrome>
                   <SiteFooter />
                 </ConditionalChrome>
+                <FloatingWhatsApp />
               </StoreProvider>
             </CatalogueProvider>
           </LanguageProvider>

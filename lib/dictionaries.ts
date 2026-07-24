@@ -218,6 +218,10 @@ const en = {
     outOfStock: 'Out of stock',
     deliveryLine: 'Cash on delivery • Fast nationwide shipping',
   },
+  whatsapp: {
+    label: 'Chat with us on WhatsApp',
+    prefill: 'Hi! I have a question.',
+  },
   orderSuccess: {
     title: 'Order placed',
     subtitle: 'Thank you! We have received your order and will call to confirm.',
@@ -646,6 +650,10 @@ const bn: Dictionary = {
     placing: 'অর্ডার নেওয়া হচ্ছে…',
     outOfStock: 'স্টক শেষ',
     deliveryLine: 'ক্যাশ অন ডেলিভারি • দ্রুত সারাদেশে ডেলিভারি',
+  },
+  whatsapp: {
+    label: 'হোয়াটসঅ্যাপে আমাদের সাথে চ্যাট করুন',
+    prefill: 'আসসালামু আলাইকুম, আমার একটা প্রশ্ন আছে।',
   },
   orderSuccess: {
     title: 'অর্ডার সম্পন্ন হয়েছে',
