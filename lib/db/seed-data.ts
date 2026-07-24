@@ -28,7 +28,7 @@ export type SeedProduct = {
 }
 
 const u = (id: string, w = 600) =>
-  `https://images.unsplash.com/photo-${id}?w=${w}&h=${w}&fit=crop`
+  `https://images.unsplash.com/photo-${id}?w=${w}&h=${w}&fit=crop&auto=format&q=75`
 
 export const SEED_CATEGORIES: SeedCategory[] = [
   {

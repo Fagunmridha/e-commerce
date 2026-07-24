@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, updateTag } from 'next/cache'
 import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { products, users } from '@/lib/db/schema'
@@ -55,6 +55,7 @@ export async function upsertProduct(input: ProductInput): Promise<void> {
     .insert(products)
     .values(values)
     .onConflictDoUpdate({ target: products.id, set: values })
+  updateTag('catalogue')
   revalidatePath('/admin/products')
   revalidatePath('/shop')
   revalidatePath(`/product/${input.id}`)
@@ -63,6 +64,7 @@ export async function upsertProduct(input: ProductInput): Promise<void> {
 export async function deleteProduct(id: string): Promise<void> {
   await requireAdmin()
   await db.delete(products).where(eq(products.id, id))
+  updateTag('catalogue')
   revalidatePath('/admin/products')
   revalidatePath('/shop')
 }

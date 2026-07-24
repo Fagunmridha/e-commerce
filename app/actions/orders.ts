@@ -1,5 +1,6 @@
 'use server'
 
+import { updateTag } from 'next/cache'
 import { createOrder, type OrderItemInput } from '@/lib/orders'
 import { getCurrentUser } from '@/lib/auth'
 import type { PaymentMethod } from '@/lib/order'
@@ -19,5 +20,8 @@ export async function placeOrder(
 ): Promise<{ orderNumber: string }> {
   // Guest checkout is allowed — userId is simply null when not signed in.
   const user = await getCurrentUser()
-  return createOrder({ ...input, userId: user?.id ?? null })
+  const result = await createOrder({ ...input, userId: user?.id ?? null })
+  // Stock was decremented — refresh the cached catalogue so availability stays right.
+  updateTag('catalogue')
+  return result
 }

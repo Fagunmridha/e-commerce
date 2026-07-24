@@ -1,4 +1,5 @@
 import 'server-only'
+import { unstable_cache } from 'next/cache'
 import { and, asc, eq, ilike, ne, or, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import {
@@ -51,13 +52,21 @@ function toProduct(row: ProductRow, agg?: Aggregate): Product {
   }
 }
 
-export async function getAllProducts(): Promise<Product[]> {
+async function fetchAllProducts(): Promise<Product[]> {
   const [rows, aggregates] = await Promise.all([
     db.select().from(products).orderBy(asc(products.createdAt), asc(products.id)),
     reviewAggregates(),
   ])
   return rows.map((row) => toProduct(row, aggregates.get(row.id)))
 }
+
+// The whole catalogue is fetched on every page (root layout). Cache it so a
+// navigation no longer pays a round-trip to the database — admin edits bust
+// the `catalogue` tag (see app/actions/admin.ts), so the store stays live.
+export const getAllProducts = unstable_cache(fetchAllProducts, ['all-products'], {
+  tags: ['catalogue'],
+  revalidate: 60,
+})
 
 export async function getProductById(id: string): Promise<Product | undefined> {
   const [row] = await db.select().from(products).where(eq(products.id, id))
@@ -141,7 +150,7 @@ export async function searchProducts(query: string): Promise<Product[]> {
   return rows.map((row) => toProduct(row, aggregates.get(row.id)))
 }
 
-export async function getAllCategories(): Promise<Category[]> {
+async function fetchAllCategories(): Promise<Category[]> {
   const rows = await db.select().from(categories)
   const counts = await db
     .select({
@@ -165,6 +174,12 @@ export async function getAllCategories(): Promise<Category[]> {
     }))
     .sort((a, b) => order.indexOf(a.slug) - order.indexOf(b.slug))
 }
+
+export const getAllCategories = unstable_cache(
+  fetchAllCategories,
+  ['all-categories'],
+  { tags: ['catalogue'], revalidate: 60 },
+)
 
 export async function getCategory(
   slug: CategorySlug,
