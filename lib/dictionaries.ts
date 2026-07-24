@@ -209,6 +209,15 @@ const en = {
       city: 'Please enter your city.',
     },
   },
+  landing: {
+    browseStore: 'Browse full store',
+    orderTitle: 'Order Now',
+    orderSubtitle: 'Fill in your details — pay cash when your order arrives.',
+    cta: 'Order Now — Cash on Delivery',
+    placing: 'Placing order…',
+    outOfStock: 'Out of stock',
+    deliveryLine: 'Cash on delivery • Fast nationwide shipping',
+  },
   orderSuccess: {
     title: 'Order placed',
     subtitle: 'Thank you! We have received your order and will call to confirm.',
@@ -628,6 +637,15 @@ const bn: Dictionary = {
       address: 'অনুগ্রহ করে ঠিকানা লিখুন।',
       city: 'অনুগ্রহ করে শহরের নাম লিখুন।',
     },
+  },
+  landing: {
+    browseStore: 'সম্পূর্ণ স্টোর দেখুন',
+    orderTitle: 'অর্ডার করুন',
+    orderSubtitle: 'আপনার তথ্য দিন — পণ্য হাতে পেয়ে টাকা দিন।',
+    cta: 'অর্ডার করুন — ক্যাশ অন ডেলিভারি',
+    placing: 'অর্ডার নেওয়া হচ্ছে…',
+    outOfStock: 'স্টক শেষ',
+    deliveryLine: 'ক্যাশ অন ডেলিভারি • দ্রুত সারাদেশে ডেলিভারি',
   },
   orderSuccess: {
     title: 'অর্ডার সম্পন্ন হয়েছে',
