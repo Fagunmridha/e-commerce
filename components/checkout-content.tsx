@@ -34,10 +34,8 @@ function buildSchema(errors: Dictionary['checkout']['errors']) {
   return z.object({
     name: z.string().min(2, errors.name),
     phone: z.string().regex(BD_PHONE, errors.phone),
-    email: z.string().email(errors.email),
     address: z.string().min(5, errors.address),
     city: z.string().min(2, errors.city),
-    postcode: z.string().optional(),
     notes: z.string().optional(),
   })
 }
@@ -62,10 +60,8 @@ export function CheckoutContent() {
     defaultValues: {
       name: '',
       phone: '',
-      email: '',
       address: '',
       city: '',
-      postcode: '',
       notes: '',
     },
   })
@@ -79,10 +75,8 @@ export function CheckoutContent() {
       const { orderNumber } = await placeOrder({
         name: values.name,
         phone: values.phone,
-        email: values.email,
         address: values.address,
         city: values.city,
-        postcode: values.postcode || undefined,
         notes: values.notes || undefined,
         paymentMethod: method,
         items: lines.map((line) => ({
@@ -130,16 +124,6 @@ export function CheckoutContent() {
 
   const methods: { value: PaymentMethod; label: string; hint: string }[] = [
     { value: 'cod', label: t.checkout.methods.cod, hint: t.checkout.methods.codHint },
-    {
-      value: 'mobile',
-      label: t.checkout.methods.mobile,
-      hint: t.checkout.methods.mobileHint,
-    },
-    {
-      value: 'card',
-      label: t.checkout.methods.card,
-      hint: t.checkout.methods.cardHint,
-    },
   ]
 
   return (
@@ -194,24 +178,6 @@ export function CheckoutContent() {
 
                 <FormField
                   control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t.checkout.email}</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="email"
-                          placeholder={t.checkout.emailPlaceholder}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
                   name="address"
                   render={({ field }) => (
                     <FormItem>
@@ -227,41 +193,22 @@ export function CheckoutContent() {
                   )}
                 />
 
-                <div className="grid gap-5 sm:grid-cols-2">
-                  <FormField
-                    control={form.control}
-                    name="city"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t.checkout.city}</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder={t.checkout.cityPlaceholder}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="postcode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t.checkout.postcode}</FormLabel>
-                        <FormControl>
-                          <Input
-                            inputMode="numeric"
-                            placeholder={t.checkout.postcodePlaceholder}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="city"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t.checkout.city}</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder={t.checkout.cityPlaceholder}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
                 <FormField
                   control={form.control}

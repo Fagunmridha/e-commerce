@@ -69,10 +69,8 @@ export const orders = pgTable('orders', {
   }),
   name: text('name').notNull(),
   phone: text('phone').notNull(),
-  email: text('email').notNull(),
   address: text('address').notNull(),
   city: text('city').notNull(),
-  postcode: text('postcode'),
   notes: text('notes'),
   paymentMethod: text('payment_method', {
     enum: ['cod', 'mobile', 'card'],

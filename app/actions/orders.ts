@@ -7,10 +7,8 @@ import type { PaymentMethod } from '@/lib/order'
 export type PlaceOrderInput = {
   name: string
   phone: string
-  email: string
   address: string
   city: string
-  postcode?: string
   notes?: string
   paymentMethod: PaymentMethod
   items: OrderItemInput[]

@@ -21,10 +21,8 @@ export type OrderItemInput = {
 export type CreateOrderInput = {
   name: string
   phone: string
-  email: string
   address: string
   city: string
-  postcode?: string
   notes?: string
   paymentMethod: PaymentMethod
   items: OrderItemInput[]
@@ -92,10 +90,8 @@ export async function createOrder(
       userId: input.userId ?? null,
       name: input.name,
       phone: input.phone,
-      email: input.email,
       address: input.address,
       city: input.city,
-      postcode: input.postcode ?? null,
       notes: input.notes ?? null,
       paymentMethod: input.paymentMethod,
       subtotal,
