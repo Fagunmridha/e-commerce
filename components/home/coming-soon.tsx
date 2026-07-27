@@ -34,7 +34,7 @@ export function ComingSoon() {
   const { t, pick, locale, price } = useLanguage()
   const { products: allProducts } = useCatalogue()
   const { addToCart } = useStore()
-  const rail = useCardRail()
+  const rail = useCardRail({ gridBelowSm: 2 })
 
   const products = useMemo(
     () => [...allProducts].reverse().slice(0, 6),
@@ -77,7 +77,8 @@ export function ComingSoon() {
               return (
                 <RailItem
                   key={product.id}
-                  className="basis-[70%] sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+                  rail={rail}
+                  className="sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
                 >
                   <article className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:border-transparent hover:shadow-card-hover">
                     <div className="relative aspect-4/3 overflow-hidden bg-secondary">
@@ -85,7 +86,7 @@ export function ComingSoon() {
                         src={product.image || '/placeholder.svg'}
                         alt={label}
                         fill
-                        sizes="(max-width: 640px) 70vw, (max-width: 1024px) 45vw, 25vw"
+                        sizes="(max-width: 640px) 45vw, (max-width: 1024px) 45vw, 25vw"
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                       <span className="absolute top-3 left-3 rounded-md bg-primary px-2.5 py-1 text-[11px] font-bold text-primary-foreground">
@@ -93,15 +94,15 @@ export function ComingSoon() {
                       </span>
                     </div>
 
-                    <div className="flex flex-1 flex-col p-4">
-                      <h3 className="line-clamp-1 text-sm font-semibold text-foreground">
+                    <div className="flex flex-1 flex-col p-3 sm:p-4">
+                      <h3 className="line-clamp-1 text-[13px] font-semibold text-foreground sm:text-sm">
                         {label}
                       </h3>
-                      <p className="mt-1.5 text-base font-bold text-foreground">
+                      <p className="mt-1.5 text-sm font-bold text-foreground sm:text-base">
                         {price(product.price)}
                       </p>
 
-                      <dl className="mt-3 space-y-1.5 text-xs text-muted-foreground">
+                      <dl className="mt-3 space-y-1.5 text-[11px] text-muted-foreground sm:text-xs">
                         <div className="flex items-center gap-2">
                           <CalendarDays
                             className="size-3.5 shrink-0"
@@ -150,7 +151,7 @@ export function ComingSoon() {
           />
         </div>
 
-        <RailDots rail={rail} label={title} className="mt-6" />
+        <RailDots rail={rail} label={title} className="mt-6 hidden sm:flex" />
       </SectionPanel>
     </Reveal>
   )

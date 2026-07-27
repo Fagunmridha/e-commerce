@@ -26,11 +26,11 @@ export function SectionPanel({
       <Container>
         <div
           className={cn(
-            'rounded-2xl border border-border bg-card p-5 sm:p-6 lg:p-7',
+            'rounded-2xl border border-border bg-card p-4 sm:p-6 lg:p-7',
             className,
           )}
         >
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3 sm:mb-6">
             <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
               {title}
             </h2>

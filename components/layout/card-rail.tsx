@@ -5,19 +5,37 @@ import useEmblaCarousel from 'embla-carousel-react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
+/** How many grid columns a rail collapses to below the `sm` breakpoint. */
+export type RailGridCols = 2 | 4
+
 /**
  * Shared carousel behaviour for every card section. Built on embla (already a
  * dependency) so touch dragging, keyboard focus and RTL all come for free.
  *
  * The hook is split from the arrows so a section can host its arrows up in the
  * SectionHeading while the track itself renders below.
+ *
+ * Pass `gridBelowSm` to turn the rail into a plain CSS grid on phones. Embla is
+ * handed `active: false` with an `sm` breakpoint override, so below 640px it
+ * never installs a transform and the slides lay out as ordinary grid children;
+ * at 640px and up it re-initialises itself and the carousel behaves as before.
+ * Rendering one markup tree this way avoids the duplicate DOM (and duplicate
+ * image requests) a `useMediaQuery` swap would cost.
  */
-export function useCardRail() {
+export function useCardRail(options?: { gridBelowSm?: RailGridCols }) {
+  const gridCols = options?.gridBelowSm ?? null
+
   const [emblaRef, emblaApi] = useEmblaCarousel({
     align: 'start',
     containScroll: 'trimSnaps',
     // One card at a time on phones, a full page of cards on desktop.
     slidesToScroll: 'auto',
+    ...(gridCols
+      ? {
+          active: false,
+          breakpoints: { '(min-width: 640px)': { active: true } },
+        }
+      : null),
   })
   const [canPrev, setCanPrev] = useState(false)
   const [canNext, setCanNext] = useState(false)
@@ -49,6 +67,7 @@ export function useCardRail() {
 
   return {
     emblaRef,
+    gridCols,
     canPrev,
     canNext,
     snaps,
@@ -209,21 +228,49 @@ export function RailTrack({
       aria-label={label}
       className={cn('overflow-hidden', className)}
     >
-      {/* Negative gutter + per-slide padding keeps gaps even at every basis. */}
-      <div className="-ml-4 flex touch-pan-y lg:-ml-5">{children}</div>
+      {/* Negative gutter + per-slide padding keeps gaps even at every basis.
+          In grid mode a real `gap` does that job below sm instead. */}
+      <div
+        className={
+          rail.gridCols
+            ? cn(
+                'grid sm:-ml-4 sm:flex sm:touch-pan-y sm:gap-0 lg:-ml-5',
+                rail.gridCols === 4
+                  ? 'grid-cols-4 gap-x-3 gap-y-5'
+                  : 'grid-cols-2 gap-4',
+              )
+            : '-ml-4 flex touch-pan-y lg:-ml-5'
+        }
+      >
+        {children}
+      </div>
     </div>
   )
 }
 
+/**
+ * One slide. Pass the `rail` when it was created with `gridBelowSm` so the
+ * slide drops its flex sizing on phones and lets the grid place it; the
+ * `className` should then only carry `sm:`-and-up `basis-*` values.
+ */
 export function RailItem({
+  rail,
   children,
   className,
 }: {
+  rail?: CardRail
   children: React.ReactNode
   className?: string
 }) {
   return (
-    <div className={cn('min-w-0 shrink-0 grow-0 pl-4 lg:pl-5', className)}>
+    <div
+      className={cn(
+        rail?.gridCols
+          ? 'min-w-0 sm:shrink-0 sm:grow-0 sm:pl-4 lg:pl-5'
+          : 'min-w-0 shrink-0 grow-0 pl-4 lg:pl-5',
+        className,
+      )}
+    >
       {children}
     </div>
   )

@@ -73,7 +73,7 @@ export function ProductCard({
               src={image || '/placeholder.svg'}
               alt=""
               fill
-              sizes="(max-width: 640px) 70vw, (max-width: 1024px) 45vw, 25vw"
+              sizes="(max-width: 1024px) 45vw, 25vw"
               priority={priority}
               className="object-cover transition-all duration-500 group-hover:scale-105 group-hover:opacity-0"
             />
@@ -81,7 +81,7 @@ export function ProductCard({
               src={hoverImage || '/placeholder.svg'}
               alt=""
               fill
-              sizes="(max-width: 640px) 70vw, (max-width: 1024px) 45vw, 25vw"
+              sizes="(max-width: 1024px) 45vw, 25vw"
               loading="lazy"
               className="scale-105 object-cover opacity-0 transition-all duration-500 group-hover:opacity-100"
             />
@@ -106,8 +106,8 @@ export function ProductCard({
           </div>
         </div>
 
-        <div className="flex flex-1 flex-col p-4">
-          <h3 className="text-sm font-semibold text-foreground">
+        <div className="flex flex-1 flex-col p-3 sm:p-4">
+          <h3 className="text-[13px] font-semibold text-foreground sm:text-sm">
             <Link
               href={`/product/${id}`}
               className="line-clamp-1 transition-colors hover:text-primary focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
@@ -117,7 +117,7 @@ export function ProductCard({
           </h3>
 
           <div className="mt-1.5 flex flex-wrap items-baseline gap-2">
-            <span className="text-base font-bold text-foreground">
+            <span className="text-sm font-bold text-foreground sm:text-base">
               {formatPrice(price)}
             </span>
             {oldPrice && (

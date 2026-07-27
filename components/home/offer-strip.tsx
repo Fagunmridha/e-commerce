@@ -57,7 +57,7 @@ export function OfferStrip() {
   return (
     <section className="py-3 lg:py-4">
       <Container>
-        <div className="grid gap-5 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-3 md:gap-5">
           {TILES.map((tile, index) => {
             const text = content[tile.key]
             const image = getCategory(tile.slug)?.image ?? tile.fallback
@@ -66,16 +66,16 @@ export function OfferStrip() {
               <Reveal key={tile.key} delay={index * 90}>
                 <Link
                   href={tile.href}
-                  className="group relative flex h-full min-h-44 items-center overflow-hidden rounded-2xl bg-secondary transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+                  className="group relative flex h-full min-h-40 items-center overflow-hidden rounded-2xl bg-secondary sm:min-h-44 transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
                 >
-                  <div className="relative z-10 w-3/5 p-5 sm:p-6">
-                    <p className="text-sm font-semibold text-primary">
+                  <div className="relative z-10 w-[62%] p-4 sm:w-3/5 sm:p-6">
+                    <p className="text-[13px] font-semibold text-primary sm:text-sm">
                       {text.eyebrow}
                     </p>
-                    <p className="mt-2 text-sm font-semibold text-foreground">
+                    <p className="mt-2 text-[13px] font-semibold text-foreground sm:text-sm">
                       {text.lead}
                     </p>
-                    <p className="mt-0.5 text-2xl leading-tight font-extrabold tracking-tight text-balance text-foreground">
+                    <p className="mt-0.5 text-xl leading-tight font-extrabold tracking-tight text-balance text-foreground sm:text-2xl">
                       {text.headline}
                     </p>
 

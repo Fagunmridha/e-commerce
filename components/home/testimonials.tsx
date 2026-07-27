@@ -25,14 +25,20 @@ export function Testimonials() {
   const rail = useCardRail()
   const title = t.home.reviewsTitle
 
+  // Two 40px arrows plus gaps eat a fifth of a 390px panel, so on phones the
+  // rail is dragged and paged by the dots below instead.
   const arrow =
-    'grid size-10 shrink-0 place-items-center rounded-full border border-border bg-background text-foreground transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-35'
+    'hidden size-10 shrink-0 place-items-center rounded-full border border-border bg-background text-foreground sm:grid transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-35'
 
   return (
     <section className="py-3 lg:py-4">
       <Container>
         <Reveal>
-          <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 lg:p-7">
+          <div className="rounded-2xl border border-border bg-card p-4 sm:p-6 lg:p-7">
+            <h2 className="mb-4 text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+              {title}
+            </h2>
+
             <div className="flex items-center gap-3 sm:gap-5">
               <button
                 type="button"
@@ -62,14 +68,10 @@ export function Testimonials() {
                         </span>
 
                         <div className="min-w-0">
-                          <h2 className="text-base font-bold text-foreground">
-                            {title}
-                          </h2>
-
                           <Rating
                             value={5}
                             size="sm"
-                            className="mt-1.5 justify-center sm:justify-start"
+                            className="justify-center sm:justify-start"
                           />
 
                           <blockquote className="mt-2 text-sm leading-relaxed text-muted-foreground">

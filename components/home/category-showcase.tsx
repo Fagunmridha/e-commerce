@@ -22,23 +22,24 @@ function CategoryCard({ category }: { category: Category }) {
   return (
     <Link
       href={category.href}
-      className="group block h-full overflow-hidden rounded-xl border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:border-transparent hover:shadow-card-hover focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+      className="group block h-full overflow-hidden rounded-xl transition-all duration-300 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none sm:border sm:border-border sm:bg-card sm:hover:-translate-y-1 sm:hover:border-transparent sm:hover:shadow-card-hover"
     >
-      <div className="relative aspect-4/3 overflow-hidden bg-secondary">
+      {/* A square thumbnail packs four categories into one phone row. */}
+      <div className="relative aspect-square overflow-hidden rounded-xl bg-secondary sm:aspect-4/3 sm:rounded-none">
         <Image
           src={category.image}
           alt=""
           fill
-          sizes="(max-width: 640px) 70vw, (max-width: 1024px) 45vw, 25vw"
+          sizes="(max-width: 640px) 24vw, (max-width: 1024px) 45vw, 25vw"
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
       </div>
 
-      <div className="p-4">
-        <h3 className="text-sm font-bold text-foreground transition-colors group-hover:text-primary">
+      <div className="pt-2 text-center sm:p-4 sm:text-left">
+        <h3 className="text-[11px] leading-tight font-bold text-foreground transition-colors group-hover:text-primary sm:text-sm">
           {label}
         </h3>
-        <p className="mt-1 text-xs text-muted-foreground">
+        <p className="mt-1 hidden text-xs text-muted-foreground sm:block">
           {category.itemCount} {t.sections.items}
         </p>
       </div>
@@ -49,7 +50,7 @@ function CategoryCard({ category }: { category: Category }) {
 export function CategoryShowcase() {
   const { t } = useLanguage()
   const { categories } = useCatalogue()
-  const rail = useCardRail()
+  const rail = useCardRail({ gridBelowSm: 4 })
 
   if (categories.length === 0) return null
 
@@ -67,7 +68,8 @@ export function CategoryShowcase() {
             {categories.map((category) => (
               <RailItem
                 key={category.slug}
-                className="basis-[70%] sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+                rail={rail}
+                className="sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
               >
                 <CategoryCard category={category} />
               </RailItem>
@@ -81,7 +83,7 @@ export function CategoryShowcase() {
           />
         </div>
 
-        <RailDots rail={rail} label={title} className="mt-6" />
+        <RailDots rail={rail} label={title} className="mt-6 hidden sm:flex" />
       </SectionPanel>
     </Reveal>
   )

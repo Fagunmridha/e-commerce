@@ -92,8 +92,14 @@ export default async function RootLayout({
                 <main id="main-content">{children}</main>
                 <ConditionalChrome>
                   <SiteFooter />
-                  {/* Spacer so the fixed bottom bar never covers page content. */}
-                  <div aria-hidden="true" className="h-14 lg:hidden" />
+                  {/* Spacer so the fixed bottom bar never covers page content.
+                      The bar adds the safe-area inset to its own height, so the
+                      spacer has to reserve that too or notched phones clip the
+                      last rows of the footer. */}
+                  <div
+                    aria-hidden="true"
+                    className="h-[calc(3.5rem+env(safe-area-inset-bottom))] lg:hidden"
+                  />
                   <MobileBottomNav />
                 </ConditionalChrome>
                 <FloatingWhatsApp />

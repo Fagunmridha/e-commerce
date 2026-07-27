@@ -82,9 +82,11 @@ export function SearchPanel({
                 className="h-12 w-full rounded-full border border-border bg-secondary/60 pr-4 pl-11 text-sm text-foreground transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-ring/30"
               />
             </div>
+            {/* Phones don't have room for input + submit + close on one row;
+                there the leading icon and the Enter key carry the submit. */}
             <button
               type="submit"
-              className="h-12 rounded-full bg-foreground px-6 text-xs font-bold tracking-wide text-background uppercase transition-colors hover:bg-primary focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+              className="hidden h-12 rounded-full bg-foreground px-6 text-xs font-bold tracking-wide text-background uppercase transition-colors hover:bg-primary focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none sm:block"
             >
               {t.header.searchSubmit}
             </button>

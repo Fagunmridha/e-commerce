@@ -30,7 +30,7 @@ export function ProductSection({
   /** Eager-load the first row's images when the section is above the fold. */
   priority?: boolean
 }) {
-  const rail = useCardRail()
+  const rail = useCardRail({ gridBelowSm: 2 })
   const { t } = useLanguage()
 
   if (products.length === 0) return null
@@ -47,7 +47,8 @@ export function ProductSection({
             {products.map((product, index) => (
               <RailItem
                 key={product.id}
-                className="basis-[70%] sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+                rail={rail}
+                className="sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
               >
                 <ProductCard product={product} priority={priority && index < 4} />
               </RailItem>
@@ -61,7 +62,8 @@ export function ProductSection({
           />
         </div>
 
-        <RailDots rail={rail} label={title} className="mt-6" />
+        {/* No carousel to page through below sm — the cards are all on screen. */}
+        <RailDots rail={rail} label={title} className="mt-6 hidden sm:flex" />
       </SectionPanel>
     </Reveal>
   )
