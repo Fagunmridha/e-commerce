@@ -19,7 +19,7 @@ export function PageHeader(props: PageHeaderProps) {
 
   return (
     <div className="border-b border-border bg-muted/60">
-      <div className="mx-auto max-w-page px-4 py-10 sm:px-6 sm:py-12 lg:px-10">
+      <div className="mx-auto max-w-page px-4 py-10 sm:px-6 sm:py-12 lg:px-4">
         {breadcrumb && (
           <nav
             aria-label="Breadcrumb"

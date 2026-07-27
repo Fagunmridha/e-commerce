@@ -103,7 +103,7 @@ export function ProductLanding({
     <div className="min-h-dvh bg-background">
       {/* Minimal top bar — the only route back to the full store. */}
       <header className="border-b border-border">
-        <div className="mx-auto flex h-16 max-w-page items-center justify-between px-4 sm:px-6 lg:px-10">
+        <div className="mx-auto flex h-16 max-w-page items-center justify-between px-2 sm:px-3 lg:px-4">
           <Link href="/" className="text-lg font-bold tracking-tight text-foreground">
             CP Market
           </Link>
@@ -116,7 +116,7 @@ export function ProductLanding({
         </div>
       </header>
 
-      <div className="mx-auto max-w-page px-4 py-8 sm:px-6 sm:py-12 lg:px-10">
+      <div className="mx-auto max-w-page px-4 py-8 sm:px-6 sm:py-12 lg:px-4">
         <div className="grid gap-8 md:grid-cols-2 lg:gap-12">
           {/* Gallery */}
           <div className="space-y-3">

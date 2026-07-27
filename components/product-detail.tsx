@@ -68,7 +68,7 @@ export function ProductDetail({
   }
 
   return (
-    <div className="mx-auto max-w-page px-4 py-8 sm:px-6 sm:py-12 lg:px-10">
+    <div className="mx-auto max-w-page px-4 py-8 sm:px-6 sm:py-12 lg:px-4">
       <nav
         aria-label="Breadcrumb"
         className="mb-6 flex items-center gap-1 text-xs text-muted-foreground"

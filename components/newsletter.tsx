@@ -1,10 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Mail, Send } from 'lucide-react'
+import { Mail } from 'lucide-react'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Container } from '@/components/layout/container'
 import { Reveal } from '@/components/reveal'
 import { useLanguage } from '@/components/language-provider'
 
@@ -28,55 +27,50 @@ export function Newsletter() {
   }
 
   return (
-    <section className="mx-auto max-w-page px-4 pb-16 sm:px-6 lg:px-10">
-      <Reveal>
-        <div className="relative overflow-hidden rounded-3xl bg-primary px-6 py-12 text-primary-foreground sm:px-12 sm:py-16">
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute -top-20 -right-16 size-72 rounded-full bg-white/10 blur-2xl"
-          />
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute -bottom-24 -left-10 size-64 rounded-full bg-white/10 blur-2xl"
-          />
+    <section className="py-3 lg:py-4">
+      <Container>
+        <Reveal>
+          <div className="rounded-2xl bg-primary px-5 py-6 text-primary-foreground sm:px-8">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex items-center gap-4">
+                <span className="grid size-12 shrink-0 place-items-center rounded-full border border-white/30">
+                  <Mail className="size-5" aria-hidden="true" />
+                </span>
+                <div>
+                  <h2 className="text-lg font-bold sm:text-xl">{copy.title}</h2>
+                  <p className="mt-1 max-w-lg text-sm opacity-80">
+                    {copy.subtitle}
+                  </p>
+                </div>
+              </div>
 
-          <div className="relative mx-auto max-w-xl text-center">
-            <span className="inline-flex size-12 items-center justify-center rounded-full bg-white/15">
-              <Mail className="size-5" />
-            </span>
-            <p className="mt-5 text-[11px] font-bold tracking-[0.18em] uppercase opacity-80">
-              {copy.eyebrow}
-            </p>
-            <h2 className="mt-2 text-display-sm">{copy.title}</h2>
-            <p className="mt-3 text-sm opacity-85">{copy.subtitle}</p>
-
-            <form
-              onSubmit={onSubmit}
-              className="mx-auto mt-7 flex max-w-md flex-col gap-3 sm:flex-row"
-            >
-              <label className="sr-only" htmlFor="newsletter-email">
-                {copy.placeholder}
-              </label>
-              <Input
-                id="newsletter-email"
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder={copy.placeholder}
-                className="h-12 flex-1 border-transparent bg-white text-foreground placeholder:text-muted-foreground"
-              />
-              <Button
-                type="submit"
-                size="lg"
-                className="h-12 gap-2 bg-foreground px-7 font-bold tracking-wide uppercase hover:bg-foreground/90"
+              {/* Input and button share one pill, as in the reference. */}
+              <form
+                onSubmit={onSubmit}
+                className="flex w-full max-w-lg overflow-hidden rounded-lg bg-white p-1 lg:w-auto lg:min-w-[26rem]"
               >
-                {copy.cta}
-                <Send className="size-4" />
-              </Button>
-            </form>
+                <label className="sr-only" htmlFor="newsletter-email">
+                  {copy.placeholder}
+                </label>
+                <input
+                  id="newsletter-email"
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder={copy.placeholder}
+                  className="h-10 min-w-0 flex-1 bg-transparent px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground"
+                />
+                <button
+                  type="submit"
+                  className="h-10 shrink-0 rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+                >
+                  {copy.cta}
+                </button>
+              </form>
+            </div>
           </div>
-        </div>
-      </Reveal>
+        </Reveal>
+      </Container>
     </section>
   )
 }

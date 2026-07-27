@@ -23,7 +23,7 @@
   --border: oklch(0.925 0.004 265);
   --input: oklch(0.925 0.004 265);
   --ring: oklch(0.55 0.21 283);
-  --badge-new: oklch(0.36 0.06 172);
+  --badge-new: oklch(0.26 0.03 265);
   --badge-new-foreground: oklch(1 0 0);
   --badge-sale: oklch(0.6 0.235 27.5);
   --badge-sale-foreground: oklch(1 0 0);
@@ -84,8 +84,19 @@
 
 @theme {
   /* Page gutter width — every section uses `max-w-page`, so the whole site
-     widens or narrows from this one value. */
-  --container-page: 100rem;
+     widens or narrows from this one value. `none` = edge-to-edge: the layout
+     is bounded only by the Container's small side padding. */
+  --container-page: none;
+
+  /* Premium card elevation. Two steps only: resting and lifted. Sections and
+     cards share them so the whole page reads as one system. */
+  --shadow-card: 0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.06);
+  --shadow-card-hover: 0 18px 40px -16px rgb(15 23 42 / 0.18),
+    0 4px 12px -4px rgb(15 23 42 / 0.06);
+  --shadow-float: 0 24px 60px -20px rgb(15 23 42 / 0.22);
+
+  /* One duration for every hover/enter transition, per the design spec. */
+  --default-transition-duration: 300ms;
 
   /* Bold-retail display sizes: much larger and tighter than the body scale,
      so headlines read as headlines instead of big paragraphs. */
@@ -123,6 +134,37 @@
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+@keyframes reveal-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes reveal-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Gentle float for the hero's decorative cards. */
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
   }
 }
 
@@ -181,13 +223,41 @@
 }
 
 @layer components {
-  /* Sections fade up as they enter the viewport. `data-revealed` is set by the
-     Reveal component; without JS the content simply stays visible. */
+  /* Sections animate in as they enter the viewport. `data-reveal` names the
+     variant and `data-revealed` is set by the Reveal component; without JS the
+     content simply stays visible. */
   [data-reveal] {
     opacity: 0;
   }
-  [data-reveal][data-revealed='true'] {
+  [data-reveal='up'][data-revealed='true'] {
     animation: reveal-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  [data-reveal='fade'][data-revealed='true'] {
+    animation: reveal-fade 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  [data-reveal='scale'][data-revealed='true'] {
+    animation: reveal-scale 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* Horizontal card rails — the mobile pattern for every card section. */
+  .rail {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    overscroll-behavior-x: contain;
+  }
+  .rail::-webkit-scrollbar {
+    display: none;
+  }
+  .rail > * {
+    scroll-snap-align: start;
+    flex: none;
+  }
+
+  .animate-float {
+    animation: float-y 6s ease-in-out infinite;
   }
 
   /* Without JS nothing sets data-revealed, so keep the content visible. */
@@ -203,7 +273,8 @@
       opacity: 1;
       animation: none;
     }
-    .animate-marquee {
+    .animate-marquee,
+    .animate-float {
       animation: none;
     }
   }

@@ -31,7 +31,7 @@ export function OrderSuccessContent({ order }: { order: OrderSummary | null }) {
   }
 
   return (
-    <section className="mx-auto max-w-lg px-4 py-16 sm:px-6 lg:px-8">
+    <section className="mx-auto max-w-lg px-4 py-16 sm:px-6 lg:px-4">
       <div className="flex flex-col items-center text-center">
         <CheckCircle2 className="size-14 text-badge-new" strokeWidth={1.5} />
         <h1 className="mt-4 text-2xl font-bold tracking-tight text-foreground">

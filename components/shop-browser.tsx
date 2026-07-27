@@ -55,7 +55,7 @@ export function ShopBrowser({ initialFilter = 'all' }: { initialFilter?: Filter 
 
   return (
     <div className="py-10">
-      <div className="mx-auto mb-8 flex max-w-page flex-col gap-4 px-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-10">
+      <div className="mx-auto mb-8 flex max-w-page flex-col gap-4 px-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-4">
         <div className="flex flex-wrap gap-2">
           {filters.map((item) => (
             <button
@@ -93,7 +93,7 @@ export function ShopBrowser({ initialFilter = 'all' }: { initialFilter?: Filter 
         </div>
       </div>
 
-      <section className="mx-auto max-w-page px-4 pb-16 sm:px-6 lg:px-10">
+      <section className="mx-auto max-w-page px-4 pb-16 sm:px-6 lg:px-4">
         <p className="mb-6 text-sm text-muted-foreground">
           {products.length} {t.category.itemsFound}
         </p>

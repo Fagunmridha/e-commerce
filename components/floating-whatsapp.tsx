@@ -26,7 +26,9 @@ export function FloatingWhatsApp() {
       rel="noopener noreferrer"
       aria-label={t.whatsapp.label}
       title={t.whatsapp.label}
-      className="fixed bottom-5 right-5 z-50 grid size-14 place-items-center rounded-full bg-[#25D366] text-white shadow-lg transition-transform duration-200 hover:scale-110 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366] focus-visible:ring-offset-2"
+      // Sits above the mobile bottom bar on small screens, and drops back to the
+      // corner once that bar is gone.
+      className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] right-5 z-50 grid size-14 place-items-center rounded-full bg-[#25D366] text-white shadow-lg transition-transform duration-200 hover:scale-110 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366] focus-visible:ring-offset-2 lg:bottom-5"
     >
       {/* Official WhatsApp glyph — lucide has no brand icons. */}
       <svg

@@ -27,7 +27,7 @@ export function ProductGrid({
     : title
 
   return (
-    <section className="mx-auto max-w-page px-4 pb-16 sm:px-6 lg:px-10">
+    <section className="mx-auto max-w-page px-4 pb-16 sm:px-6 lg:px-4">
       {(heading || viewAllHref) && (
         <div className="mb-6 flex items-baseline justify-between gap-4">
           {heading && (

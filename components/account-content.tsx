@@ -44,7 +44,7 @@ export function AccountContent({
   const label = (value: Localized) => pick(value)
 
   return (
-    <section className="mx-auto max-w-3xl px-4 py-14 sm:px-6 lg:px-8">
+    <section className="mx-auto max-w-3xl px-4 py-14 sm:px-6 lg:px-4">
       <div className="rounded-lg border border-border bg-card p-6">
         <p className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
           {label({ en: 'Signed in as', bn: 'সাইন ইন করেছেন' })}

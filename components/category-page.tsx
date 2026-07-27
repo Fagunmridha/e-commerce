@@ -66,7 +66,7 @@ export function CategoryPage({ slug }: { slug: CategorySlug }) {
           aria-hidden="true"
           className="absolute inset-0 size-full object-cover opacity-25"
         />
-        <div className="relative mx-auto max-w-page px-4 py-16 sm:px-6 lg:px-10 lg:py-24">
+        <div className="relative mx-auto max-w-page px-4 py-16 sm:px-6 lg:px-4 lg:py-24">
           <nav
             aria-label="Breadcrumb"
             className="mb-4 flex items-center gap-1 text-xs text-white/70"
@@ -90,7 +90,7 @@ export function CategoryPage({ slug }: { slug: CategorySlug }) {
 
       {/* Toolbar */}
       <div className="border-b border-border bg-background">
-        <div className="mx-auto flex max-w-page flex-col gap-4 px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-10">
+        <div className="mx-auto flex max-w-page flex-col gap-4 px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-4">
           <div className="flex flex-wrap items-center gap-2">
             <span className="mr-1 text-xs font-bold tracking-wider text-muted-foreground uppercase">
               {t.category.filterBy}
@@ -147,7 +147,7 @@ export function CategoryPage({ slug }: { slug: CategorySlug }) {
       </div>
 
       {/* Grid */}
-      <section className="mx-auto max-w-page px-4 py-12 sm:px-6 lg:px-10">
+      <section className="mx-auto max-w-page px-4 py-12 sm:px-6 lg:px-4">
         {products.length === 0 ? (
           <p className="py-16 text-center text-sm text-muted-foreground">
             {t.sections.noProductsInCategory}

@@ -14,7 +14,7 @@ export function ContactContent() {
     <>
       <PageHeader pageKey="contact" />
 
-      <section className="mx-auto grid max-w-page gap-10 px-4 py-14 sm:px-6 lg:grid-cols-3 lg:px-10">
+      <section className="mx-auto grid max-w-page gap-10 px-4 py-14 sm:px-6 lg:grid-cols-3 lg:px-4">
         <div className="lg:col-span-2">
           <h2 className="text-lg font-semibold text-foreground">
             {t.contact.formTitle}

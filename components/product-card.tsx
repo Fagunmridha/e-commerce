@@ -1,9 +1,12 @@
 'use client'
 
+import { useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
-import { Heart, ShoppingBag } from 'lucide-react'
+import { Eye, Heart, ShoppingCart } from 'lucide-react'
 import { toast } from 'sonner'
 import { Rating } from '@/components/rating'
+import { ProductQuickView } from '@/components/product-quick-view'
 import { useLanguage } from '@/components/language-provider'
 import { useStore } from '@/components/store-provider'
 import { cn } from '@/lib/utils'
@@ -14,19 +17,29 @@ const BADGE_STYLES = {
   sale: 'bg-badge-sale text-badge-sale-foreground',
 } as const
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({
+  product,
+  priority = false,
+}: {
+  product: Product
+  /** Set on the first row above the fold so the LCP image is not lazy-loaded. */
+  priority?: boolean
+}) {
   const { t, pick, price: formatPrice } = useLanguage()
   const { addToCart, isWishlisted, toggleWishlist } = useStore()
+  const [quickViewOpen, setQuickViewOpen] = useState(false)
 
-  const { id, name, price, oldPrice, image, badge, rating, reviews } = product
+  const { id, name, price, oldPrice, image, images, badge, rating, reviews, stock } =
+    product
   const label = pick(name)
   const favorited = isWishlisted(id)
-  const discount = oldPrice
-    ? Math.round(((oldPrice - price) / oldPrice) * 100)
-    : 0
+  const soldOut = stock <= 0
 
-  const quickAdd = (event: React.MouseEvent) => {
-    event.preventDefault()
+  // Second gallery shot, revealed on hover. Falls back to the primary image so
+  // the crossfade is a no-op rather than a flash of empty space.
+  const hoverImage = images?.find((src) => src && src !== image) ?? image
+
+  const quickAdd = () => {
     addToCart({
       productId: id,
       quantity: 1,
@@ -36,86 +49,125 @@ export function ProductCard({ product }: { product: Product }) {
     toast.success(t.product.added, { description: label })
   }
 
-  const onToggleWishlist = (event: React.MouseEvent) => {
-    event.preventDefault()
+  const onToggleWishlist = () => {
     toast.success(toggleWishlist(id) ? t.wishlist.added : t.wishlist.removed, {
       description: label,
     })
   }
 
+  const action =
+    'flex h-11 items-center justify-center text-muted-foreground transition-colors hover:bg-primary hover:text-primary-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none focus-visible:-outline-offset-2 disabled:pointer-events-none disabled:opacity-40'
+
   return (
-    <Link
-      href={`/product/${id}`}
-      className="group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:border-foreground/15 hover:shadow-[0_18px_40px_-20px_rgb(0_0_0/0.35)]"
-    >
-      <div className="relative aspect-4/5 overflow-hidden bg-muted">
-        <img
-          src={image || '/placeholder.svg'}
-          alt={label}
-          loading="lazy"
-          className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.07]"
-        />
+    <>
+      <article className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:border-transparent hover:shadow-card-hover">
+        <div className="relative aspect-4/3 overflow-hidden bg-secondary">
+          <Link
+            href={`/product/${id}`}
+            // The image is decorative here; the title below is the real link.
+            tabIndex={-1}
+            aria-hidden="true"
+            className="block size-full"
+          >
+            <Image
+              src={image || '/placeholder.svg'}
+              alt=""
+              fill
+              sizes="(max-width: 640px) 70vw, (max-width: 1024px) 45vw, 25vw"
+              priority={priority}
+              className="object-cover transition-all duration-500 group-hover:scale-105 group-hover:opacity-0"
+            />
+            <Image
+              src={hoverImage || '/placeholder.svg'}
+              alt=""
+              fill
+              sizes="(max-width: 640px) 70vw, (max-width: 1024px) 45vw, 25vw"
+              loading="lazy"
+              className="scale-105 object-cover opacity-0 transition-all duration-500 group-hover:opacity-100"
+            />
+          </Link>
 
-        {/* Badges */}
-        <div className="absolute top-3 left-3 flex flex-col items-start gap-1.5">
-          {badge && (
-            <span
-              className={cn(
-                'rounded px-2 py-0.5 text-[11px] font-bold tracking-wide uppercase',
-                BADGE_STYLES[badge],
-              )}
+          <div className="pointer-events-none absolute top-3 left-3 flex flex-col items-start gap-1.5">
+            {badge && (
+              <span
+                className={cn(
+                  'rounded-md px-2.5 py-1 text-[11px] font-bold',
+                  BADGE_STYLES[badge],
+                )}
+              >
+                {t.badges[badge]}
+              </span>
+            )}
+            {soldOut && (
+              <span className="rounded-md bg-background px-2.5 py-1 text-[11px] font-bold text-muted-foreground shadow-card">
+                {t.card.outOfStock}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-1 flex-col p-4">
+          <h3 className="text-sm font-semibold text-foreground">
+            <Link
+              href={`/product/${id}`}
+              className="line-clamp-1 transition-colors hover:text-primary focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
             >
-              {t.badges[badge]}
+              {label}
+            </Link>
+          </h3>
+
+          <div className="mt-1.5 flex flex-wrap items-baseline gap-2">
+            <span className="text-base font-bold text-foreground">
+              {formatPrice(price)}
             </span>
-          )}
-          {discount > 0 && (
-            <span className="rounded bg-foreground px-2 py-0.5 text-[11px] font-bold tracking-wide text-background uppercase">
-              -{discount}% {t.card.off}
-            </span>
-          )}
+            {oldPrice && (
+              <span className="text-xs text-muted-foreground line-through">
+                {formatPrice(oldPrice)}
+              </span>
+            )}
+          </div>
+
+          <Rating value={rating} reviews={reviews} className="mt-1.5" />
         </div>
 
-        {/* Wishlist — always reachable on touch, fades in on pointer devices. */}
-        <button
-          onClick={onToggleWishlist}
-          aria-label={favorited ? t.wishlist.remove : t.product.favorite}
-          aria-pressed={favorited}
-          className={cn(
-            'absolute top-3 right-3 grid size-9 place-items-center rounded-full bg-background/90 text-foreground shadow-sm backdrop-blur transition-all hover:bg-background',
-            favorited
-              ? 'opacity-100'
-              : 'opacity-100 md:opacity-0 md:group-hover:opacity-100',
-          )}
-        >
-          <Heart className={cn('size-4', favorited && 'fill-primary text-primary')} />
-        </button>
-
-        {/* Quick add slides up on hover; on touch it simply sits at the bottom. */}
-        <button
-          onClick={quickAdd}
-          className="absolute inset-x-3 bottom-3 flex items-center justify-center gap-2 rounded-lg bg-foreground py-2.5 text-xs font-bold tracking-wide text-background uppercase transition-all duration-300 hover:bg-primary md:translate-y-[130%] md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100"
-        >
-          <ShoppingBag className="size-4" />
-          {t.card.addToBag}
-        </button>
-      </div>
-
-      <div className="flex flex-1 flex-col p-4">
-        <h3 className="line-clamp-1 text-sm font-semibold text-foreground">
-          {label}
-        </h3>
-        <Rating value={rating} reviews={reviews} className="mt-1.5" />
-        <div className="mt-2 flex items-baseline gap-2">
-          <span className="text-base font-bold text-foreground">
-            {formatPrice(price)}
-          </span>
-          {oldPrice && (
-            <span className="text-sm text-muted-foreground line-through">
-              {formatPrice(oldPrice)}
-            </span>
-          )}
+        {/* Persistent action row — reachable on touch without a hover state. */}
+        <div className="grid grid-cols-3 divide-x divide-border border-t border-border bg-secondary/50">
+          <button
+            type="button"
+            onClick={quickAdd}
+            disabled={soldOut}
+            aria-label={`${t.card.addToBag}: ${label}`}
+            className={action}
+          >
+            <ShoppingCart className="size-4" />
+          </button>
+          <button
+            type="button"
+            onClick={onToggleWishlist}
+            aria-label={favorited ? t.wishlist.remove : t.product.favorite}
+            aria-pressed={favorited}
+            className={action}
+          >
+            <Heart
+              className={cn('size-4', favorited && 'fill-primary text-primary')}
+            />
+          </button>
+          <button
+            type="button"
+            onClick={() => setQuickViewOpen(true)}
+            aria-label={`${t.card.quickView}: ${label}`}
+            className={action}
+          >
+            <Eye className="size-4" />
+          </button>
         </div>
-      </div>
-    </Link>
+      </article>
+
+      <ProductQuickView
+        product={product}
+        open={quickViewOpen}
+        onOpenChange={setQuickViewOpen}
+      />
+    </>
   )
 }

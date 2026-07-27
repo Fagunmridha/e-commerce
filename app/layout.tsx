@@ -9,6 +9,7 @@ import { StoreProvider } from '@/components/store-provider'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 import { ConditionalChrome } from '@/components/conditional-chrome'
+import { MobileBottomNav } from '@/components/mobile-bottom-nav'
 import { FloatingWhatsApp } from '@/components/floating-whatsapp'
 import { SkipLink } from '@/components/skip-link'
 import { Toaster } from '@/components/ui/sonner'
@@ -91,6 +92,9 @@ export default async function RootLayout({
                 <main id="main-content">{children}</main>
                 <ConditionalChrome>
                   <SiteFooter />
+                  {/* Spacer so the fixed bottom bar never covers page content. */}
+                  <div aria-hidden="true" className="h-14 lg:hidden" />
+                  <MobileBottomNav />
                 </ConditionalChrome>
                 <FloatingWhatsApp />
               </StoreProvider>

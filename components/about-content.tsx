@@ -16,7 +16,7 @@ export function AboutContent() {
     <>
       <PageHeader pageKey="about" />
 
-      <section className="mx-auto grid max-w-page items-center gap-10 px-4 py-14 sm:px-6 lg:grid-cols-2 lg:px-10 lg:py-20">
+      <section className="mx-auto grid max-w-page items-center gap-10 px-4 py-14 sm:px-6 lg:grid-cols-2 lg:px-4 lg:py-20">
         <Reveal>
           <h2 className="text-display-sm text-foreground">
             {t.about.storyTitle}
@@ -42,7 +42,7 @@ export function AboutContent() {
       </section>
 
       <section className="border-y border-border bg-muted/40">
-        <div className="mx-auto max-w-page px-4 py-14 sm:px-6 lg:px-10">
+        <div className="mx-auto max-w-page px-4 py-14 sm:px-6 lg:px-4">
           <h2 className="text-display-sm text-foreground">
             {t.about.valuesTitle}
           </h2>
@@ -70,7 +70,7 @@ export function AboutContent() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-page px-4 py-14 sm:px-6 lg:px-10">
+      <section className="mx-auto max-w-page px-4 py-14 sm:px-6 lg:px-4">
         <div className="grid grid-cols-2 gap-6 lg:grid-cols-4">
           {t.about.stats.map((stat, index) => (
             <Reveal key={stat.label} delay={index * 80} className="text-center">

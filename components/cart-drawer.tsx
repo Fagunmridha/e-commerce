@@ -15,7 +15,12 @@ import { useLanguage } from '@/components/language-provider'
 import { useStore } from '@/components/store-provider'
 import { useCatalogue } from '@/components/catalogue-provider'
 
-export function CartDrawer() {
+export function CartDrawer({
+  /** Replaces the default header icon — used by the mobile bottom bar. */
+  trigger,
+}: {
+  trigger?: React.ReactNode
+} = {}) {
   const { t, pick, price } = useLanguage()
   const { getRecommendedProducts } = useCatalogue()
   const RECOMMENDATIONS = getRecommendedProducts(undefined, 2)
@@ -33,17 +38,19 @@ export function CartDrawer() {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <button
-          className="relative rounded-md p-2 text-foreground transition-colors hover:bg-muted"
-          aria-label={`${t.cart.open}, ${itemCount} ${t.cart.items}`}
-        >
-          <ShoppingBag className="size-5" />
-          {hydrated && itemCount > 0 && (
-            <span className="absolute top-0.5 right-0.5 flex size-4 items-center justify-center rounded-full bg-badge-sale text-[10px] font-semibold text-badge-sale-foreground">
-              {itemCount}
-            </span>
-          )}
-        </button>
+        {trigger ?? (
+          <button
+            className="relative grid size-11 place-items-center rounded-full text-foreground transition-colors hover:bg-secondary focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+            aria-label={`${t.cart.open}, ${itemCount} ${t.cart.items}`}
+          >
+            <ShoppingBag className="size-5" />
+            {hydrated && itemCount > 0 && (
+              <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-badge-sale text-[10px] font-bold text-badge-sale-foreground">
+                {itemCount}
+              </span>
+            )}
+          </button>
+        )}
       </SheetTrigger>
 
       <SheetContent side="right" className="w-full gap-0 sm:max-w-md">

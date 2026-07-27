@@ -12,12 +12,12 @@ export function WishlistButton() {
   return (
     <Link
       href="/wishlist"
-      className="relative rounded-md p-2 text-foreground transition-colors hover:bg-muted"
+      className="relative grid size-11 place-items-center rounded-full text-foreground transition-colors hover:bg-secondary focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
       aria-label={`${t.wishlist.open}, ${wishlist.length}`}
     >
       <Heart className="size-5" />
       {hydrated && wishlist.length > 0 && (
-        <span className="absolute top-0.5 right-0.5 flex size-4 items-center justify-center rounded-full bg-badge-sale text-[10px] font-semibold text-badge-sale-foreground">
+        <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-badge-sale text-[10px] font-bold text-badge-sale-foreground">
           {wishlist.length}
         </span>
       )}
