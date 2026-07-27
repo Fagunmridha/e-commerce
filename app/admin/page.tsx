@@ -1,59 +1,150 @@
-import Link from 'next/link'
-import { sql } from 'drizzle-orm'
-import { db } from '@/lib/db'
-import { orders, products, reviews, users } from '@/lib/db/schema'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { StatCard } from '@/components/admin/dashboard/stat-card'
+import {
+  CategoryChart,
+  SalesChart,
+  TopProductsChart,
+} from '@/components/admin/dashboard/charts'
+import { RecentOrdersTable } from '@/components/admin/dashboard/recent-orders'
+import {
+  getDashboardStats,
+  getMonthlySales,
+  getRecentOrders,
+  getSalesByCategory,
+  getTopProducts,
+} from '@/lib/admin/stats'
+import { getServerLocale } from '@/lib/server-locale'
+import { formatPrice } from '@/lib/currency'
 
 export const dynamic = 'force-dynamic'
 
-export default async function AdminOverview() {
-  const [
-    [productRow],
-    [orderRow],
-    [userRow],
-    [reviewRow],
-    [revenue],
-  ] = await Promise.all([
-    db.select({ n: sql<string>`count(*)` }).from(products),
-    db.select({ n: sql<string>`count(*)` }).from(orders),
-    db.select({ n: sql<string>`count(*)` }).from(users),
-    db.select({ n: sql<string>`count(*)` }).from(reviews),
-    db.select({ total: sql<string>`coalesce(sum(${orders.total}), 0)` }).from(orders),
-  ])
+export default async function AdminDashboard() {
+  const [locale, stats, monthly, byCategory, topProducts, recentOrders] =
+    await Promise.all([
+      getServerLocale(),
+      getDashboardStats(),
+      getMonthlySales(),
+      getSalesByCategory(),
+      getTopProducts(5),
+      getRecentOrders(50),
+    ])
 
-  const productCount = Number(productRow?.n ?? 0)
-  const orderCount = Number(orderRow?.n ?? 0)
-  const userCount = Number(userRow?.n ?? 0)
-  const reviewCount = Number(reviewRow?.n ?? 0)
-
-  const stats = [
-    { label: 'Products', value: productCount, href: '/admin/products' },
-    { label: 'Orders', value: orderCount, href: '/admin/orders' },
-    { label: 'Customers', value: userCount, href: '/admin/users' },
-    { label: 'Reviews', value: reviewCount, href: '#' },
-    {
-      label: 'Revenue (USD)',
-      value: `$${Number(revenue?.total ?? 0).toFixed(2)}`,
-      href: '/admin/orders',
-    },
-  ]
+  const money = (value: number) => formatPrice(value, locale)
+  const revenueSeries = stats.sparkline.map((point) => point.revenue)
+  const orderSeries = stats.sparkline.map((point) => point.orders)
 
   return (
-    <div>
-      <h2 className="mb-6 text-xl font-bold text-foreground">Overview</h2>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-        {stats.map((stat) => (
-          <Link
-            key={stat.label}
-            href={stat.href}
-            className="rounded-lg border border-border bg-card p-5 transition-colors hover:border-primary"
-          >
-            <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-            <p className="mt-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              {stat.label}
-            </p>
-          </Link>
-        ))}
+    <>
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+        <p className="text-sm text-muted-foreground">
+          Everything happening in your store right now.
+        </p>
       </div>
-    </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          label="Total revenue"
+          value={money(stats.revenue.total)}
+          icon="revenue"
+          accent="violet"
+          change={stats.revenue.change}
+          series={revenueSeries}
+          href="/admin/orders"
+        />
+        <StatCard
+          label="Today's revenue"
+          value={money(stats.revenue.today)}
+          hint="Since midnight"
+          icon="trending"
+          accent="emerald"
+          series={revenueSeries}
+        />
+        <StatCard
+          label="Orders"
+          value={String(stats.orders.total)}
+          icon="orders"
+          accent="sky"
+          change={stats.orders.change}
+          series={orderSeries}
+          href="/admin/orders"
+        />
+        <StatCard
+          label="Pending orders"
+          value={String(stats.orders.pending)}
+          hint="Awaiting processing"
+          icon="pending"
+          accent="amber"
+          href="/admin/orders?status=pending"
+        />
+        <StatCard
+          label="Products"
+          value={String(stats.products.total)}
+          hint={`${stats.products.lowStock} low on stock`}
+          icon="products"
+          accent="violet"
+          href="/admin/products"
+        />
+        <StatCard
+          label="Out of stock"
+          value={String(stats.products.outOfStock)}
+          hint="Needs restocking"
+          icon="alert"
+          accent="rose"
+          href="/admin/products"
+        />
+        <StatCard
+          label="Customers"
+          value={String(stats.customers.total)}
+          icon="customers"
+          accent="emerald"
+          change={stats.customers.change}
+          href="/admin/users"
+        />
+        {/* Visitors and conversion rate need a web-analytics source. Vercel
+            Analytics is mounted but exposes no query API, so rather than invent
+            a number this card says what is missing. */}
+        <Card className="gap-0 border-dashed py-0">
+          <CardContent className="flex h-full flex-col justify-center p-4">
+            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+              Visitors &amp; conversion
+            </p>
+            <p className="mt-1.5 text-sm font-medium text-foreground">
+              Not connected
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Needs an analytics source with a query API.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <SalesChart data={monthly} />
+        <CategoryChart data={byCategory} />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <TopProductsChart data={topProducts} />
+
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Recent orders</CardTitle>
+            <CardDescription>
+              The latest {recentOrders.length} orders, newest first.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <RecentOrdersTable orders={recentOrders} />
+          </CardContent>
+        </Card>
+      </div>
+    </>
   )
 }

@@ -12,6 +12,7 @@ import { ConditionalChrome } from '@/components/conditional-chrome'
 import { MobileBottomNav } from '@/components/mobile-bottom-nav'
 import { FloatingWhatsApp } from '@/components/floating-whatsapp'
 import { SkipLink } from '@/components/skip-link'
+import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
 import { getDictionary } from '@/lib/dictionaries'
 import { getServerLocale } from '@/lib/server-locale'
@@ -80,8 +81,16 @@ export default async function RootLayout({
 
   return (
     <ClerkProvider>
-      <html lang={locale}>
+      <html lang={locale} suppressHydrationWarning>
         <body className={`font-sans antialiased`}>
+          {/* Light by default and no system following, so the storefront looks
+              exactly as it did; the admin header's toggle is what opts in. */}
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            enableSystem={false}
+            disableTransitionOnChange
+          >
           <LanguageProvider initialLocale={locale}>
             <CatalogueProvider products={products} categories={categories}>
               <StoreProvider>
@@ -106,6 +115,7 @@ export default async function RootLayout({
               </StoreProvider>
             </CatalogueProvider>
           </LanguageProvider>
+          </ThemeProvider>
           <Toaster />
           <Analytics />
         </body>

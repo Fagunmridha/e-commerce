@@ -11,17 +11,23 @@ import { Newsletter } from '@/components/newsletter'
 import { useLanguage } from '@/components/language-provider'
 import { useCatalogue } from '@/components/catalogue-provider'
 import { cn } from '@/lib/utils'
+import { getCategoryDescription } from '@/lib/dictionaries'
 import type { CategorySlug } from '@/lib/types'
 
 type SortKey = 'featured' | 'price-asc' | 'price-desc' | 'rating'
 
-/** Editorial banner colour per category, matching the hero slides. */
-const BANNER_TINT: Record<CategorySlug, string> = {
+/**
+ * Editorial banner colour per category, matching the hero slides. Categories
+ * are admin-managed, so an unknown slug falls back to the neutral tint rather
+ * than rendering an untinted banner.
+ */
+const BANNER_TINT: Record<string, string> = {
   men: 'bg-[#1e3a5f]',
   women: 'bg-[#7c2d4a]',
   kids: 'bg-[#b45309]',
   accessories: 'bg-[#0f172a]',
 }
+const DEFAULT_BANNER_TINT = 'bg-[#0f172a]'
 
 export function CategoryPage({ slug }: { slug: CategorySlug }) {
   const { t, pick } = useLanguage()
@@ -59,7 +65,12 @@ export function CategoryPage({ slug }: { slug: CategorySlug }) {
   return (
     <>
       {/* Banner */}
-      <section className={cn('relative overflow-hidden', BANNER_TINT[slug])}>
+      <section
+        className={cn(
+          'relative overflow-hidden',
+          BANNER_TINT[slug] ?? DEFAULT_BANNER_TINT,
+        )}
+      >
         <img
           src={category.image}
           alt=""
@@ -79,9 +90,11 @@ export function CategoryPage({ slug }: { slug: CategorySlug }) {
           </nav>
 
           <h1 className="text-display-sm text-white sm:text-display">{name}</h1>
-          <p className="mt-4 max-w-xl text-sm text-white/75 sm:text-base">
-            {t.categoryDescriptions[slug]}
-          </p>
+          {getCategoryDescription(t, slug) && (
+            <p className="mt-4 max-w-xl text-sm text-white/75 sm:text-base">
+              {getCategoryDescription(t, slug)}
+            </p>
+          )}
           <p className="mt-6 inline-flex items-center rounded-full bg-white/15 px-4 py-1.5 text-xs font-bold tracking-wide text-white uppercase backdrop-blur">
             {all.length} {t.category.itemsFound}
           </p>

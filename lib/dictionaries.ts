@@ -1038,3 +1038,15 @@ export const DICTIONARIES: Record<Locale, Dictionary> = { en, bn }
 export function getDictionary(locale: Locale): Dictionary {
   return DICTIONARIES[locale]
 }
+
+/**
+ * Blurb for a category page. Only the four seeded categories have translated
+ * copy; anything the admin adds later has no dictionary entry, so this returns
+ * undefined rather than indexing a fixed key set with an arbitrary slug.
+ */
+export function getCategoryDescription(
+  t: Dictionary,
+  slug: string,
+): string | undefined {
+  return (t.categoryDescriptions as Record<string, string>)[slug]
+}

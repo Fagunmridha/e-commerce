@@ -162,7 +162,15 @@ async function fetchAllCategories(): Promise<Category[]> {
 
   const countMap = new Map(counts.map((row) => [row.category, Number(row.count)]))
 
+  // The four seeded categories keep their editorial order; anything the admin
+  // adds later sorts alphabetically after them. `indexOf` returns -1 for an
+  // unknown slug, so it has to be mapped past the end of the known list rather
+  // than used directly — otherwise new categories would sort to the front.
   const order: CategorySlug[] = ['men', 'women', 'kids', 'accessories']
+  const rank = (slug: CategorySlug) => {
+    const index = order.indexOf(slug)
+    return index === -1 ? order.length : index
+  }
 
   return rows
     .map((row) => ({
@@ -172,7 +180,7 @@ async function fetchAllCategories(): Promise<Category[]> {
       image: row.image,
       itemCount: countMap.get(row.slug as CategorySlug) ?? 0,
     }))
-    .sort((a, b) => order.indexOf(a.slug) - order.indexOf(b.slug))
+    .sort((a, b) => rank(a.slug) - rank(b.slug) || a.slug.localeCompare(b.slug))
 }
 
 export const getAllCategories = unstable_cache(

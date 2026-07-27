@@ -1,16 +1,59 @@
+import Link from 'next/link'
 import { getAllOrders } from '@/lib/orders'
 import { OrderStatusSelect } from '@/components/admin/order-status-select'
+import { cn } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
-export default async function AdminOrdersPage() {
-  const orders = await getAllOrders()
+const STATUSES = [
+  'pending',
+  'processing',
+  'shipped',
+  'delivered',
+  'cancelled',
+] as const
+
+export default async function AdminOrdersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string }>
+}) {
+  const { status } = await searchParams
+  const active = STATUSES.find((value) => value === status)
+
+  const all = await getAllOrders()
+  const orders = active ? all.filter((order) => order.status === active) : all
 
   return (
     <div>
-      <h2 className="mb-6 text-xl font-bold text-foreground">Orders</h2>
+      <h2 className="mb-4 text-xl font-bold text-foreground">Orders</h2>
+
+      {/* The dashboard and the header bell both deep-link here with a status,
+          so the filter has to be honoured rather than silently ignored. */}
+      <nav className="mb-6 flex flex-wrap gap-1.5">
+        {[undefined, ...STATUSES].map((value) => (
+          <Link
+            key={value ?? 'all'}
+            href={value ? `/admin/orders?status=${value}` : '/admin/orders'}
+            className={cn(
+              'rounded-full border px-3 py-1 text-xs font-medium capitalize transition-colors',
+              active === value
+                ? 'border-transparent bg-primary text-primary-foreground'
+                : 'border-border text-muted-foreground hover:bg-muted',
+            )}
+          >
+            {value ?? 'All'}
+            <span className="ml-1.5 opacity-70">
+              {value ? all.filter((o) => o.status === value).length : all.length}
+            </span>
+          </Link>
+        ))}
+      </nav>
+
       {orders.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No orders yet.</p>
+        <p className="text-sm text-muted-foreground">
+          {active ? `No ${active} orders.` : 'No orders yet.'}
+        </p>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-border">
           <table className="w-full text-sm">

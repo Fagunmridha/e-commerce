@@ -1,6 +1,11 @@
 import type { Localized } from '@/lib/i18n'
 
-export type CategorySlug = 'men' | 'women' | 'kids' | 'accessories'
+/**
+ * A category's URL slug. Categories are rows in the database and the admin can
+ * add or remove them, so this is a plain string rather than a fixed union —
+ * nothing in the app may assume a particular set of categories exists.
+ */
+export type CategorySlug = string
 
 export type Product = {
   id: string
