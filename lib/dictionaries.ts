@@ -105,6 +105,34 @@ const en = {
     remove: 'Remove',
     size: 'Size',
     removed: 'Removed from cart',
+    discount: 'Discount',
+  },
+  /**
+   * Shared by the cart drawer, the checkout summary and the homepage hero
+   * card — which is why these do not live under `checkout`.
+   */
+  coupon: {
+    label: 'Discount code',
+    placeholder: 'Enter code',
+    apply: 'Apply',
+    applying: 'Checking…',
+    remove: 'Remove',
+    applied: 'applied',
+    saved: 'You save',
+    getExtra: 'Get extra',
+    copyCode: 'Copy code',
+    copied: 'Code copied — use it at checkout',
+    /** `{amount}` is replaced with a formatted price. */
+    minOrder: 'On orders over {amount}.',
+    noMinimum: 'On any order.',
+    errors: {
+      not_found: 'We could not find that code.',
+      inactive: 'That code is not active right now.',
+      not_started: 'That code has not started yet.',
+      expired: 'That code has expired.',
+      min_order: 'Your order is below the minimum for that code.',
+      used_up: 'That code has been fully claimed.',
+    },
   },
   wishlist: {
     open: 'Wishlist',
@@ -217,6 +245,7 @@ const en = {
     shipping: 'Delivery',
     free: 'Free',
     total: 'Total',
+    discount: 'Discount',
     placeOrder: 'Place Order',
     placing: 'Placing order…',
     errors: {
@@ -623,6 +652,29 @@ const bn: Dictionary = {
     remove: 'সরান',
     size: 'সাইজ',
     removed: 'ব্যাগ থেকে সরানো হয়েছে',
+    discount: 'ছাড়',
+  },
+  coupon: {
+    label: 'ডিসকাউন্ট কোড',
+    placeholder: 'কোড লিখুন',
+    apply: 'প্রয়োগ করুন',
+    applying: 'দেখা হচ্ছে…',
+    remove: 'বাদ দিন',
+    applied: 'প্রয়োগ হয়েছে',
+    saved: 'আপনি সাশ্রয় করছেন',
+    getExtra: 'পান অতিরিক্ত',
+    copyCode: 'কোড কপি করুন',
+    copied: 'কোড কপি হয়েছে — চেকআউটে ব্যবহার করুন',
+    minOrder: '{amount} টাকার বেশি অর্ডারে।',
+    noMinimum: 'যেকোনো অর্ডারে।',
+    errors: {
+      not_found: 'এই কোডটি খুঁজে পাওয়া যায়নি।',
+      inactive: 'এই কোডটি এখন চালু নেই।',
+      not_started: 'এই কোডটি এখনো শুরু হয়নি।',
+      expired: 'এই কোডের মেয়াদ শেষ হয়ে গেছে।',
+      min_order: 'এই কোড ব্যবহারের জন্য অর্ডারের পরিমাণ যথেষ্ট নয়।',
+      used_up: 'এই কোডটি আর অবশিষ্ট নেই।',
+    },
   },
   wishlist: {
     open: 'পছন্দের তালিকা',
@@ -734,6 +786,7 @@ const bn: Dictionary = {
     shipping: 'ডেলিভারি',
     free: 'ফ্রি',
     total: 'সর্বমোট',
+    discount: 'ছাড়',
     placeOrder: 'অর্ডার নিশ্চিত করুন',
     placing: 'অর্ডার নেওয়া হচ্ছে…',
     errors: {

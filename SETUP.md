@@ -74,6 +74,22 @@ Then visit `/admin` for the dashboard:
 - **Orders** — see every order, change status (pending → delivered)
 - **Users** — change roles
 
+## 6. Image uploads (Vercel Blob)
+
+In the Vercel dashboard: **Storage → Blob → Connect to project**, then pull the
+token down locally:
+
+```bash
+vercel env pull
+```
+
+That writes `BLOB_READ_WRITE_TOKEN` into your env file. The admin image picker
+uploads straight from the browser to Blob via `app/api/upload/route.ts`, which
+mints a short-lived token only for admins.
+
+Without the token, uploads fail but the picker's **Paste a URL instead** field
+still works — that is how the seed catalogue's Unsplash images got there.
+
 ## What changed
 
 - `lib/db/` — Drizzle schema, client, migrations, seed
@@ -88,4 +104,9 @@ Then visit `/admin` for the dashboard:
 
 - Payment gateway (SSLCommerz / bKash) — checkout currently records the order
   with the chosen method; COD works, online payment is not yet processed.
-- Image uploads (Cloudinary / UploadThing) — product images are URLs for now.
+- Image optimisation — `next.config.mjs` still sets `images.unoptimized: true`,
+  so uploads are served at full weight. Narrowing `remotePatterns` and turning
+  optimisation on has to happen together (the `**` wildcard is only safe while
+  Next never fetches these URLs server-side).
+- Media library (`/admin/media`) — nothing sweeps up blobs orphaned by an image
+  replacement yet; `list()` from `@vercel/blob` would power it.

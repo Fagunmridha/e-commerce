@@ -78,9 +78,25 @@ export const ADMIN_NAV: AdminNavGroup[] = [
           { href: '/admin/orders?status=shipped', label: 'Shipped' },
         ],
       },
-      { href: '/admin/users', label: 'Customers', icon: Users },
+      {
+        href: '/admin/users',
+        label: 'Customers',
+        icon: Users,
+        children: [
+          { href: '/admin/users', label: 'All customers' },
+          { href: '/admin/users?role=admin', label: 'Admins' },
+        ],
+      },
       { href: '/admin/reviews', label: 'Reviews', icon: Star, planned: true },
-      { href: '/admin/coupons', label: 'Coupons', icon: Percent, planned: true },
+      {
+        href: '/admin/coupons',
+        label: 'Coupons',
+        icon: Percent,
+        children: [
+          { href: '/admin/coupons', label: 'All coupons' },
+          { href: '/admin/coupons/new', label: 'Add coupon' },
+        ],
+      },
       {
         href: '/admin/payments',
         label: 'Payments',
@@ -93,7 +109,15 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   {
     label: 'Content',
     items: [
-      { href: '/admin/banners', label: 'Banners', icon: ImageIcon, planned: true },
+      {
+        href: '/admin/banners',
+        label: 'Banners',
+        icon: ImageIcon,
+        children: [
+          { href: '/admin/banners', label: 'All banners' },
+          { href: '/admin/banners/new', label: 'Add banner' },
+        ],
+      },
       { href: '/admin/blog', label: 'Blog', icon: FileText, planned: true },
       {
         href: '/admin/media',

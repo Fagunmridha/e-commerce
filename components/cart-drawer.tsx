@@ -14,6 +14,7 @@ import {
 import { useLanguage } from '@/components/language-provider'
 import { useStore } from '@/components/store-provider'
 import { useCatalogue } from '@/components/catalogue-provider'
+import { CouponField } from '@/components/coupon-field'
 
 export function CartDrawer({
   /** Replaces the default header icon — used by the mobile bottom bar. */
@@ -30,6 +31,7 @@ export function CartDrawer({
     itemCount,
     subtotal,
     shipping,
+    discount,
     total,
     setQuantity,
     removeLine,
@@ -181,11 +183,21 @@ export function CartDrawer({
             </div>
 
             <div className="space-y-4 border-t border-border px-5 py-5">
+              {/* Applying here carries through to checkout — both read the
+                  same store state. */}
+              <CouponField />
+
               <div className="space-y-1.5 text-sm">
                 <div className="flex justify-between text-muted-foreground">
                   <span>{t.cart.subtotal}</span>
                   <span>{price(subtotal)}</span>
                 </div>
+                {discount > 0 && (
+                  <div className="flex justify-between font-medium text-badge-new">
+                    <span>{t.cart.discount}</span>
+                    <span>−{price(discount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-muted-foreground">
                   <span>{t.cart.shipping}</span>
                   {shipping === 0 ? (

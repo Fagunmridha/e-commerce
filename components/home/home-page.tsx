@@ -12,6 +12,8 @@ import { Testimonials } from '@/components/home/testimonials'
 import { Newsletter } from '@/components/newsletter'
 import { useLanguage } from '@/components/language-provider'
 import { useCatalogue } from '@/components/catalogue-provider'
+import type { HeroSlide } from '@/lib/banners'
+import type { FeaturedCoupon } from '@/lib/coupon-math'
 
 const ROW = 8
 
@@ -20,7 +22,13 @@ const ROW = 8
  * catalogue context, so the sections reflect the real database rather than
  * hardcoded lists.
  */
-export function HomePage() {
+export function HomePage({
+  heroSlides,
+  featuredCoupon,
+}: {
+  heroSlides: HeroSlide[]
+  featuredCoupon: FeaturedCoupon | null
+}) {
   const { t } = useLanguage()
   const { products } = useCatalogue()
 
@@ -42,7 +50,7 @@ export function HomePage() {
 
   return (
     <>
-      <Hero />
+      <Hero slides={heroSlides} coupon={featuredCoupon} />
       <FeatureBar />
 
       <CategoryShowcase />

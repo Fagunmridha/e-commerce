@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/form'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/page-header'
+import { CouponField } from '@/components/coupon-field'
 import { useLanguage } from '@/components/language-provider'
 import { useStore } from '@/components/store-provider'
 import { placeOrder } from '@/app/actions/orders'
@@ -51,7 +52,8 @@ const METHOD_ICONS: Record<PaymentMethod, typeof Banknote> = {
 export function CheckoutContent() {
   const router = useRouter()
   const { t, pick, price } = useLanguage()
-  const { hydrated, lines, subtotal, shipping, total, clearCart } = useStore()
+  const { hydrated, lines, subtotal, shipping, discount, total, coupon, clearCart } =
+    useStore()
   const [method, setMethod] = useState<PaymentMethod>('cod')
   const [submitting, setSubmitting] = useState(false)
 
@@ -85,6 +87,8 @@ export function CheckoutContent() {
           size: line.size,
           colorEn: line.colorEn,
         })),
+        // Just the code — the server re-checks it and prices the discount.
+        couponCode: coupon?.code ?? null,
       })
 
       clearCart()
@@ -328,11 +332,19 @@ export function CheckoutContent() {
               })}
             </ul>
 
+            <CouponField className="mt-4 border-t border-border pt-4" />
+
             <dl className="mt-4 space-y-2 text-sm">
               <div className="flex justify-between text-muted-foreground">
                 <dt>{t.checkout.subtotal}</dt>
                 <dd>{price(subtotal)}</dd>
               </div>
+              {discount > 0 && (
+                <div className="flex justify-between font-medium text-badge-new">
+                  <dt>{t.checkout.discount}</dt>
+                  <dd>−{price(discount)}</dd>
+                </div>
+              )}
               <div className="flex justify-between text-muted-foreground">
                 <dt>{t.checkout.shipping}</dt>
                 <dd

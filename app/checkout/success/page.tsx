@@ -27,6 +27,10 @@ export default async function OrderSuccessPage({
               address: order.address,
               city: order.city,
               phone: order.phone,
+              subtotal: order.subtotal,
+              discount: order.discount,
+              couponCode: order.couponCode,
+              shipping: order.shipping,
               total: order.total,
             }
           : null

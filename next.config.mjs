@@ -10,7 +10,12 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'images.unsplash.com',
       },
-      // Product images are admin-entered URLs, so the host is not known ahead of
+      // Anything uploaded through /admin lands here.
+      {
+        protocol: 'https',
+        hostname: '*.public.blob.vercel-storage.com',
+      },
+      // Product images may still be admin-pasted URLs, so the host is not known ahead of
       // time and next/image would otherwise throw on an unlisted one. Safe only
       // because `unoptimized` is true: Next never fetches these server-side, so
       // there is no SSRF surface. Narrow this list before turning optimization

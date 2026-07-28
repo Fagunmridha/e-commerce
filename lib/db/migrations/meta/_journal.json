@@ -15,6 +15,34 @@
       "when": 1784864544707,
       "tag": "0001_married_human_torch",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785228026004,
+      "tag": "0002_worthless_solo",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1785228970257,
+      "tag": "0003_daffy_xorn",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1785229779882,
+      "tag": "0004_next_jack_murdock",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1785233268034,
+      "tag": "0005_bright_mikhail_rasputin",
+      "breakpoints": true
     }
   ]
 }

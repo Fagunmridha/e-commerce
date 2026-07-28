@@ -1,61 +1,52 @@
-import { desc } from 'drizzle-orm'
-import { db } from '@/lib/db'
-import { users } from '@/lib/db/schema'
 import { getCurrentUser } from '@/lib/auth'
-import { RoleToggle } from '@/components/admin/role-toggle'
+import { getCustomers } from '@/lib/admin/customers'
+import {
+  CustomersTable,
+  type CustomerRowView,
+} from '@/components/admin/customers/customers-table'
 
 export const dynamic = 'force-dynamic'
 
-export default async function AdminUsersPage() {
+export default async function AdminCustomersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ role?: string }>
+}) {
+  const { role } = await searchParams
   const me = await getCurrentUser()
-  const rows = await db.select().from(users).orderBy(desc(users.createdAt))
+  const all = await getCustomers()
+
+  // The sidebar's "Admins" entry deep-links here with ?role=admin, so the
+  // filter is applied server-side rather than left to the table's facet.
+  const activeRole = role === 'admin' || role === 'customer' ? role : undefined
+  const rows = activeRole
+    ? all.filter((row) => row.role === activeRole)
+    : all
+
+  const customers: CustomerRowView[] = rows.map((row) => ({
+    id: row.id,
+    name: row.name || '—',
+    email: row.email,
+    role: row.role,
+    orderCount: row.orderCount,
+    lifetimeValue: row.lifetimeValue,
+    lastOrderAt: row.lastOrderAt?.toISOString() ?? null,
+    isSelf: me?.id === row.id,
+  }))
 
   return (
     <div>
-      <h2 className="mb-6 text-xl font-bold text-foreground">Users</h2>
-      <div className="overflow-x-auto rounded-lg border border-border">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
-            <tr>
-              <th className="px-4 py-3 font-semibold">Name</th>
-              <th className="px-4 py-3 font-semibold">Email</th>
-              <th className="px-4 py-3 font-semibold">Role</th>
-              <th className="px-4 py-3 font-semibold">Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {rows.map((user) => (
-              <tr key={user.id}>
-                <td className="px-4 py-3 font-medium text-foreground">
-                  {user.name || '—'}
-                  {me?.id === user.id && (
-                    <span className="ml-2 text-xs text-muted-foreground">(you)</span>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-muted-foreground">{user.email}</td>
-                <td className="px-4 py-3">
-                  <span
-                    className={
-                      user.role === 'admin'
-                        ? 'rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary'
-                        : 'rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground'
-                    }
-                  >
-                    {user.role}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <RoleToggle
-                    userId={user.id}
-                    role={user.role}
-                    isSelf={me?.id === user.id}
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="mb-6">
+        <h2 className="text-xl font-bold text-foreground">
+          {activeRole === 'admin' ? 'Admins' : 'Customers'}
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          {customers.length} account{customers.length === 1 ? '' : 's'} ·
+          lifetime value excludes cancelled orders.
+        </p>
       </div>
+
+      <CustomersTable customers={customers} />
     </div>
   )
 }

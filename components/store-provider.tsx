@@ -6,14 +6,21 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 import type { Product } from '@/lib/types'
 import { useCatalogue } from '@/components/catalogue-provider'
-import { getShippingCost } from '@/lib/currency'
+import {
+  computeTotals,
+  type CouponIssue,
+  type PublicCoupon,
+} from '@/lib/coupon-math'
+import { previewCoupon } from '@/app/actions/coupons'
 
 const CART_KEY = 'cp_cart'
 const WISHLIST_KEY = 'cp_wishlist'
+const COUPON_KEY = 'cp_coupon'
 
 /**
  * Only the choice is stored — name, price and image are always read back from
@@ -55,7 +62,14 @@ type StoreContextValue = {
   subtotal: number
   /** Delivery charge in USD — free above the threshold. */
   shipping: number
+  /** Preview only. The order's real discount is computed server-side. */
+  discount: number
   total: number
+  coupon: PublicCoupon | null
+  couponError: CouponIssue | null
+  /** Resolves true when the code was accepted. */
+  applyCoupon: (code: string) => Promise<boolean>
+  clearCoupon: () => void
   addToCart: (line: CartLine) => void
   setQuantity: (key: string, quantity: number) => void
   removeLine: (key: string) => void
@@ -73,6 +87,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [hydrated, setHydrated] = useState(false)
   const [cart, setCart] = useState<CartLine[]>([])
   const [wishlistIds, setWishlistIds] = useState<string[]>([])
+  const [coupon, setCoupon] = useState<PublicCoupon | null>(null)
+  const [couponError, setCouponError] = useState<CouponIssue | null>(null)
 
   useEffect(() => {
     setCart(read<CartLine[]>(CART_KEY, []))
@@ -121,7 +137,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setCart((current) => current.filter((item) => lineKey(item) !== key))
   }, [])
 
-  const clearCart = useCallback(() => setCart([]), [])
+  // A cleared cart releases the coupon too — the next order starts fresh.
+  const clearCart = useCallback(() => {
+    setCart([])
+    setCoupon(null)
+    setCouponError(null)
+  }, [])
 
   const toggleWishlist = useCallback((productId: string) => {
     let added = false
@@ -160,7 +181,69 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   )
 
   const subtotal = lines.reduce((sum, line) => sum + line.lineTotal, 0)
-  const shipping = getShippingCost(subtotal)
+
+  // Read inside callbacks that must not re-create themselves on every cart edit.
+  const subtotalRef = useRef(subtotal)
+  subtotalRef.current = subtotal
+
+  const applyCoupon = useCallback(async (code: string) => {
+    const result = await previewCoupon(code, subtotalRef.current)
+
+    if (result.ok) {
+      setCoupon(result.coupon)
+      setCouponError(null)
+      return true
+    }
+
+    setCoupon(null)
+    setCouponError(result.reason)
+    return false
+  }, [])
+
+  const clearCoupon = useCallback(() => {
+    setCoupon(null)
+    setCouponError(null)
+  }, [])
+
+  // Restore the saved code once the cart is known, re-checking it against the
+  // server rather than trusting anything in localStorage. Only the code was
+  // ever stored — same rule the cart follows.
+  useEffect(() => {
+    if (!hydrated) return
+    const saved = read<string | null>(COUPON_KEY, null)
+    if (!saved) return
+
+    let cancelled = false
+    void previewCoupon(saved, subtotalRef.current).then((result) => {
+      if (cancelled) return
+      if (result.ok) setCoupon(result.coupon)
+      else window.localStorage.removeItem(COUPON_KEY)
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [hydrated])
+
+  useEffect(() => {
+    if (!hydrated) return
+    if (coupon) window.localStorage.setItem(COUPON_KEY, JSON.stringify(coupon.code))
+    else window.localStorage.removeItem(COUPON_KEY)
+  }, [coupon, hydrated])
+
+  // Editing the cart below the minimum invalidates the code. Dropping it here
+  // rather than at submit means the shopper never sees a discount they will
+  // not actually get. The reason is surfaced by the checkout UI, which has the
+  // dictionary; the provider deliberately stays language-agnostic.
+  useEffect(() => {
+    if (!coupon || subtotal <= 0) return
+    if (subtotal < coupon.minOrder) {
+      setCoupon(null)
+      setCouponError('min_order')
+    }
+  }, [subtotal, coupon])
+
+  const { discount, shipping, total } = computeTotals(subtotal, coupon)
 
   const value: StoreContextValue = {
     hydrated,
@@ -168,7 +251,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     itemCount: lines.reduce((sum, line) => sum + line.quantity, 0),
     subtotal,
     shipping,
-    total: subtotal + shipping,
+    discount,
+    total,
+    coupon,
+    couponError,
+    applyCoupon,
+    clearCoupon,
     addToCart,
     setQuantity,
     removeLine,

@@ -2,6 +2,7 @@ import 'dotenv/config'
 import { db } from './index'
 import { categories, products } from './schema'
 import { SEED_CATEGORIES, SEED_PRODUCTS } from './seed-data'
+import { seedBanners } from './seed-banners'
 
 /**
  * Seeds the initial catalogue into Neon. Idempotent — re-running upserts by
@@ -44,8 +45,11 @@ async function main() {
       })
   }
 
+  console.log('Seeding hero banners…')
+  const bannerCount = await seedBanners()
+
   console.log(
-    `Done — ${SEED_CATEGORIES.length} categories, ${SEED_PRODUCTS.length} products.`,
+    `Done — ${SEED_CATEGORIES.length} categories, ${SEED_PRODUCTS.length} products, ${bannerCount} hero banners.`,
   )
 }
 

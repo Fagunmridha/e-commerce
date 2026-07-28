@@ -13,6 +13,10 @@ export type OrderSummary = {
   address: string
   city: string
   phone: string
+  subtotal: number
+  discount: number
+  couponCode: string | null
+  shipping: number
   total: number
 }
 
@@ -60,6 +64,29 @@ export function OrderSuccessContent({ order }: { order: OrderSummary | null }) {
             <span className="block text-xs font-normal text-muted-foreground">
               {order.address}, {order.city} · {order.phone}
             </span>
+          </dd>
+        </div>
+        <div className="flex justify-between gap-4 border-t border-border pt-3 text-muted-foreground">
+          <dt>{t.checkout.subtotal}</dt>
+          <dd>{price(order.subtotal)}</dd>
+        </div>
+        {order.discount > 0 && (
+          <div className="flex justify-between gap-4 font-medium text-badge-new">
+            <dt>
+              {t.checkout.discount}
+              {order.couponCode && (
+                <span className="ml-1 font-mono text-xs">
+                  ({order.couponCode})
+                </span>
+              )}
+            </dt>
+            <dd>−{price(order.discount)}</dd>
+          </div>
+        )}
+        <div className="flex justify-between gap-4 text-muted-foreground">
+          <dt>{t.checkout.shipping}</dt>
+          <dd>
+            {order.shipping === 0 ? t.checkout.free : price(order.shipping)}
           </dd>
         </div>
         <div className="flex justify-between gap-4 border-t border-border pt-3 text-base font-semibold">

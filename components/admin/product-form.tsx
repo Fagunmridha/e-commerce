@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { ImageUploader } from '@/components/admin/image-uploader'
 import { upsertProduct, type ProductInput } from '@/app/actions/admin'
 import type { CategorySlug, Product } from '@/lib/types'
 import type { Localized } from '@/lib/i18n'
@@ -157,9 +158,12 @@ export function ProductForm({ product }: { product?: Product }) {
         </Field>
       </div>
 
-      <Field label="Image URL">
-        <Input value={form.image} onChange={(e) => set('image', e.target.value)} />
-      </Field>
+      <ImageUploader
+        value={form.image}
+        onChange={(url) => set('image', url)}
+        folder="products"
+        label="Product image"
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Badge">

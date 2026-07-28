@@ -1,0 +1,1 @@
+ALTER TABLE "coupons" ADD COLUMN "featured" boolean DEFAULT false NOT NULL;

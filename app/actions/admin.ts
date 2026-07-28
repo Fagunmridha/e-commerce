@@ -6,20 +6,39 @@ import { db } from '@/lib/db'
 import { products, users } from '@/lib/db/schema'
 import { requireAdmin } from '@/lib/auth'
 import { updateOrderStatus, type OrderStatus } from '@/lib/orders'
+import {
+  orderStatusSchema,
+  productSchema,
+  roleSchema,
+  userIdSchema,
+  uuidSchema,
+} from '@/lib/validation/admin'
+import { parseOrThrow } from '@/lib/validation/shared'
 import type { Localized } from '@/lib/i18n'
 import type { CategorySlug } from '@/lib/types'
+
+/**
+ * Server actions are public HTTP endpoints. `requireAdmin()` keeps strangers
+ * out, but every payload is still parsed before it reaches the database —
+ * otherwise a stale client could persist a negative price or a NaN.
+ */
 
 export async function setUserRole(
   userId: number,
   role: 'customer' | 'admin',
 ): Promise<void> {
   const me = await requireAdmin()
+  const id = parseOrThrow(userIdSchema, userId)
+  const nextRole = parseOrThrow(roleSchema, role)
+
   // Guard against an admin accidentally removing their own last-admin access.
-  if (me.id === userId && role !== 'admin') {
+  if (me.id === id && nextRole !== 'admin') {
     throw new Error('You cannot remove your own admin role')
   }
-  await db.update(users).set({ role }).where(eq(users.id, userId))
+
+  await db.update(users).set({ role: nextRole }).where(eq(users.id, id))
   revalidatePath('/admin/users')
+  revalidatePath(`/admin/users/${id}`)
 }
 
 export type ProductInput = {
@@ -38,19 +57,22 @@ export type ProductInput = {
 
 export async function upsertProduct(input: ProductInput): Promise<void> {
   await requireAdmin()
+  const data = parseOrThrow(productSchema, input)
+
   const values = {
-    id: input.id,
-    name: input.name,
-    price: input.price,
-    oldPrice: input.oldPrice ?? null,
-    image: input.image,
-    category: input.category,
-    badge: input.badge ?? null,
-    sizes: input.sizes ?? null,
-    colors: input.colors ?? null,
-    description: input.description ?? null,
-    stock: input.stock,
+    id: data.id,
+    name: data.name,
+    price: data.price,
+    oldPrice: data.oldPrice,
+    image: data.image,
+    category: data.category as CategorySlug,
+    badge: data.badge,
+    sizes: data.sizes,
+    colors: data.colors,
+    description: data.description,
+    stock: data.stock,
   }
+
   await db
     .insert(products)
     .values(values)
@@ -58,7 +80,7 @@ export async function upsertProduct(input: ProductInput): Promise<void> {
   updateTag('catalogue')
   revalidatePath('/admin/products')
   revalidatePath('/shop')
-  revalidatePath(`/product/${input.id}`)
+  revalidatePath(`/product/${data.id}`)
 }
 
 export async function deleteProduct(id: string): Promise<void> {
@@ -73,7 +95,12 @@ export async function setOrderStatus(
   orderId: string,
   status: OrderStatus,
 ): Promise<void> {
-  await requireAdmin()
-  await updateOrderStatus(orderId, status)
+  const me = await requireAdmin()
+  const id = parseOrThrow(uuidSchema, orderId)
+  const nextStatus = parseOrThrow(orderStatusSchema, status)
+
+  // Recording who made the change is the point of the timeline.
+  await updateOrderStatus(id, nextStatus, me.id)
   revalidatePath('/admin/orders')
+  revalidatePath(`/admin/orders/${id}`)
 }

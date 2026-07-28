@@ -13,6 +13,8 @@ export type PlaceOrderInput = {
   notes?: string
   paymentMethod: PaymentMethod
   items: OrderItemInput[]
+  /** The code only — the server prices the discount itself. */
+  couponCode?: string | null
 }
 
 export async function placeOrder(
@@ -23,5 +25,7 @@ export async function placeOrder(
   const result = await createOrder({ ...input, userId: user?.id ?? null })
   // Stock was decremented — refresh the cached catalogue so availability stays right.
   updateTag('catalogue')
+  // A redemption was spent, so the admin coupon list is out of date.
+  updateTag('coupons')
   return result
 }
