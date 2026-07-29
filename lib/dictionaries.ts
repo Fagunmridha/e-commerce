@@ -35,37 +35,13 @@ const en = {
   },
   hero: {
     secondaryCta: 'Browse collections',
-    slides: [
-      {
-        label: 'New Collection',
-        title: 'Best Quality Products For Your',
-        highlight: 'Everyday Needs',
-        subtitle: 'High quality fashion for men, women and kids.',
-        cta: 'Shop Now',
-      },
-      {
-        label: "Men's Collection",
-        title: 'Sharp Everyday',
-        highlight: 'Essentials For Him',
-        subtitle: 'Shirts, knitwear and trousers built to outlast the season.',
-        cta: 'Shop Men',
-      },
-      {
-        label: "Women's Collection",
-        title: 'Effortless Style',
-        highlight: 'For Every Day',
-        subtitle: 'Linen, cotton and knits in shapes that move with you.',
-        cta: 'Shop Women',
-      },
-      {
-        label: 'Kids Collection',
-        title: 'Built For',
-        highlight: 'Playtime',
-        subtitle: 'Soft, durable and easy to wash. Sizes 2Y to 10Y.',
-        cta: 'Shop Kids',
-      },
-    ],
-    goToSlide: 'Go to slide',
+    slide: {
+      label: 'New Collection',
+      title: 'Best Quality Products For Your',
+      highlight: 'Everyday Needs',
+      subtitle: 'High quality fashion for men, women and kids.',
+      cta: 'Shop Now',
+    },
   },
   features: [
     { title: 'Free Shipping', description: 'On all orders over $100' },
@@ -582,37 +558,13 @@ const bn: Dictionary = {
   },
   hero: {
     secondaryCta: 'কালেকশন ঘুরে দেখুন',
-    slides: [
-      {
-        label: 'নতুন কালেকশন',
-        title: 'সেরা মানের পণ্য আপনার',
-        highlight: 'প্রতিদিনের প্রয়োজনে',
-        subtitle: 'পুরুষ, নারী ও শিশুদের জন্য উন্নত মানের ফ্যাশন।',
-        cta: 'এখনই কিনুন',
-      },
-      {
-        label: 'পুরুষদের কালেকশন',
-        title: 'প্রতিদিনের জন্য',
-        highlight: 'পরিপাটি পোশাক',
-        subtitle: 'শার্ট, নিটওয়্যার ও ট্রাউজার — বহুদিন টেকার মতো করে বানানো।',
-        cta: 'পুরুষদের পোশাক দেখুন',
-      },
-      {
-        label: 'নারীদের কালেকশন',
-        title: 'সহজ, স্বচ্ছন্দ',
-        highlight: 'প্রতিদিনের স্টাইল',
-        subtitle: 'লিনেন, কটন ও নিট — আরামদায়ক কাটে।',
-        cta: 'নারীদের পোশাক দেখুন',
-      },
-      {
-        label: 'শিশুদের কালেকশন',
-        title: 'খেলার জন্যই',
-        highlight: 'তৈরি',
-        subtitle: 'নরম, টেকসই ও সহজে ধোয়া যায়। সাইজ ২ থেকে ১০ বছর।',
-        cta: 'শিশুদের পোশাক দেখুন',
-      },
-    ],
-    goToSlide: 'স্লাইডে যান',
+    slide: {
+      label: 'নতুন কালেকশন',
+      title: 'সেরা মানের পণ্য আপনার',
+      highlight: 'প্রতিদিনের প্রয়োজনে',
+      subtitle: 'পুরুষ, নারী ও শিশুদের জন্য উন্নত মানের ফ্যাশন।',
+      cta: 'এখনই কিনুন',
+    },
   },
   features: [
     { title: 'ফ্রি ডেলিভারি', description: '৳12,000-এর বেশি সব অর্ডারে' },

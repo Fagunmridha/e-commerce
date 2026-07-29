@@ -2,165 +2,65 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useEffect, useMemo, useRef, useState } from 'react'
 import { BadgePercent, Copy, Package } from 'lucide-react'
 import { toast } from 'sonner'
 import { Container } from '@/components/layout/container'
 import { Reveal } from '@/components/reveal'
 import { useLanguage } from '@/components/language-provider'
-import type { HeroSlide } from '@/lib/banners'
 import type { FeaturedCoupon } from '@/lib/coupon-math'
 import { cn } from '@/lib/utils'
-
-const ROTATE_MS = 7000
-const FALLBACK_IMAGE = '/hero_clothing_rack.png'
 
 /**
  * The homepage hero: one wide panel carrying the headline and the product
  * photo, with the two standing offers stacked in a rail beside it. On phones
  * the rail drops below the panel and the offers sit side by side.
- *
- * Slides come from the `banners` table so an admin can put up an Eid or Puja
- * panel — and schedule it — without a deploy. When the table has nothing live,
- * the dictionary copy stands in, so the page above the fold is never empty.
  */
-export function Hero({
-  slides = [],
-  coupon = null,
-}: {
-  slides?: HeroSlide[]
-  coupon?: FeaturedCoupon | null
-}) {
-  const { t, pick } = useLanguage()
+export function Hero({ coupon = null }: { coupon?: FeaturedCoupon | null }) {
+  const { t } = useLanguage()
 
+  const copy = t.hero.slide
   const cards = t.home.heroCards
-
-  // Dictionary fallback for an empty `banners` table. `t` is already resolved
-  // to the active locale, so each field is mirrored into both slots — whichever
-  // one `pick` reaches holds the right language. Keeping it in HeroSlide shape
-  // means there is only one hero layout to maintain.
-  const fallback = useMemo<HeroSlide[]>(() => {
-    const same = (value: string) => ({ en: value, bn: value })
-    return t.hero.slides.map((slide, index) => ({
-      id: `fallback-${index}`,
-      image: FALLBACK_IMAGE,
-      label: same(slide.label),
-      title: same(slide.title),
-      highlight: same(slide.highlight),
-      subtitle: same(slide.subtitle),
-      ctaLabel: same(slide.cta),
-      ctaHref: '/shop',
-    }))
-  }, [t.hero.slides])
-
-  const live = slides.length > 0 ? slides : fallback
-
-  const [index, setIndex] = useState(0)
-  const [paused, setPaused] = useState(false)
-
-  // A shrinking list (admin deactivates a banner) must not strand the index.
-  useEffect(() => {
-    setIndex((current) => (current < live.length ? current : 0))
-  }, [live.length])
-
-  const reduceMotion = usePrefersReducedMotion()
-
-  useEffect(() => {
-    if (live.length < 2 || paused || reduceMotion) return
-    const timer = setInterval(
-      () => setIndex((current) => (current + 1) % live.length),
-      ROTATE_MS,
-    )
-    return () => clearInterval(timer)
-  }, [live.length, paused, reduceMotion])
-
-  const current = live[index] ?? live[0]
-  if (!current) return null
-
-  const label = current.label && pick(current.label)
 
   return (
     <section className="pt-4 pb-5 lg:pt-6 lg:pb-8">
       <Container>
         <div className="grid gap-4 lg:grid-cols-[1fr_20rem] lg:gap-5 xl:grid-cols-[1fr_22rem]">
           <Reveal>
-            <div
-              className="relative h-full overflow-hidden rounded-2xl bg-secondary"
-              onMouseEnter={() => setPaused(true)}
-              onMouseLeave={() => setPaused(false)}
-              onFocusCapture={() => setPaused(true)}
-              onBlurCapture={() => setPaused(false)}
-            >
+            <div className="relative h-full overflow-hidden rounded-2xl bg-secondary">
               <div className="grid h-full items-center sm:grid-cols-2">
                 <div className="px-5 pt-8 pb-6 sm:py-12 sm:pl-10 lg:py-16 lg:pl-12">
-                  {label && (
-                    <p className="text-sm font-semibold tracking-wide text-primary">
-                      {label}
-                    </p>
-                  )}
+                  <p className="text-sm font-semibold tracking-wide text-primary">
+                    {copy.label}
+                  </p>
 
                   <h1 className="mt-4 text-3xl leading-[1.12] font-extrabold tracking-tight text-balance text-foreground sm:text-4xl lg:text-5xl">
-                    {pick(current.title)}{' '}
-                    {current.highlight && (
-                      <span className="text-primary">
-                        {pick(current.highlight)}
-                      </span>
-                    )}
+                    {copy.title}{' '}
+                    <span className="text-primary">{copy.highlight}</span>
                   </h1>
 
-                  {current.subtitle && (
-                    <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground sm:mt-5 sm:text-base">
-                      {pick(current.subtitle)}
-                    </p>
-                  )}
+                  <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground sm:mt-5 sm:text-base">
+                    {copy.subtitle}
+                  </p>
 
                   <Link
-                    href={current.ctaHref}
+                    href="/shop"
                     className="mt-6 inline-flex h-12 items-center justify-center rounded-lg bg-primary px-8 text-sm font-semibold text-primary-foreground sm:mt-8 shadow-lg shadow-primary/25 transition-all hover:-translate-y-0.5 hover:bg-primary/90 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
                   >
-                    {current.ctaLabel ? pick(current.ctaLabel) : t.hero.slides[0].cta}
+                    {copy.cta}
                   </Link>
-
-                  {live.length > 1 && (
-                    <div className="mt-8 flex gap-2">
-                      {live.map((slide, dot) => (
-                        <button
-                          key={slide.id}
-                          type="button"
-                          onClick={() => setIndex(dot)}
-                          aria-label={`${t.hero.goToSlide} ${dot + 1}`}
-                          aria-current={dot === index}
-                          className={cn(
-                            'h-1.5 rounded-full transition-all focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none',
-                            dot === index
-                              ? 'w-6 bg-primary'
-                              : 'w-1.5 bg-foreground/20 hover:bg-foreground/40',
-                          )}
-                        />
-                      ))}
-                    </div>
-                  )}
                 </div>
 
-                {/* The photo fills the right half and bleeds to the panel edge.
-                    All slides are stacked and cross-faded so the panel height
-                    never jumps mid-rotation. */}
+                {/* The photo fills the right half and bleeds to the panel edge. */}
                 <div className="relative h-60 sm:h-full sm:min-h-[24rem] lg:min-h-[28rem]">
-                  {live.map((slide, position) => (
-                    <Image
-                      key={slide.id}
-                      src={slide.image}
-                      alt=""
-                      fill
-                      // The first slide's image is the homepage LCP element.
-                      priority={position === 0}
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 40vw"
-                      className={cn(
-                        'object-cover object-center transition-opacity duration-700',
-                        position === index ? 'opacity-100' : 'opacity-0',
-                      )}
-                    />
-                  ))}
+                  <Image
+                    src="/hero_clothing_rack.png"
+                    alt=""
+                    fill
+                    // The hero image is the homepage LCP element.
+                    priority
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 40vw"
+                    className="object-cover object-center"
+                  />
                 </div>
               </div>
             </div>
@@ -294,21 +194,4 @@ function CouponCard({ coupon }: { coupon: FeaturedCoupon | null }) {
       {decoration}
     </div>
   )
-}
-
-/** Respects the OS "reduce motion" setting for the auto-rotation. */
-function usePrefersReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(false)
-  const query = useRef<MediaQueryList | null>(null)
-
-  useEffect(() => {
-    query.current = window.matchMedia('(prefers-reduced-motion: reduce)')
-    setReduced(query.current.matches)
-
-    const onChange = (event: MediaQueryListEvent) => setReduced(event.matches)
-    query.current.addEventListener('change', onChange)
-    return () => query.current?.removeEventListener('change', onChange)
-  }, [])
-
-  return reduced
 }

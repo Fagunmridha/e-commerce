@@ -119,8 +119,7 @@ export async function redeemCoupon(code: string): Promise<string | null> {
 // Cached with the `active` + `featured` filter in SQL only. The date window and
 // usage cap are applied against a fresh `now` below — a cached row carries the
 // timestamp of whenever it was computed, so putting the schedule in the query
-// would leave an expired code advertised on the homepage. Same reasoning as
-// `getHeroSlides` in lib/banners.ts.
+// would leave an expired code advertised on the homepage.
 const cachedFeatured = unstable_cache(
   () =>
     db

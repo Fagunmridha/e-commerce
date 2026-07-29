@@ -47,7 +47,7 @@ export function ImageUploader({
 }: {
   value: string
   onChange: (url: string) => void
-  folder: 'products' | 'banners' | 'categories'
+  folder: 'products' | 'categories'
   label?: string
   className?: string
 }) {

@@ -18,7 +18,11 @@ import {
 } from '@/lib/admin/coupon-status'
 import type { CouponRow } from '@/lib/db/schema'
 
-/** Same conversion the banner form uses — see the note there on timezones. */
+/**
+ * `<input type="datetime-local">` speaks local wall-clock time with no zone.
+ * `toISOString()` would shift by the UTC offset and quietly move a campaign by
+ * hours, so the value is assembled from the local parts instead.
+ */
 function toLocalInput(date: Date | null): string {
   if (!date) return ''
   const pad = (n: number) => String(n).padStart(2, '0')

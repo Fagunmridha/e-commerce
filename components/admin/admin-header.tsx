@@ -56,7 +56,7 @@ const SEARCHABLE = ADMIN_NAV.flatMap((group) =>
 
 const QUICK_CREATE = [
   { href: '/admin/products/new', label: 'New product' },
-  { href: '/admin/banners/new', label: 'New banner' },
+  { href: '/admin/coupons/new', label: 'New coupon' },
   { href: '/admin/orders', label: 'View orders' },
 ]
 

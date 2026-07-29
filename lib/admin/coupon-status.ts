@@ -39,3 +39,19 @@ export function couponStatus(
   if (coupon.startsAt && coupon.startsAt > now) return 'scheduled'
   return 'live'
 }
+
+const DAY = { day: 'numeric', month: 'short' } as const
+
+/** "1 Mar – 20 Mar", "From 1 Mar", "Until 20 Mar" or "Always on". */
+export function formatWindow(
+  startsAt: Date | null,
+  endsAt: Date | null,
+): string {
+  const start = startsAt?.toLocaleDateString('en-GB', DAY)
+  const end = endsAt?.toLocaleDateString('en-GB', DAY)
+
+  if (start && end) return `${start} – ${end}`
+  if (start) return `From ${start}`
+  if (end) return `Until ${end}`
+  return 'Always on'
+}

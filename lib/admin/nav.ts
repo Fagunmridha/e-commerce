@@ -109,15 +109,6 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   {
     label: 'Content',
     items: [
-      {
-        href: '/admin/banners',
-        label: 'Banners',
-        icon: ImageIcon,
-        children: [
-          { href: '/admin/banners', label: 'All banners' },
-          { href: '/admin/banners/new', label: 'Add banner' },
-        ],
-      },
       { href: '/admin/blog', label: 'Blog', icon: FileText, planned: true },
       {
         href: '/admin/media',

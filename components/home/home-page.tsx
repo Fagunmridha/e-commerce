@@ -12,7 +12,6 @@ import { Testimonials } from '@/components/home/testimonials'
 import { Newsletter } from '@/components/newsletter'
 import { useLanguage } from '@/components/language-provider'
 import { useCatalogue } from '@/components/catalogue-provider'
-import type { HeroSlide } from '@/lib/banners'
 import type { FeaturedCoupon } from '@/lib/coupon-math'
 
 const ROW = 8
@@ -23,10 +22,8 @@ const ROW = 8
  * hardcoded lists.
  */
 export function HomePage({
-  heroSlides,
   featuredCoupon,
 }: {
-  heroSlides: HeroSlide[]
   featuredCoupon: FeaturedCoupon | null
 }) {
   const { t } = useLanguage()
@@ -50,7 +47,7 @@ export function HomePage({
 
   return (
     <>
-      <Hero slides={heroSlides} coupon={featuredCoupon} />
+      <Hero coupon={featuredCoupon} />
       <FeatureBar />
 
       <CategoryShowcase />

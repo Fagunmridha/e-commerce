@@ -17,9 +17,9 @@ import type { CategorySlug } from '@/lib/types'
 type SortKey = 'featured' | 'price-asc' | 'price-desc' | 'rating'
 
 /**
- * Editorial banner colour per category, matching the hero slides. Categories
- * are admin-managed, so an unknown slug falls back to the neutral tint rather
- * than rendering an untinted banner.
+ * Editorial banner colour per category. Categories are admin-managed, so an
+ * unknown slug falls back to the neutral tint rather than rendering an
+ * untinted banner.
  */
 const BANNER_TINT: Record<string, string> = {
   men: 'bg-[#1e3a5f]',

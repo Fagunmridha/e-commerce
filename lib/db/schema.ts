@@ -176,48 +176,11 @@ export const reviews = pgTable('reviews', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })
 
-/**
- * Editorial slots on the storefront — today the homepage hero, with room for
- * the offer strip and announcement bar later.
- *
- * `startsAt` / `endsAt` are what let an Eid or Puja slide be written a week
- * early and go live on its own. The window is evaluated at request time rather
- * than in SQL (see lib/banners.ts) so caching cannot make a slide late.
- */
-export const banners = pgTable('banners', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  /** Natural key so the seed can upsert without duplicating rows. */
-  slug: text('slug').notNull().unique(),
-  placement: text('placement', {
-    enum: ['hero', 'offer', 'announcement'],
-  })
-    .notNull()
-    .default('hero'),
-  image: text('image').notNull(),
-  /** Small eyebrow line above the headline. */
-  label: jsonb('label').$type<Localized>(),
-  title: jsonb('title').$type<Localized>().notNull(),
-  /** Tail of the headline, rendered in the primary colour. */
-  highlight: jsonb('highlight').$type<Localized>(),
-  subtitle: jsonb('subtitle').$type<Localized>(),
-  ctaLabel: jsonb('cta_label').$type<Localized>(),
-  ctaHref: text('cta_href').notNull().default('/shop'),
-  /** Null means "no start" / "no end" — an always-on slide. */
-  startsAt: timestamp('starts_at'),
-  endsAt: timestamp('ends_at'),
-  active: boolean('active').notNull().default(true),
-  sortOrder: integer('sort_order').notNull().default(0),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-})
-
 export type UserRow = typeof users.$inferSelect
 export type CategoryRow = typeof categories.$inferSelect
 export type ProductRow = typeof products.$inferSelect
 export type OrderRow = typeof orders.$inferSelect
 export type OrderItemRow = typeof orderItems.$inferSelect
 export type ReviewRow = typeof reviews.$inferSelect
-export type BannerRow = typeof banners.$inferSelect
 export type CouponRow = typeof coupons.$inferSelect
 export type OrderEventRow = typeof orderEvents.$inferSelect
-export type BannerPlacement = BannerRow['placement']

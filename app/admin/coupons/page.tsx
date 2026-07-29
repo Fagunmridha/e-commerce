@@ -6,8 +6,7 @@ import {
   type CouponRowView,
 } from '@/components/admin/coupons/coupons-table'
 import { getAllCoupons } from '@/lib/coupons'
-import { couponStatus } from '@/lib/admin/coupon-status'
-import { formatWindow } from '@/lib/admin/banner-status'
+import { couponStatus, formatWindow } from '@/lib/admin/coupon-status'
 
 export const dynamic = 'force-dynamic'
 
