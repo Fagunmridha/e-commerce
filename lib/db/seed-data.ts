@@ -1,5 +1,5 @@
 import type { Localized } from '@/lib/i18n'
-import type { CategorySlug } from '@/lib/types'
+import type { CategorySlug, ProductColor } from '@/lib/types'
 
 /**
  * The initial catalogue. This file is the SOURCE used only by the seed script
@@ -22,7 +22,7 @@ export type SeedProduct = {
   category: CategorySlug
   badge?: 'new' | 'sale'
   sizes?: string[]
-  colors?: Localized[]
+  colors?: ProductColor[]
   description?: Localized
   stock: number
 }
@@ -57,31 +57,34 @@ const DEFAULT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
 const KIDS_SIZES = ['2Y', '4Y', '6Y', '8Y', '10Y']
 
 const COLOR = {
-  grey: { en: 'Grey', bn: 'ধূসর' },
-  black: { en: 'Black', bn: 'কালো' },
-  navy: { en: 'Navy', bn: 'নেভি' },
-  indigo: { en: 'Indigo', bn: 'ইন্ডিগো' },
-  washedBlue: { en: 'Washed Blue', bn: 'হালকা নীল' },
-  white: { en: 'White', bn: 'সাদা' },
-  sky: { en: 'Sky', bn: 'আকাশি' },
-  sand: { en: 'Sand', bn: 'বালু' },
-  camel: { en: 'Camel', bn: 'উটে রঙ' },
-  charcoal: { en: 'Charcoal', bn: 'কালচে ধূসর' },
-  stone: { en: 'Stone', bn: 'পাথুরে' },
-  olive: { en: 'Olive', bn: 'জলপাই' },
-  sage: { en: 'Sage', bn: 'হালকা সবুজ' },
-  cream: { en: 'Cream', bn: 'ক্রিম' },
-  blush: { en: 'Blush', bn: 'হালকা গোলাপি' },
-  ivory: { en: 'Ivory', bn: 'হাতির দাঁত' },
-  print: { en: 'Print', bn: 'প্রিন্ট' },
-  yellow: { en: 'Yellow', bn: 'হলুদ' },
-  red: { en: 'Red', bn: 'লাল' },
-  blue: { en: 'Blue', bn: 'নীল' },
-  tan: { en: 'Tan', bn: 'হালকা বাদামি' },
-  gold: { en: 'Gold', bn: 'সোনালি' },
-  silver: { en: 'Silver', bn: 'রুপালি' },
-  brown: { en: 'Brown', bn: 'বাদামি' },
-} satisfies Record<string, Localized>
+  grey: { name: { en: 'Grey', bn: 'ধূসর' }, hex: '#9ca3af' },
+  black: { name: { en: 'Black', bn: 'কালো' }, hex: '#111827' },
+  navy: { name: { en: 'Navy', bn: 'নেভি' }, hex: '#1b2a4a' },
+  indigo: { name: { en: 'Indigo', bn: 'ইন্ডিগো' }, hex: '#3f4c8c' },
+  washedBlue: { name: { en: 'Washed Blue', bn: 'হালকা নীল' }, hex: '#93b3d1' },
+  white: { name: { en: 'White', bn: 'সাদা' }, hex: '#ffffff' },
+  sky: { name: { en: 'Sky', bn: 'আকাশি' }, hex: '#7dd3fc' },
+  sand: { name: { en: 'Sand', bn: 'বালু' }, hex: '#d8c3a5' },
+  camel: { name: { en: 'Camel', bn: 'উটে রঙ' }, hex: '#c19a6b' },
+  charcoal: { name: { en: 'Charcoal', bn: 'কালচে ধূসর' }, hex: '#36454f' },
+  stone: { name: { en: 'Stone', bn: 'পাথুরে' }, hex: '#a8a29e' },
+  olive: { name: { en: 'Olive', bn: 'জলপাই' }, hex: '#6b7f4b' },
+  sage: { name: { en: 'Sage', bn: 'হালকা সবুজ' }, hex: '#b2c2a8' },
+  cream: { name: { en: 'Cream', bn: 'ক্রিম' }, hex: '#f5f0e1' },
+  blush: { name: { en: 'Blush', bn: 'হালকা গোলাপি' }, hex: '#e8bfc4' },
+  ivory: { name: { en: 'Ivory', bn: 'হাতির দাঁত' }, hex: '#fffff0' },
+  // No hex on purpose — a print has no single swatch colour. This is the
+  // canonical reason `hex` is optional, and product 10 (`[COLOR.print]`) is the
+  // live test case for the text-pill fallback.
+  print: { name: { en: 'Print', bn: 'প্রিন্ট' } },
+  yellow: { name: { en: 'Yellow', bn: 'হলুদ' }, hex: '#facc15' },
+  red: { name: { en: 'Red', bn: 'লাল' }, hex: '#dc2626' },
+  blue: { name: { en: 'Blue', bn: 'নীল' }, hex: '#2563eb' },
+  tan: { name: { en: 'Tan', bn: 'হালকা বাদামি' }, hex: '#d2b48c' },
+  gold: { name: { en: 'Gold', bn: 'সোনালি' }, hex: '#d4af37' },
+  silver: { name: { en: 'Silver', bn: 'রুপালি' }, hex: '#c0c0c0' },
+  brown: { name: { en: 'Brown', bn: 'বাদামি' }, hex: '#7b4b2a' },
+} satisfies Record<string, ProductColor>
 
 export const SEED_PRODUCTS: SeedProduct[] = [
   {

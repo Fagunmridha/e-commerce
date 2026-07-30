@@ -3,38 +3,87 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { ImageUploader } from '@/components/admin/image-uploader'
 import { upsertProduct, type ProductInput } from '@/app/actions/admin'
-import type { CategorySlug, Product } from '@/lib/types'
+import type { CategorySlug, Product, ProductColor } from '@/lib/types'
 import type { Localized } from '@/lib/i18n'
 
 const CATEGORIES: CategorySlug[] = ['men', 'women', 'kids', 'accessories']
 
-/** "Black|কালো, White|সাদা" → [{en,bn}]. Bangla falls back to English. */
-function parseColors(input: string): Localized[] | null {
+/**
+ * "Black|কালো|#111827, Print|প্রিন্ট" → [{ name: {en,bn}, hex? }].
+ *
+ * Bangla falls back to English. The hex segment is optional and simply omitted
+ * when blank, so a colourway with no swatch stores no `hex` key at all — one
+ * representation of "no hex", which is what `isSwatchable` relies on. The server
+ * re-validates the hex (`hexColorSchema`); this only shapes it.
+ */
+function parseColors(input: string): ProductColor[] | null {
   const items = input
     .split(',')
     .map((chunk) => chunk.trim())
     .filter(Boolean)
     .map((chunk) => {
-      const [en, bn] = chunk.split('|').map((part) => part.trim())
+      const [en, bn, hex] = chunk.split('|').map((part) => part.trim())
+      const name = { en, bn: bn || en }
+      return hex ? { name, hex } : { name }
+    })
+  return items.length ? items : null
+}
+
+/**
+ * Round-trips `parseColors`. No trailing "|" when there is no hex, so opening an
+ * untouched product and saving it does not rewrite its colours.
+ */
+function serializeColors(colors?: ProductColor[]): string {
+  return (colors ?? [])
+    .map((color) =>
+      color.hex
+        ? `${color.name.en}|${color.name.bn}|${color.hex}`
+        : `${color.name.en}|${color.name.bn}`,
+    )
+    .join(', ')
+}
+
+/** One highlight per line, "English|Bangla". Bangla falls back to English. */
+function parseHighlights(input: string): Localized[] | null {
+  const items = input
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [en, bn] = line.split('|').map((part) => part.trim())
       return { en, bn: bn || en }
     })
   return items.length ? items : null
 }
 
-function serializeColors(colors?: Localized[]): string {
-  return (colors ?? []).map((color) => `${color.en}|${color.bn}`).join(', ')
+function serializeHighlights(highlights?: Localized[]): string {
+  return (highlights ?? [])
+    .map((item) => `${item.en}|${item.bn}`)
+    .join('\n')
 }
 
-export function ProductForm({ product }: { product?: Product }) {
+export function ProductForm({
+  product,
+  gallery = [],
+}: {
+  product?: Product
+  /** Extra shots beyond `product.image`, in position order. */
+  gallery?: string[]
+}) {
   const router = useRouter()
   const [pending, setPending] = useState(false)
   const isEdit = Boolean(product)
+
+  // Kept outside the main form object: it is a growable list whose rows are
+  // uploaders with their own progress state.
+  const [shots, setShots] = useState<string[]>(gallery)
 
   const [form, setForm] = useState({
     id: product?.id ?? '',
@@ -51,6 +100,7 @@ export function ProductForm({ product }: { product?: Product }) {
     moq: (product?.moq ?? 1).toString(),
     sizes: product?.sizes?.join(', ') ?? '',
     colors: serializeColors(product?.colors),
+    highlights: serializeHighlights(product?.highlights),
     descriptionEn: product?.description?.en ?? '',
     descriptionBn: product?.description?.bn ?? '',
   })
@@ -78,6 +128,9 @@ export function ProductForm({ product }: { product?: Product }) {
         ? form.sizes.split(',').map((s) => s.trim()).filter(Boolean)
         : null,
       colors: parseColors(form.colors),
+      highlights: parseHighlights(form.highlights),
+      // Blank uploader rows are dropped rather than saved as empty URLs.
+      gallery: shots.map((url) => url.trim()).filter(Boolean),
       description:
         form.descriptionEn || form.descriptionBn
           ? {
@@ -166,8 +219,54 @@ export function ProductForm({ product }: { product?: Product }) {
         value={form.image}
         onChange={(url) => set('image', url)}
         folder="products"
-        label="Product image"
+        label="Primary image"
       />
+
+      <div className="space-y-3">
+        <Label>Gallery</Label>
+        <p className="text-xs text-muted-foreground">
+          Extra shots of this product, shown as thumbnails after the primary
+          image. Leave empty and the detail page shows a single photo with no
+          thumbnail strip.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-3">
+          {shots.map((url, index) => (
+            <div key={index} className="space-y-2">
+              <ImageUploader
+                value={url}
+                onChange={(next) =>
+                  setShots((current) =>
+                    current.map((item, i) => (i === index ? next : item)),
+                  )
+                }
+                folder="products"
+                label={`Shot ${index + 2}`}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() =>
+                  setShots((current) => current.filter((_, i) => i !== index))
+                }
+              >
+                Remove
+              </Button>
+            </div>
+          ))}
+        </div>
+        {shots.length < 8 && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setShots((current) => [...current, ''])}
+          >
+            <Plus className="size-4" />
+            Add a shot
+          </Button>
+        )}
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Badge">
@@ -202,12 +301,29 @@ export function ProductForm({ product }: { product?: Product }) {
         </p>
       </Field>
 
-      <Field label="Colors (English|Bangla, comma separated)">
+      <Field label="Colors (English|Bangla|#hex, comma separated)">
         <Input
           value={form.colors}
           onChange={(e) => set('colors', e.target.value)}
-          placeholder="Black|কালো, White|সাদা"
+          placeholder="Black|কালো|#111827, Print|প্রিন্ট"
         />
+        <p className="text-xs text-muted-foreground">
+          The hex is optional. Give every colour one and they render as swatches;
+          leave any off and all of them show as text pills instead — a row mixing
+          circles and pills reads as broken.
+        </p>
+      </Field>
+
+      <Field label="Highlights (one per line, English|Bangla)">
+        <Textarea
+          rows={4}
+          value={form.highlights}
+          onChange={(e) => set('highlights', e.target.value)}
+          placeholder={'100% Cotton|১০০% কটন\nBreathable|শ্বাস-প্রশ্বাসযোগ্য'}
+        />
+        <p className="text-xs text-muted-foreground">
+          Short selling points for this specific product, up to 8.
+        </p>
       </Field>
 
       <div className="grid gap-4 sm:grid-cols-2">

@@ -3,7 +3,7 @@
 import { revalidatePath, updateTag } from 'next/cache'
 import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
-import { products, users } from '@/lib/db/schema'
+import { productImages, products, users } from '@/lib/db/schema'
 import { requireAdmin } from '@/lib/auth'
 import { updateOrderStatus, type OrderStatus } from '@/lib/orders'
 import {
@@ -15,7 +15,7 @@ import {
 } from '@/lib/validation/admin'
 import { parseOrThrow } from '@/lib/validation/shared'
 import type { Localized } from '@/lib/i18n'
-import type { CategorySlug } from '@/lib/types'
+import type { CategorySlug, ProductColor } from '@/lib/types'
 
 /**
  * Server actions are public HTTP endpoints. `requireAdmin()` keeps strangers
@@ -50,7 +50,11 @@ export type ProductInput = {
   category: CategorySlug
   badge?: 'new' | 'sale' | null
   sizes?: string[] | null
-  colors?: Localized[] | null
+  colors?: ProductColor[] | null
+  /** Per-product selling points shown on the detail page. */
+  highlights?: Localized[] | null
+  /** Extra gallery shots. `image` above stays the primary photo. */
+  gallery?: string[] | null
   description?: Localized | null
   stock: number
   /** Minimum pieces per order. Omit or 1 for no minimum. */
@@ -71,6 +75,7 @@ export async function upsertProduct(input: ProductInput): Promise<void> {
     badge: data.badge,
     sizes: data.sizes,
     colors: data.colors,
+    highlights: data.highlights,
     description: data.description,
     stock: data.stock,
     moq: data.moq,
@@ -80,6 +85,27 @@ export async function upsertProduct(input: ProductInput): Promise<void> {
     .insert(products)
     .values(values)
     .onConflictDoUpdate({ target: products.id, set: values })
+
+  // Replace the gallery wholesale. Neon's HTTP driver has no interactive
+  // transactions, but `batch` maps to a real one — without it a failure between
+  // the delete and the insert would wipe the gallery and put nothing back.
+  //
+  // `values([])` throws in Drizzle, so an emptied gallery is a delete on its own.
+  if (data.gallery.length) {
+    await db.batch([
+      db.delete(productImages).where(eq(productImages.productId, data.id)),
+      db.insert(productImages).values(
+        data.gallery.map((url, index) => ({
+          productId: data.id,
+          url,
+          position: index,
+        })),
+      ),
+    ])
+  } else {
+    await db.delete(productImages).where(eq(productImages.productId, data.id))
+  }
+
   updateTag('catalogue')
   revalidatePath('/admin/products')
   revalidatePath('/shop')

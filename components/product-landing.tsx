@@ -20,6 +20,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { useLanguage } from '@/components/language-provider'
+import { ColorSwatch, isSwatchable } from '@/components/color-swatch'
 import { placeOrder } from '@/app/actions/orders'
 import type { Dictionary } from '@/lib/dictionaries'
 import type { Product } from '@/lib/types'
@@ -62,6 +63,7 @@ export function ProductLanding({
 
   const name = pick(product.name)
   const selectedColor = product.colors?.[selectedColorIndex]
+  const swatchable = isSwatchable(product.colors)
   const outOfStock = product.stock <= 0
 
   const form = useForm<LandingValues>({
@@ -87,7 +89,7 @@ export function ProductLanding({
             productId: product.id,
             quantity,
             size: selectedSize || undefined,
-            colorEn: selectedColor?.en,
+            colorEn: selectedColor?.name.en,
           },
         ],
       })
@@ -195,25 +197,35 @@ export function ProductLanding({
                 <p className="text-sm font-semibold text-foreground">
                   {t.product.color}:{' '}
                   <span className="font-normal">
-                    {selectedColor ? pick(selectedColor) : ''}
+                    {selectedColor ? pick(selectedColor.name) : ''}
                   </span>
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {product.colors.map((color, index) => (
-                    <button
-                      key={color.en}
-                      type="button"
-                      onClick={() => setSelectedColorIndex(index)}
-                      className={cn(
-                        'rounded-md border px-4 py-2 text-sm font-medium transition-colors',
-                        selectedColorIndex === index
-                          ? 'border-primary bg-accent text-primary'
-                          : 'border-border hover:border-primary',
-                      )}
-                    >
-                      {pick(color)}
-                    </button>
-                  ))}
+                  {product.colors.map((color, index) =>
+                    swatchable ? (
+                      <ColorSwatch
+                        key={color.name.en}
+                        hex={color.hex!}
+                        label={pick(color.name)}
+                        selected={selectedColorIndex === index}
+                        onSelect={() => setSelectedColorIndex(index)}
+                      />
+                    ) : (
+                      <button
+                        key={color.name.en}
+                        type="button"
+                        onClick={() => setSelectedColorIndex(index)}
+                        className={cn(
+                          'rounded-md border px-4 py-2 text-sm font-medium transition-colors',
+                          selectedColorIndex === index
+                            ? 'border-primary bg-accent text-primary'
+                            : 'border-border hover:border-primary',
+                        )}
+                      >
+                        {pick(color.name)}
+                      </button>
+                    ),
+                  )}
                 </div>
               </div>
             )}

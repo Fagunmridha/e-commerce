@@ -300,7 +300,7 @@ export function CheckoutContent() {
               {lines.map((line) => {
                 const name = pick(line.product.name)
                 const color = line.product.colors?.find(
-                  (item) => item.en === line.colorEn,
+                  (item) => item.name.en === line.colorEn,
                 )
 
                 return (
@@ -317,7 +317,7 @@ export function CheckoutContent() {
                       <p className="text-xs text-muted-foreground">
                         {line.size && `${t.cart.size}: ${line.size}`}
                         {line.size && color && ' • '}
-                        {color && pick(color)}
+                        {color && pick(color.name)}
                         {' • '}
                         {t.checkout.quantityShort}: {line.quantity}
                       </p>

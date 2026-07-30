@@ -83,7 +83,7 @@ export function CartDrawer({
                 {lines.map((line) => {
                   const label = pick(line.product.name)
                   const color = line.product.colors?.find(
-                    (item) => item.en === line.colorEn,
+                    (item) => item.name.en === line.colorEn,
                   )
 
                   return (
@@ -107,7 +107,7 @@ export function CartDrawer({
                         <p className="mt-0.5 text-xs text-muted-foreground">
                           {line.size && `${t.cart.size}: ${line.size}`}
                           {line.size && color && ' • '}
-                          {color && pick(color)}
+                          {color && pick(color.name)}
                         </p>
                         <p className="mt-1 text-sm font-semibold text-foreground">
                           {price(line.lineTotal)}

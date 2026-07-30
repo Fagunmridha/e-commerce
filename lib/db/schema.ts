@@ -10,7 +10,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core'
 import type { Localized } from '@/lib/i18n'
-import type { CategorySlug } from '@/lib/types'
+import type { CategorySlug, ProductColor } from '@/lib/types'
 
 /**
  * Users mirror Clerk accounts. Clerk owns authentication; this table owns the
@@ -45,7 +45,16 @@ export const products = pgTable('products', {
     .$type<CategorySlug>(),
   badge: text('badge', { enum: ['new', 'sale'] }),
   sizes: text('sizes').array(),
-  colors: jsonb('colors').$type<Localized[]>(),
+  /**
+   * `[{ name: { en, bn }, hex? }]`. It was `[{ en, bn }]` until migration 0012
+   * reshaped the rows by hand — Drizzle emits no SQL for a `$type<>` change, so
+   * this assertion is only as true as that migration having run. `toColors` in
+   * lib/products.ts normalises either shape on read, which is what keeps a
+   * `db:push`-built database working.
+   */
+  colors: jsonb('colors').$type<ProductColor[]>(),
+  /** Per-product selling points — "100% Cotton", "Breathable". */
+  highlights: jsonb('highlights').$type<Localized[]>(),
   description: jsonb('description').$type<Localized>(),
   stock: integer('stock').notNull().default(0),
   /**

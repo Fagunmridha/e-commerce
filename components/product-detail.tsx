@@ -1,21 +1,14 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
-import {
-  ChevronRight,
-  Headphones,
-  Heart,
-  Minus,
-  Plus,
-  RotateCcw,
-  Share2,
-  ShieldCheck,
-  Truck,
-} from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Check, ChevronRight, Heart, Minus, Plus, Share2, Truck } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Rating } from '@/components/rating'
+import { ColorSwatch, isSwatchable } from '@/components/color-swatch'
 import { useLanguage } from '@/components/language-provider'
 import { useStore } from '@/components/store-provider'
 import { useCatalogue } from '@/components/catalogue-provider'
@@ -30,13 +23,19 @@ const BADGE_STYLES = {
 export function ProductDetail({
   product,
   images,
+  deliveryWindow,
 }: {
   product: Product
   images: string[]
+  /** Pre-formatted on the server — a client `new Date()` here would risk a
+   *  hydration mismatch around midnight. */
+  deliveryWindow: string
 }) {
   const { t, pick, price: formatPrice } = useLanguage()
   const { addToCart, isWishlisted, toggleWishlist } = useStore()
   const { getCategory } = useCatalogue()
+  const router = useRouter()
+
   const [selectedImage, setSelectedImage] = useState(0)
   const [selectedSize, setSelectedSize] = useState(product.sizes?.[0] ?? '')
   const [selectedColorIndex, setSelectedColorIndex] = useState(0)
@@ -49,25 +48,63 @@ export function ProductDetail({
   const category = getCategory(product.category)
   const categoryName = category ? pick(category.name) : product.category
   const selectedColor = product.colors?.[selectedColorIndex]
+  // `hex!` below is safe only because this is `every(c => c.hex)`. Keep the two
+  // together.
+  const swatchable = isSwatchable(product.colors)
   const isFavorited = isWishlisted(product.id)
 
-  const addToBag = () => {
-    addToCart({
-      productId: product.id,
-      quantity,
-      size: selectedSize || undefined,
-      colorEn: selectedColor?.en,
-    })
+  const soldOut = product.stock <= 0
+  const discount = product.oldPrice
+    ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
+    : 0
 
+  const line = {
+    productId: product.id,
+    quantity,
+    size: selectedSize || undefined,
+    colorEn: selectedColor?.name.en,
+  }
+
+  const addToBag = () => {
+    addToCart(line)
     toast.success(t.product.added, {
       description: `${name}${selectedSize ? ` · ${t.product.size} ${selectedSize}` : ''} × ${quantity}`,
     })
+  }
+
+  // No second order path: this adds to the cart like any other line and hands
+  // over to the existing checkout, so coupons and totals keep working.
+  const buyNow = () => {
+    addToCart(line)
+    router.push('/checkout')
   }
 
   const onToggleWishlist = () => {
     toast.success(toggleWishlist(product.id) ? t.wishlist.added : t.wishlist.removed, {
       description: name,
     })
+  }
+
+  const onShare = async () => {
+    const url = window.location.href
+
+    // `navigator.share` only exists on secure origins, and mostly on mobile.
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: name, url })
+        return
+      } catch {
+        // A cancelled share sheet rejects — that is not an error worth reporting.
+        return
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(url)
+      toast.success(t.product.linkCopied)
+    } catch {
+      toast.error(t.product.share)
+    }
   }
 
   return (
@@ -93,66 +130,102 @@ export function ProductDetail({
       <div className="grid gap-8 md:grid-cols-2 lg:gap-12">
         {/* Gallery */}
         <div className="space-y-3">
-          <div className="aspect-square overflow-hidden rounded-xl bg-muted">
-            <img
+          <div className="relative aspect-square overflow-hidden rounded-xl bg-muted">
+            <Image
               src={images[selectedImage] || '/placeholder.svg'}
               alt={`${name} — ${t.product.view} ${selectedImage + 1}`}
-              className="size-full object-cover"
+              fill
+              sizes="(max-width: 768px) 100vw, 50vw"
+              priority
+              className="object-cover"
             />
           </div>
-          <div className="grid grid-cols-4 gap-2">
-            {images.map((image, index) => (
-              <button
-                key={image + index}
-                onClick={() => setSelectedImage(index)}
-                aria-label={`${t.product.showView} ${index + 1}`}
-                aria-current={selectedImage === index}
-                className={cn(
-                  'aspect-square overflow-hidden rounded-lg border-2 transition-colors',
-                  selectedImage === index
-                    ? 'border-primary'
-                    : 'border-transparent hover:border-border',
-                )}
-              >
-                <img
-                  src={image || '/placeholder.svg'}
-                  alt=""
-                  className="size-full object-cover"
-                />
-              </button>
-            ))}
-          </div>
+          {/* Only a real gallery gets a thumbnail strip. A single-photo product
+              used to render a 4-column grid holding one item. */}
+          {images.length > 1 && (
+            <div className="grid grid-cols-4 gap-2">
+              {images.map((image, index) => (
+                <button
+                  key={image + index}
+                  onClick={() => setSelectedImage(index)}
+                  aria-label={`${t.product.showView} ${index + 1}`}
+                  aria-current={selectedImage === index}
+                  className={cn(
+                    'relative aspect-square overflow-hidden rounded-lg border-2 transition-colors',
+                    selectedImage === index
+                      ? 'border-primary'
+                      : 'border-transparent hover:border-border',
+                  )}
+                >
+                  <Image
+                    src={image || '/placeholder.svg'}
+                    alt=""
+                    fill
+                    sizes="120px"
+                    className="object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Details */}
+        {/* Buy box */}
         <div className="space-y-6">
           <div>
             <div className="mb-3 flex items-start justify-between gap-4">
-              <div>
-                {product.badge && (
-                  <span
-                    className={cn(
-                      'mb-2 inline-block rounded px-2 py-0.5 text-[11px] font-semibold',
-                      BADGE_STYLES[product.badge],
-                    )}
-                  >
-                    {t.badges[product.badge]}
-                  </span>
-                )}
+              <div className="min-w-0">
+                <div className="mb-2 flex flex-wrap items-center gap-2">
+                  {product.badge && (
+                    <span
+                      className={cn(
+                        'inline-block rounded px-2 py-0.5 text-[11px] font-semibold',
+                        BADGE_STYLES[product.badge],
+                      )}
+                    >
+                      {t.badges[product.badge]}
+                    </span>
+                  )}
+                  {discount > 0 && (
+                    <span className="inline-block rounded bg-badge-sale px-2 py-0.5 text-[11px] font-semibold text-badge-sale-foreground">
+                      {discount}% {t.product.off}
+                    </span>
+                  )}
+                </div>
                 <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                   {name}
                 </h1>
-                <Rating
-                  value={product.rating}
-                  reviews={product.reviews}
-                  size="md"
-                  className="mt-2"
-                />
+
+                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+                  {/* The star block is aria-hidden, so the number inside
+                      <Rating> is the only accessible form of the score. */}
+                  <a
+                    href="#reviews"
+                    className="flex items-center gap-2 transition-colors hover:text-primary"
+                  >
+                    <Rating value={product.rating} size="md" />
+                    <span>
+                      {t.product.reviewsLabel.replace(
+                        '{n}',
+                        String(product.reviews),
+                      )}
+                    </span>
+                  </a>
+                  {product.sold ? (
+                    <>
+                      <span aria-hidden="true">·</span>
+                      <span>
+                        {t.product.sold.replace('{n}', String(product.sold))}
+                      </span>
+                    </>
+                  ) : null}
+                </div>
               </div>
+
               <button
                 onClick={onToggleWishlist}
                 className={cn(
-                  'rounded-lg border p-3 transition-colors',
+                  'shrink-0 rounded-lg border p-3 transition-colors',
                   isFavorited
                     ? 'border-primary bg-accent text-primary'
                     : 'border-border text-muted-foreground hover:border-primary',
@@ -190,24 +263,34 @@ export function ProductDetail({
               <p className="text-sm font-semibold text-foreground">
                 {t.product.color}:{' '}
                 <span className="font-normal">
-                  {selectedColor ? pick(selectedColor) : ''}
+                  {selectedColor ? pick(selectedColor.name) : ''}
                 </span>
               </p>
               <div className="flex flex-wrap gap-2">
-                {product.colors.map((color, index) => (
-                  <button
-                    key={color.en}
-                    onClick={() => setSelectedColorIndex(index)}
-                    className={cn(
-                      'rounded-md border px-4 py-2 text-sm font-medium transition-colors',
-                      selectedColorIndex === index
-                        ? 'border-primary bg-accent text-primary'
-                        : 'border-border hover:border-primary',
-                    )}
-                  >
-                    {pick(color)}
-                  </button>
-                ))}
+                {product.colors.map((color, index) =>
+                  swatchable ? (
+                    <ColorSwatch
+                      key={color.name.en}
+                      hex={color.hex!}
+                      label={pick(color.name)}
+                      selected={selectedColorIndex === index}
+                      onSelect={() => setSelectedColorIndex(index)}
+                    />
+                  ) : (
+                    <button
+                      key={color.name.en}
+                      onClick={() => setSelectedColorIndex(index)}
+                      className={cn(
+                        'rounded-md border px-4 py-2 text-sm font-medium transition-colors',
+                        selectedColorIndex === index
+                          ? 'border-primary bg-accent text-primary'
+                          : 'border-border hover:border-primary',
+                      )}
+                    >
+                      {pick(color.name)}
+                    </button>
+                  ),
+                )}
               </div>
             </div>
           )}
@@ -245,68 +328,106 @@ export function ProductDetail({
                 {t.wholesale.moq.hint.replace('{n}', String(minQuantity))}
               </p>
             )}
-            <div className="flex w-fit items-center rounded-md border border-border">
-              <button
-                onClick={() =>
-                  setQuantity(Math.max(minQuantity, quantity - 1))
-                }
-                disabled={quantity <= minQuantity}
-                className="p-2.5 transition-colors hover:bg-muted disabled:opacity-40"
-                aria-label={t.cart.decrease}
-              >
-                <Minus className="size-4" />
-              </button>
-              <span className="w-10 text-center text-sm font-medium">
-                {quantity}
-              </span>
-              <button
-                onClick={() => setQuantity(quantity + 1)}
-                className="p-2.5 transition-colors hover:bg-muted"
-                aria-label={t.cart.increase}
-              >
-                <Plus className="size-4" />
-              </button>
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex w-fit items-center rounded-md border border-border">
+                <button
+                  onClick={() => setQuantity(Math.max(minQuantity, quantity - 1))}
+                  disabled={quantity <= minQuantity}
+                  className="p-2.5 transition-colors hover:bg-muted disabled:opacity-40"
+                  aria-label={t.cart.decrease}
+                >
+                  <Minus className="size-4" />
+                </button>
+                <span className="w-10 text-center text-sm font-medium">
+                  {quantity}
+                </span>
+                {/* Stops at what is actually on the shelf. */}
+                <button
+                  onClick={() =>
+                    setQuantity(Math.min(product.stock, quantity + 1))
+                  }
+                  disabled={soldOut || quantity >= product.stock}
+                  className="p-2.5 transition-colors hover:bg-muted disabled:opacity-40"
+                  aria-label={t.cart.increase}
+                >
+                  <Plus className="size-4" />
+                </button>
+              </div>
+              {!soldOut && product.stock <= 5 && (
+                <p className="text-xs font-medium text-badge-sale">
+                  {t.product.lowStock.replace('{n}', String(product.stock))}
+                </p>
+              )}
             </div>
           </div>
 
           <div className="flex flex-col gap-2 sm:flex-row">
-            <Button size="lg" className="flex-1" onClick={addToBag}>
-              {t.product.addToBag}
+            <Button
+              size="lg"
+              className="flex-1"
+              onClick={addToBag}
+              disabled={soldOut}
+            >
+              {soldOut ? t.product.outOfStock : t.product.addToBag}
             </Button>
-            <Button variant="outline" size="lg" className="sm:w-auto">
+            <Button
+              size="lg"
+              variant="secondary"
+              className="flex-1"
+              onClick={buyNow}
+              disabled={soldOut}
+            >
+              {t.product.buyNow}
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="sm:w-auto"
+              onClick={onShare}
+            >
               <Share2 className="size-4" />
-              {t.product.share}
+              <span className="sr-only sm:not-sr-only">{t.product.share}</span>
             </Button>
           </div>
 
-          {/* Trust strip — the same four promises as the site-wide feature bar. */}
-          <ul className="grid grid-cols-2 gap-3 border-t border-border pt-6">
-            {t.features.map((feature, index) => {
-              const Icon = [Truck, RotateCcw, ShieldCheck, Headphones][index]
-
-              return (
-                <li key={feature.title} className="flex items-center gap-2.5">
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    <Icon className="size-4" />
-                  </span>
-                  <span className="text-xs font-medium text-foreground">
-                    {feature.title}
-                  </span>
-                </li>
-              )
-            })}
-          </ul>
+          <div className="flex items-start gap-2.5 rounded-lg border border-border bg-muted/40 p-3">
+            <Truck className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+            <p className="text-xs text-muted-foreground">
+              <span className="font-medium text-foreground">
+                {t.product.estimatedDelivery}
+              </span>{' '}
+              {deliveryWindow}
+            </p>
+          </div>
         </div>
       </div>
 
-      <div className="mt-16 grid gap-10 border-t border-border pt-10 md:grid-cols-2">
+      <div className="mt-16 grid gap-10 border-t border-border pt-10 md:grid-cols-3">
+        {product.highlights && product.highlights.length > 0 && (
+          <div>
+            <h2 className="mb-4 text-lg font-semibold text-foreground">
+              {t.product.highlights}
+            </h2>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              {product.highlights.map((item) => (
+                <li key={item.en} className="flex items-start gap-2">
+                  <Check
+                    className="mt-0.5 size-4 shrink-0 text-primary"
+                    aria-hidden="true"
+                  />
+                  {pick(item)}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <div>
           <h2 className="mb-4 text-lg font-semibold text-foreground">
             {t.product.care}
           </h2>
           <ul className="space-y-2 text-sm text-muted-foreground">
-            {t.product.careItems.map((line) => (
-              <li key={line}>• {line}</li>
+            {t.product.careItems.map((item) => (
+              <li key={item}>• {item}</li>
             ))}
           </ul>
         </div>
@@ -329,7 +450,15 @@ export function ProductDetail({
               <dt className="text-muted-foreground">
                 {t.product.specAvailability}
               </dt>
-              <dd className="font-medium text-badge-new">{t.product.inStock}</dd>
+              {/* Reads the real column. This used to say "In stock" always. */}
+              <dd
+                className={cn(
+                  'font-medium',
+                  soldOut ? 'text-muted-foreground' : 'text-badge-new',
+                )}
+              >
+                {soldOut ? t.product.outOfStock : t.product.inStock}
+              </dd>
             </div>
           </dl>
         </div>

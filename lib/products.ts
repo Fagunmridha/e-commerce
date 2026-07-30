@@ -5,13 +5,21 @@ import { db } from '@/lib/db'
 import { getViewerShop } from '@/lib/wholesalers'
 import {
   categories,
+  orderItems,
+  orders,
   productImages,
   products,
   reviews,
   wholesalerApplications,
   type ProductRow,
 } from '@/lib/db/schema'
-import type { Category, CategorySlug, Product } from '@/lib/types'
+import type { Localized } from '@/lib/i18n'
+import type {
+  Category,
+  CategorySlug,
+  Product,
+  ProductColor,
+} from '@/lib/types'
 
 type Aggregate = { avg: number; count: number }
 
@@ -36,10 +44,34 @@ async function reviewAggregates(): Promise<Map<string, Aggregate>> {
   return map
 }
 
+/**
+ * `colors` was `Localized[]` until migration 0012 reshaped it to
+ * `{ name, hex? }[]`. `$type<>` is a compile-time assertion only, so at runtime
+ * this can still be the old shape: a database the migration has not been run
+ * against, or a dev copy built with `db:push` (which diffs DDL and so finds
+ * nothing to do here). Normalising on read means every consumer sees exactly
+ * one shape and the migration is cleanup rather than a deploy dependency.
+ */
+function toColors(value: unknown): ProductColor[] | undefined {
+  if (!Array.isArray(value)) return undefined
+
+  const colors = value.flatMap<ProductColor>((item) => {
+    if (!item || typeof item !== 'object') return []
+    if ('name' in item) return [item as ProductColor]
+
+    const legacy = item as Localized
+    return legacy.en ? [{ name: legacy }] : []
+  })
+
+  // Collapse [] to undefined, which is what every consumer already guards for.
+  return colors.length ? colors : undefined
+}
+
 function toProduct(
   row: ProductRow,
   agg?: Aggregate,
   sellerName?: string,
+  sold?: number,
 ): Product {
   return {
     id: row.id,
@@ -50,7 +82,8 @@ function toProduct(
     category: row.category,
     badge: row.badge ?? undefined,
     sizes: row.sizes ?? undefined,
-    colors: row.colors ?? undefined,
+    colors: toColors(row.colors),
+    highlights: row.highlights?.length ? row.highlights : undefined,
     description: row.description ?? undefined,
     stock: row.stock,
     // 1 is "no minimum", which every house product has — left undefined so the
@@ -58,6 +91,7 @@ function toProduct(
     moq: row.moq > 1 ? row.moq : undefined,
     rating: agg?.avg ?? 0,
     reviews: agg?.count ?? 0,
+    sold: sold || undefined,
     sellerId: row.sellerId ?? undefined,
     sellerName,
   }
@@ -83,7 +117,11 @@ async function fetchAllProducts(): Promise<Product[]> {
 // The whole catalogue is fetched on every page (root layout). Cache it so a
 // navigation no longer pays a round-trip to the database — admin edits bust
 // the `catalogue` tag (see app/actions/admin.ts), so the store stays live.
-export const getAllProducts = unstable_cache(fetchAllProducts, ['all-products'], {
+//
+// The `-v2` suffix retires entries written before the `colors` reshape. A cache
+// hit never runs `toProduct`, so `toColors` would not get the chance to
+// normalise them and the old shape would be served straight through.
+export const getAllProducts = unstable_cache(fetchAllProducts, ['all-products-v2'], {
   tags: ['catalogue'],
   revalidate: 60,
 })
@@ -110,7 +148,7 @@ async function fetchWholesaleProducts(): Promise<Product[]> {
 
 export const getWholesaleProducts = unstable_cache(
   fetchWholesaleProducts,
-  ['wholesale-products'],
+  ['wholesale-products-v2'],
   { tags: ['catalogue'], revalidate: 60 },
 )
 
@@ -140,6 +178,26 @@ export async function getAdminProducts(): Promise<Product[]> {
       row.shopName ?? undefined,
     ),
   )
+}
+
+/**
+ * Pieces sold, for the "256 sold" line on the detail page.
+ *
+ * Derived rather than stored: `order_items` already holds every sale. Cancelled
+ * orders are excluded, so the number goes back down when an order is cancelled
+ * — which is the honest behaviour and the reason for the join.
+ *
+ * Called only from the single-product paths. Adding this GROUP BY to every
+ * catalogue query would cost a scan on every page for a number no card shows.
+ */
+async function soldCount(id: string): Promise<number> {
+  const [row] = await db
+    .select({ n: sql<string>`coalesce(sum(${orderItems.quantity}), 0)` })
+    .from(orderItems)
+    .innerJoin(orders, eq(orderItems.orderId, orders.id))
+    .where(and(eq(orderItems.productId, id), ne(orders.status, 'cancelled')))
+
+  return Number(row?.n ?? 0)
 }
 
 /** One product's rating, for the paths that fetch a single row. */
@@ -172,7 +230,11 @@ export async function getProductById(id: string): Promise<Product | undefined> {
   if (!row) return undefined
 
   if (!row.sellerId) {
-    return toProduct(row, await reviewAggregate(id))
+    const [agg, sold] = await Promise.all([
+      reviewAggregate(id),
+      soldCount(id),
+    ])
+    return toProduct(row, agg, undefined, sold)
   }
 
   const [shop] = await db
@@ -186,7 +248,8 @@ export async function getProductById(id: string): Promise<Product | undefined> {
   if (shop?.status !== 'approved') return undefined
   if (!(await getViewerShop())) return undefined
 
-  return toProduct(row, await reviewAggregate(id), shop.shopName)
+  const [agg, sold] = await Promise.all([reviewAggregate(id), soldCount(id)])
+  return toProduct(row, agg, shop.shopName, sold)
 }
 
 /** Admin edit screen — no seller or approval gate, by design. */
@@ -265,7 +328,17 @@ export async function getRecommendedProducts(
   return all.filter((product) => product.id !== excludeId).slice(0, limit)
 }
 
-/** Detail-page gallery: pads out with category siblings when a product has one shot. */
+/**
+ * Detail-page gallery: the primary shot followed by this product's own extra
+ * images.
+ *
+ * This used to pad the list out with photos of *other* products from the same
+ * category whenever a product had no `product_images` rows — which was always,
+ * because nothing wrote to that table. The result was a thumbnail strip where
+ * slots 2–4 showed different garments entirely. Now that the admin form writes
+ * the gallery, a product with one photo correctly gets a one-item list and the
+ * thumbnail strip hides itself.
+ */
 export async function getProductImages(product: Product): Promise<string[]> {
   const extra = await db
     .select({ url: productImages.url })
@@ -273,21 +346,7 @@ export async function getProductImages(product: Product): Promise<string[]> {
     .where(eq(productImages.productId, product.id))
     .orderBy(asc(productImages.position))
 
-  if (extra.length) return [product.image, ...extra.map((row) => row.url)]
-
-  const siblings = await db
-    .select({ image: products.image })
-    .from(products)
-    .where(
-      and(
-        eq(products.category, product.category),
-        ne(products.id, product.id),
-        isNull(products.sellerId),
-      ),
-    )
-    .limit(3)
-
-  return [product.image, ...siblings.map((row) => row.image)]
+  return [product.image, ...extra.map((row) => row.url)]
 }
 
 /** Free-text search over English and Bangla product names. */

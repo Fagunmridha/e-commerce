@@ -143,6 +143,81 @@ const en = {
     specSku: 'SKU',
     specAvailability: 'Availability',
     inStock: 'In stock',
+    outOfStock: 'Out of stock',
+    lowStock: 'Only {n} left',
+    buyNow: 'Buy Now',
+    highlights: 'Highlights',
+    /** `{n}` is the review count; the whole thing links to the reviews section. */
+    reviewsLabel: '{n} Reviews',
+    sold: '{n} sold',
+    off: 'OFF',
+    linkCopied: 'Link copied',
+    estimatedDelivery: 'Estimated delivery',
+    faqTitle: 'Frequently Asked Questions',
+    faqSubtitle: 'Still have a question? We are here to help.',
+    /**
+     * Store policy, not product detail — the same list on every product page.
+     * That is deliberate (it is what shoppers actually ask before buying) and it
+     * is also why the page ships no FAQPage structured data: identical markup on
+     * hundreds of URLs is what Google's guidance warns against.
+     */
+    faq: [
+      {
+        question: 'Is this product 100% original?',
+        answer:
+          'Yes. Everything we list comes from the brand or an authorised supplier, and each piece is checked before it is packed.',
+      },
+      {
+        question: 'How long does delivery take?',
+        answer:
+          'Inside Dhaka, 2–3 working days. Outside Dhaka, 3–5. You get a tracking message as soon as the parcel leaves us.',
+      },
+      {
+        question: 'Can I return or exchange it?',
+        answer:
+          'Yes, within 30 days, as long as the item is unworn and the tags are still on. Return delivery is on us if the item was wrong or damaged.',
+      },
+      {
+        question: 'What payment methods can I use?',
+        answer:
+          'Cash on delivery, bKash, Nagad and Rocket, or any Visa or Mastercard.',
+      },
+      {
+        question: 'How do I pick the right size?',
+        answer:
+          'Our sizes run true to standard Bangladeshi fit. If you are between two sizes, take the larger one — and if it does not fit, exchange it free.',
+      },
+      {
+        question: 'Will I get exactly the item in the photos?',
+        answer:
+          'Yes. We photograph our own stock. Screen settings can shift a colour slightly, but the piece is the one you see.',
+      },
+      {
+        question: 'How do I track my order?',
+        answer:
+          'Open My Account and you will find every order with its current status. We also message you at each step.',
+      },
+      {
+        question: 'Can I cancel an order?',
+        answer:
+          'Yes, any time before it ships. Call us and we will cancel it — nothing is charged on a cash-on-delivery order until it reaches you.',
+      },
+      {
+        question: 'Are the reviews real?',
+        answer:
+          'Every review is written by a signed-in customer. We never write them ourselves and we never delete a bad one.',
+      },
+      {
+        question: 'Can I buy this wholesale?',
+        answer:
+          'If you run a shop, yes — approved shops buy at trade prices with their own minimum order. Apply on our wholesale page and we will get back to you within two working days.',
+      },
+    ],
+    helpTitle: 'Need more help?',
+    helpSubtitle: 'Our team is ready to answer, six days a week.',
+    helpCall: 'Call us',
+    helpWhatsApp: 'WhatsApp',
+    helpEmail: 'Email us',
   },
   shop: {
     all: 'All',
@@ -841,6 +916,74 @@ const bn: Dictionary = {
     specSku: 'এসকেইউ',
     specAvailability: 'স্টক',
     inStock: 'স্টকে আছে',
+    outOfStock: 'স্টকে নেই',
+    lowStock: 'আর মাত্র {n}টি আছে',
+    buyNow: 'এখনই কিনুন',
+    highlights: 'বৈশিষ্ট্য',
+    reviewsLabel: '{n}টি রিভিউ',
+    sold: '{n}টি বিক্রি হয়েছে',
+    off: 'ছাড়',
+    linkCopied: 'লিংক কপি হয়েছে',
+    estimatedDelivery: 'সম্ভাব্য ডেলিভারি',
+    faqTitle: 'সাধারণ প্রশ্নোত্তর',
+    faqSubtitle: 'আরো কিছু জানতে চান? আমরা সাহায্য করতে আছি।',
+    faq: [
+      {
+        question: 'পণ্যটি কি ১০০% অরিজিনাল?',
+        answer:
+          'হ্যাঁ। আমাদের সব পণ্য ব্র্যান্ড বা অনুমোদিত সাপ্লায়ার থেকে আসে, আর প্যাক করার আগে প্রতিটি যাচাই করা হয়।',
+      },
+      {
+        question: 'ডেলিভারিতে কত দিন লাগে?',
+        answer:
+          'ঢাকার ভেতরে ২–৩ কর্মদিবস, ঢাকার বাইরে ৩–৫ কর্মদিবস। পার্সেল বেরোনোর সাথে সাথেই ট্র্যাকিং মেসেজ পাবেন।',
+      },
+      {
+        question: 'রিটার্ন বা এক্সচেঞ্জ করা যাবে?',
+        answer:
+          'হ্যাঁ, ৩০ দিনের মধ্যে — পণ্যটি না পরা থাকতে হবে আর ট্যাগ লাগানো থাকতে হবে। পণ্য ভুল বা নষ্ট এলে ফেরত পাঠানোর খরচ আমাদের।',
+      },
+      {
+        question: 'কোন কোন উপায়ে পেমেন্ট করা যায়?',
+        answer:
+          'ক্যাশ অন ডেলিভারি, বিকাশ, নগদ, রকেট — অথবা যেকোনো ভিসা বা মাস্টারকার্ড।',
+      },
+      {
+        question: 'সঠিক সাইজ কীভাবে বাছব?',
+        answer:
+          'আমাদের সাইজ বাংলাদেশি স্ট্যান্ডার্ড ফিট অনুযায়ী। দুই সাইজের মাঝামাঝি হলে বড়টি নিন — আর না মিললে ফ্রিতে এক্সচেঞ্জ করে দেব।',
+      },
+      {
+        question: 'ছবিতে যা দেখছি হুবহু সেটাই পাব?',
+        answer:
+          'হ্যাঁ। আমরা নিজেদের পণ্যের ছবিই তুলি। স্ক্রিনের সেটিংসে রঙ একটু আলাদা লাগতে পারে, কিন্তু পণ্যটি ঠিক ওটাই।',
+      },
+      {
+        question: 'অর্ডার ট্র্যাক করব কীভাবে?',
+        answer:
+          '"আমার অ্যাকাউন্ট" এ গেলে প্রতিটি অর্ডার আর তার অবস্থা দেখতে পাবেন। প্রতিটি ধাপে আমরা মেসেজও করি।',
+      },
+      {
+        question: 'অর্ডার বাতিল করা যাবে?',
+        answer:
+          'হ্যাঁ, পাঠানোর আগে যেকোনো সময়। আমাদের কল করুন, বাতিল করে দেব — ক্যাশ অন ডেলিভারিতে পণ্য হাতে পাওয়ার আগে কোনো টাকা কাটা হয় না।',
+      },
+      {
+        question: 'রিভিউগুলো কি আসল?',
+        answer:
+          'প্রতিটি রিভিউ সাইন-ইন করা ক্রেতার লেখা। আমরা নিজে রিভিউ লিখি না, আর খারাপ রিভিউ মুছিও না।',
+      },
+      {
+        question: 'এটা পাইকারি দামে কেনা যাবে?',
+        answer:
+          'আপনার দোকান থাকলে হ্যাঁ — অনুমোদিত দোকান নিজের সর্বনিম্ন অর্ডারসহ পাইকারি দামে কেনে। আমাদের পাইকারি পেজে আবেদন করুন, দুই কর্মদিবসের মধ্যে জানাবো।',
+      },
+    ],
+    helpTitle: 'আরো সাহায্য দরকার?',
+    helpSubtitle: 'সপ্তাহে ছয় দিন আমাদের টিম উত্তর দিতে তৈরি।',
+    helpCall: 'কল করুন',
+    helpWhatsApp: 'হোয়াটসঅ্যাপ',
+    helpEmail: 'ইমেইল করুন',
   },
   shop: {
     all: 'সব',

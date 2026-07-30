@@ -7,6 +7,18 @@ import type { Localized } from '@/lib/i18n'
  */
 export type CategorySlug = string
 
+/**
+ * A selectable colourway.
+ *
+ * `hex` is optional on purpose. Rows created before migration 0012 carry only a
+ * name, and some colourways genuinely have no single swatch colour — "Print" is
+ * the canonical example. Consumers must fall back to a text pill when it is
+ * absent rather than invent a colour. When present it is always lower-case
+ * `#rrggbb` (normalised by `hexColorSchema`), because it goes straight into a
+ * `style` attribute.
+ */
+export type ProductColor = { name: Localized; hex?: string }
+
 export type Product = {
   id: string
   name: Localized
@@ -17,7 +29,9 @@ export type Product = {
   category: CategorySlug
   badge?: 'new' | 'sale'
   sizes?: string[]
-  colors?: Localized[]
+  colors?: ProductColor[]
+  /** Per-product selling points — "100% Cotton", "Breathable". */
+  highlights?: Localized[]
   description?: Localized
   stock: number
   /**
@@ -29,6 +43,12 @@ export type Product = {
   /** Aggregated from the reviews table — average stars and total count. */
   rating: number
   reviews: number
+  /**
+   * Pieces sold, excluding cancelled orders. Derived from `order_items`, so it
+   * is only populated on the detail page — the list queries would each need an
+   * extra GROUP BY for a number nothing in a card shows.
+   */
+  sold?: number
   /**
    * Set when an approved wholesaler listed this rather than the store itself.
    * Marketplace lines are shown in the wholesale section and kept out of the

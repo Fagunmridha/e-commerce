@@ -44,6 +44,23 @@ export const imageSchema = z
   )
 
 /**
+ * A swatch colour an admin typed. Accepts `#rgb` or `#rrggbb` and normalises to
+ * lower-case `#rrggbb`, so there is exactly one stored form.
+ *
+ * Strict on purpose: the value is interpolated into a `style` attribute, and a
+ * typo would render an invisible or default-coloured circle with no error
+ * anywhere in the stack.
+ */
+export const hexColorSchema = z
+  .string()
+  .trim()
+  .regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, 'Use a hex colour like #1f2937')
+  .transform((value) => {
+    const body = value.slice(1).toLowerCase()
+    return `#${body.length === 3 ? [...body].map((char) => char + char).join('') : body}`
+  })
+
+/**
  * Bangladeshi mobile: 11 digits starting 013–019, optional +88 prefix.
  * Shared so the checkout form and the wholesale application agree on what a
  * valid number looks like.

@@ -68,7 +68,7 @@ export function WishlistContent() {
                             productId: product.id,
                             quantity: 1,
                             size: product.sizes?.[0],
-                            colorEn: product.colors?.[0]?.en,
+                            colorEn: product.colors?.[0]?.name.en,
                           })
                           toast.success(t.product.added, { description: name })
                         }}

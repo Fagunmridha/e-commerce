@@ -1,5 +1,33 @@
 import { z } from 'zod'
-import { imageSchema, localizedSchema, moneySchema } from '@/lib/validation/shared'
+import {
+  hexColorSchema,
+  imageSchema,
+  localizedSchema,
+  moneySchema,
+} from '@/lib/validation/shared'
+
+/**
+ * One colourway. `hex` is optional — absent, null and '' all mean "no swatch
+ * yet" and all normalise to the key being omitted, so nothing downstream has to
+ * tell them apart when deciding whether a product can render swatches.
+ *
+ * A stale admin tab open across the deploy will POST the old `{ en, bn }` shape
+ * and get "English text is required" from `localizedSchema` seeing `undefined`.
+ * Confusing, but loud — and far better than writing the legacy shape back over
+ * rows migration 0012 just reshaped.
+ */
+export const productColorSchema = z.object({
+  name: localizedSchema,
+  hex: z.preprocess(
+    (value) =>
+      value === null ||
+      value === undefined ||
+      (typeof value === 'string' && value.trim() === '')
+        ? undefined
+        : value,
+    hexColorSchema.optional(),
+  ),
+})
 
 export const roleSchema = z.enum(['customer', 'admin'])
 
@@ -37,10 +65,22 @@ export const productSchema = z.object({
     .nullish()
     .transform((value) => (value?.length ? value : null)),
   colors: z
-    .array(localizedSchema)
+    .array(productColorSchema)
     .max(30)
     .nullish()
     .transform((value) => (value?.length ? value : null)),
+  /** Per-product selling points. Capped low — this is a scannable list, not prose. */
+  highlights: z
+    .array(localizedSchema)
+    .max(8)
+    .nullish()
+    .transform((value) => (value?.length ? value : null)),
+  /** Extra gallery shots. The primary photo is `image`, above. */
+  gallery: z
+    .array(imageSchema)
+    .max(8)
+    .nullish()
+    .transform((value) => (value?.length ? value : [])),
   description: localizedSchema.nullish().transform((value) => value ?? null),
   stock: z.number().int().min(0).max(1_000_000),
   /** Minimum order quantity. Defaulted so older callers stay valid. */

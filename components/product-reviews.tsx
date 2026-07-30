@@ -55,7 +55,12 @@ export function ProductReviews({
   }
 
   return (
-    <section className="mx-auto max-w-page px-4 py-12 sm:px-6 lg:px-4">
+    // `id` is the target of the rating link in the buy box. `scroll-mt` keeps
+    // the heading clear of the sticky site header when jumped to.
+    <section
+      id="reviews"
+      className="mx-auto max-w-page scroll-mt-24 px-4 py-12 sm:px-6 lg:px-4"
+    >
       <div className="border-t border-border pt-10">
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <h2 className="text-lg font-semibold text-foreground">
