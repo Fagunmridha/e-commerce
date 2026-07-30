@@ -6,7 +6,7 @@ import {
   AlertTriangle,
   ArrowDownRight,
   ArrowUpRight,
-  BadgeDollarSign,
+  Wallet,
   Clock,
   Package,
   ShoppingCart,
@@ -25,7 +25,8 @@ export type StatAccent = 'violet' | 'emerald' | 'amber' | 'sky' | 'rose'
  * component.
  */
 const ICONS = {
-  revenue: BadgeDollarSign,
+  // Currency-neutral: the store prices in taka, and lucide has no ৳ glyph.
+  revenue: Wallet,
   trending: TrendingUp,
   orders: ShoppingCart,
   pending: Clock,

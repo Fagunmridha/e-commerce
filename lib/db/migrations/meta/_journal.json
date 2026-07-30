@@ -50,6 +50,41 @@
       "when": 1785297039568,
       "tag": "0006_steady_the_captain",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1785313758182,
+      "tag": "0007_known_demogoblin",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1785319346598,
+      "tag": "0008_unusual_green_goblin",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1785319437811,
+      "tag": "0009_icy_shockwave",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1785380918606,
+      "tag": "0010_overjoyed_molten_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1785380959190,
+      "tag": "0011_chunky_queen_noir",
+      "breakpoints": true
     }
   ]
 }

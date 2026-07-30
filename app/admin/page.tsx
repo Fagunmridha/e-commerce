@@ -19,15 +19,13 @@ import {
   getSalesByCategory,
   getTopProducts,
 } from '@/lib/admin/stats'
-import { getServerLocale } from '@/lib/server-locale'
 import { formatPrice } from '@/lib/currency'
 
 export const dynamic = 'force-dynamic'
 
 export default async function AdminDashboard() {
-  const [locale, stats, monthly, byCategory, topProducts, recentOrders] =
+  const [stats, monthly, byCategory, topProducts, recentOrders] =
     await Promise.all([
-      getServerLocale(),
       getDashboardStats(),
       getMonthlySales(),
       getSalesByCategory(),
@@ -35,7 +33,7 @@ export default async function AdminDashboard() {
       getRecentOrders(50),
     ])
 
-  const money = (value: number) => formatPrice(value, locale)
+  const money = formatPrice
   const revenueSeries = stats.sparkline.map((point) => point.revenue)
   const orderSeries = stats.sparkline.map((point) => point.orders)
 

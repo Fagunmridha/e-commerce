@@ -74,21 +74,52 @@ Then visit `/admin` for the dashboard:
 - **Orders** — see every order, change status (pending → delivered)
 - **Users** — change roles
 
-## 6. Image uploads (Vercel Blob)
+## 6. Image uploads (Cloudflare R2)
 
-In the Vercel dashboard: **Storage → Blob → Connect to project**, then pull the
-token down locally:
+Images live in R2 rather than Vercel Blob: R2's free tier permits commercial
+use and charges nothing for egress, which is most of what a product catalogue
+costs. Vercel's Hobby plan is [non-commercial only](https://vercel.com/docs/limits/fair-use-guidelines#commercial-usage).
 
-```bash
-vercel env pull
-```
+In the Cloudflare dashboard:
 
-That writes `BLOB_READ_WRITE_TOKEN` into your env file. The admin image picker
-uploads straight from the browser to Blob via `app/api/upload/route.ts`, which
-mints a short-lived token only for admins.
+1. **R2 → Create bucket** — call it `cp-market`.
+2. **R2 → Manage API tokens → Create API token** — *Object Read & Write*,
+   scoped to that one bucket. Copy the Access Key ID and Secret Access Key.
+3. **Bucket → Settings → CORS policy** — without this, browser uploads fail
+   even though the presigned URL is perfectly valid:
 
-Without the token, uploads fail but the picker's **Paste a URL instead** field
-still works — that is how the seed catalogue's Unsplash images got there.
+   ```json
+   [{
+     "AllowedOrigins": ["http://localhost:3000", "https://your-domain.com"],
+     "AllowedMethods": ["PUT"],
+     "AllowedHeaders": ["Content-Type"],
+     "ExposeHeaders": ["ETag"],
+     "MaxAgeSeconds": 3600
+   }]
+   ```
+
+4. **Bucket → Settings → Public access** — enable the `r2.dev` URL and put it
+   in `R2_PUBLIC_URL`.
+
+Fill in `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`,
+`R2_BUCKET` and `R2_PUBLIC_URL` (see `.env.example`).
+
+The picker uploads straight from the browser to R2 with a presigned PUT minted
+by `app/api/upload/route.ts` — the bytes never cross a route handler, which on
+Vercel would cap out around 4.5 MB. That route is also the only auth gate:
+`wholesale-products/` and `wholesale-documents/` are open to any signed-in user,
+every other folder is admin-only. Both have to be, and not just approved
+wholesalers: an applicant uploads their trade licence *before* anyone can approve
+them. The 5 MB and image-type caps are what keep that from being a file host.
+
+> **Before going live**, move your domain's nameservers to Cloudflare and add
+> `img.your-domain.com` as a custom domain on the bucket, then change
+> `R2_PUBLIC_URL` to it. Cloudflare supports `r2.dev` for development only — it
+> is rate-limited. Putting DNS on Cloudflare does not affect hosting on Vercel:
+> add Vercel's records in Cloudflare DNS with the proxy turned off.
+
+Without the credentials, uploads fail but the picker's **Paste a URL instead**
+field still works — that is how the seed catalogue's Unsplash images got there.
 
 ## What changed
 
@@ -108,5 +139,5 @@ still works — that is how the seed catalogue's Unsplash images got there.
   so uploads are served at full weight. Narrowing `remotePatterns` and turning
   optimisation on has to happen together (the `**` wildcard is only safe while
   Next never fetches these URLs server-side).
-- Media library (`/admin/media`) — nothing sweeps up blobs orphaned by an image
-  replacement yet; `list()` from `@vercel/blob` would power it.
+- Media library (`/admin/media`) — nothing sweeps up objects orphaned by an
+  image replacement yet; `ListObjectsV2` against the R2 bucket would power it.

@@ -10,10 +10,11 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'images.unsplash.com',
       },
-      // Anything uploaded through /admin lands here.
+      // Anything uploaded through the app lands in Cloudflare R2 — an
+      // r2.dev URL in development, img.<domain> once the custom domain is on.
       {
         protocol: 'https',
-        hostname: '*.public.blob.vercel-storage.com',
+        hostname: '*.r2.dev',
       },
       // Product images may still be admin-pasted URLs, so the host is not known ahead of
       // time and next/image would otherwise throw on an unlisted one. Safe only

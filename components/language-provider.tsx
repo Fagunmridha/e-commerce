@@ -12,8 +12,8 @@ type LanguageContextValue = {
   t: Dictionary
   /** Pick the active language out of a localized value from lib/data. */
   pick: (value: Localized) => string
-  /** Catalogue USD price rendered in the active currency. */
-  price: (usd: number) => string
+  /** A taka amount rendered for display, e.g. `৳1,200`. */
+  price: (amount: number) => string
 }
 
 const LanguageContext = createContext<LanguageContextValue | null>(null)
@@ -36,7 +36,9 @@ export function LanguageProvider({
   }, [])
 
   const pick = useCallback((value: Localized) => value[locale], [locale])
-  const price = useCallback((usd: number) => formatPrice(usd, locale), [locale])
+  // Currency does not vary by language — the store sells in taka either way —
+  // but this stays on the context so call sites keep one import.
+  const price = useCallback((amount: number) => formatPrice(amount), [])
 
   return (
     <LanguageContext.Provider

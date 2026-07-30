@@ -56,7 +56,7 @@ export function couponBlocker(
  * The authoritative validity check. Called both by the checkout preview action
  * and by `createOrder`; the latter never trusts the former's result.
  *
- * Order of checks matters for the message the shopper sees — "spend $20 more"
+ * Order of checks matters for the message the shopper sees — "spend ৳200 more"
  * is more useful than "expired" when both are true, so the hard blockers are
  * evaluated first and the fixable one last.
  */
@@ -136,7 +136,7 @@ const cachedFeatured = unstable_cache(
  * marketing copy. Several coupons may be flagged; the newest live one wins.
  *
  * `minOrder` is deliberately *not* used to filter — the homepage has no cart to
- * test it against. It is returned so the card can say "on orders over $50".
+ * test it against. It is returned so the card can say "on orders over ৳500".
  */
 export async function getFeaturedCoupon(): Promise<FeaturedCoupon | null> {
   const rows = await cachedFeatured()

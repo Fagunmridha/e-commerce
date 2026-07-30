@@ -27,9 +27,7 @@ import { placeOrder } from '@/app/actions/orders'
 import type { Dictionary } from '@/lib/dictionaries'
 import type { PaymentMethod } from '@/lib/order'
 import { cn } from '@/lib/utils'
-
-/** Bangladeshi mobile: 11 digits starting 013–019, optional +88 prefix. */
-const BD_PHONE = /^(?:\+?88)?01[3-9]\d{8}$/
+import { BD_PHONE } from '@/lib/validation/shared'
 
 function buildSchema(errors: Dictionary['checkout']['errors']) {
   return z.object({

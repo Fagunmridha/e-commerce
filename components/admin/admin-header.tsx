@@ -105,7 +105,14 @@ function LanguageMenu() {
   )
 }
 
-export function AdminHeader({ pendingOrders }: { pendingOrders: number }) {
+export function AdminHeader({
+  pendingOrders,
+  pendingWholesalers = 0,
+}: {
+  pendingOrders: number
+  pendingWholesalers?: number
+}) {
+  const pendingTotal = pendingOrders + pendingWholesalers
   const pathname = usePathname()
   const router = useRouter()
   const [paletteOpen, setPaletteOpen] = useState(false)
@@ -173,27 +180,36 @@ export function AdminHeader({ pendingOrders }: { pendingOrders: number }) {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="relative">
               <Bell className="size-4" />
-              {pendingOrders > 0 && (
+              {pendingTotal > 0 && (
                 <span className="absolute top-1 right-1 flex min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-white">
-                  {pendingOrders > 99 ? '99+' : pendingOrders}
+                  {pendingTotal > 99 ? '99+' : pendingTotal}
                 </span>
               )}
               <span className="sr-only">
-                {pendingOrders} orders awaiting action
+                {pendingTotal} items awaiting action
               </span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-64">
             <DropdownMenuLabel>Notifications</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {pendingOrders > 0 ? (
+            {pendingOrders > 0 && (
               <DropdownMenuItem asChild>
                 <Link href="/admin/orders?status=pending">
                   {pendingOrders} order{pendingOrders === 1 ? '' : 's'} awaiting
                   processing
                 </Link>
               </DropdownMenuItem>
-            ) : (
+            )}
+            {pendingWholesalers > 0 && (
+              <DropdownMenuItem asChild>
+                <Link href="/admin/wholesalers">
+                  {pendingWholesalers} wholesale application
+                  {pendingWholesalers === 1 ? '' : 's'} to review
+                </Link>
+              </DropdownMenuItem>
+            )}
+            {pendingTotal === 0 && (
               <div className="px-2 py-6 text-center text-sm text-muted-foreground">
                 Nothing needs your attention
               </div>

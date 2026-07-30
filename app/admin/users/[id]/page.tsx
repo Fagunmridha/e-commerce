@@ -8,6 +8,7 @@ import { StatCard } from '@/components/admin/dashboard/stat-card'
 import { getCurrentUser } from '@/lib/auth'
 import { getCustomerById, getCustomerOrders } from '@/lib/admin/customers'
 import type { OrderRow } from '@/lib/db/schema'
+import { formatPrice } from '@/lib/currency'
 
 export const dynamic = 'force-dynamic'
 
@@ -85,7 +86,7 @@ export default async function AdminCustomerDetailPage({
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard
           label="Lifetime value"
-          value={`$${customer.lifetimeValue.toFixed(2)}`}
+          value={formatPrice(customer.lifetimeValue)}
           hint="Cancelled orders excluded"
           icon="revenue"
         />
@@ -106,7 +107,7 @@ export default async function AdminCustomerDetailPage({
         />
         <StatCard
           label="Average order"
-          value={`$${averageOrder.toFixed(2)}`}
+          value={formatPrice(averageOrder)}
           hint={`Joined ${customer.createdAt.toLocaleDateString('en-GB', {
             day: 'numeric',
             month: 'short',
@@ -183,7 +184,9 @@ function OrderList({
                 >
                   {order.status}
                 </Badge>
-                <span className="font-semibold">${order.total.toFixed(2)}</span>
+                <span className="font-semibold">
+                  {formatPrice(order.total)}
+                </span>
               </div>
             </li>
           ))}

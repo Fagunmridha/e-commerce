@@ -41,7 +41,7 @@ export type CouponRowView = {
   id: string
   code: string
   type: 'percent' | 'fixed'
-  /** Pre-formatted "20%" / "$10" so sorting and CSV export both read well. */
+  /** Pre-formatted "20%" / "৳500" so sorting and CSV export both read well. */
   value: string
   minOrder: string
   window: string

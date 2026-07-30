@@ -7,6 +7,7 @@ import {
 } from '@/components/admin/coupons/coupons-table'
 import { getAllCoupons } from '@/lib/coupons'
 import { couponStatus, formatWindow } from '@/lib/admin/coupon-status'
+import { formatPrice } from '@/lib/currency'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,8 +19,9 @@ export default async function AdminCouponsPage() {
     id: row.id,
     code: row.code,
     type: row.type,
-    value: row.type === 'percent' ? `${row.value}%` : `$${row.value.toFixed(2)}`,
-    minOrder: row.minOrder > 0 ? `$${row.minOrder.toFixed(2)}` : '—',
+    value:
+      row.type === 'percent' ? `${row.value}%` : formatPrice(row.value),
+    minOrder: row.minOrder > 0 ? formatPrice(row.minOrder) : '—',
     window: formatWindow(row.startsAt, row.endsAt),
     usageLimit: row.usageLimit,
     usageCount: row.usageCount,

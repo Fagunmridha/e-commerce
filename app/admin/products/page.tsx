@@ -1,13 +1,15 @@
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { getAllProducts } from '@/lib/products'
+import { getAdminProducts } from '@/lib/products'
 import { DeleteProductButton } from '@/components/admin/delete-product-button'
+import { formatPrice } from '@/lib/currency'
 
 export const dynamic = 'force-dynamic'
 
 export default async function AdminProductsPage() {
-  const products = await getAllProducts()
+  // Includes marketplace listings — an admin managing stock needs the lot.
+  const products = await getAdminProducts()
 
   return (
     <div>
@@ -27,6 +29,7 @@ export default async function AdminProductsPage() {
             <tr>
               <th className="px-4 py-3 font-semibold">Product</th>
               <th className="px-4 py-3 font-semibold">Category</th>
+              <th className="px-4 py-3 font-semibold">Seller</th>
               <th className="px-4 py-3 font-semibold">Price</th>
               <th className="px-4 py-3 font-semibold">Stock</th>
               <th className="px-4 py-3 font-semibold">Actions</th>
@@ -50,8 +53,11 @@ export default async function AdminProductsPage() {
                 <td className="px-4 py-3 capitalize text-muted-foreground">
                   {product.category}
                 </td>
+                <td className="px-4 py-3 text-muted-foreground">
+                  {product.sellerName ?? 'In-house'}
+                </td>
                 <td className="px-4 py-3 text-foreground">
-                  ${product.price.toFixed(2)}
+                  {formatPrice(product.price)}
                 </td>
                 <td className="px-4 py-3">
                   <span

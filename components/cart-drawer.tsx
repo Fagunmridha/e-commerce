@@ -115,11 +115,15 @@ export function CartDrawer({
 
                         <div className="mt-2 flex items-center gap-1">
                           <div className="flex items-center rounded-md border border-border">
+                            {/* Stops at the seller's minimum rather than at 1.
+                                The provider clamps anyway, so without this the
+                                button would look broken on a wholesale line. */}
                             <button
                               onClick={() =>
                                 setQuantity(line.key, line.quantity - 1)
                               }
-                              className="p-1.5 transition-colors hover:bg-muted"
+                              disabled={line.quantity <= line.moq}
+                              className="p-1.5 transition-colors hover:bg-muted disabled:opacity-40"
                               aria-label={`${t.cart.decrease} ${label}`}
                             >
                               <Minus className="size-3" />

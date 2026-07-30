@@ -1,8 +1,18 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 
-/** Routes that require a signed-in user. Admin access is additionally
- * role-checked inside the /admin layout against the database. */
-const isProtectedRoute = createRouteMatcher(['/account(.*)', '/admin(.*)'])
+/** Routes that require a signed-in user. This is authentication only —
+ * authorization is checked against the database inside the matching layout:
+ * /admin against `users.role`, and the wholesale market and seller dashboard
+ * against an approved `wholesaler_applications` row. `/wholesale` itself stays
+ * open because it is the pitch page carrying the Apply button; it lists no
+ * products. */
+const isProtectedRoute = createRouteMatcher([
+  '/account(.*)',
+  '/admin(.*)',
+  '/wholesale/apply(.*)',
+  '/wholesale/market(.*)',
+  '/wholesale/dashboard(.*)',
+])
 
 export default clerkMiddleware(async (auth, req) => {
   if (isProtectedRoute(req)) {

@@ -6,6 +6,7 @@ import {
   orderItems,
   orders,
   products,
+  wholesalerApplications,
   type OrderEventRow,
   type OrderRow,
 } from '@/lib/db/schema'
@@ -69,10 +70,45 @@ export async function createOrder(
   const rows = await db.select().from(products).where(inArray(products.id, ids))
   const byId = new Map(rows.map((row) => [row.id, row]))
 
+  // Marketplace lines are only sellable while their shop is still approved.
+  // Suspension hides listings from the market but does not delete the rows, so
+  // without this a stale cart would still get a paused shop's stock through.
+  const sellerIds = [
+    ...new Set(rows.flatMap((row) => (row.sellerId ? [row.sellerId] : []))),
+  ]
+  const liveShops = sellerIds.length
+    ? new Set(
+        (
+          await db
+            .select({ id: wholesalerApplications.id })
+            .from(wholesalerApplications)
+            .where(
+              and(
+                inArray(wholesalerApplications.id, sellerIds),
+                eq(wholesalerApplications.status, 'approved'),
+              ),
+            )
+        ).map((row) => row.id),
+      )
+    : new Set<string>()
+
   let subtotal = 0
   const lines = input.items.flatMap((item) => {
     const product = byId.get(item.productId)
     if (!product) return []
+
+    if (product.sellerId && !liveShops.has(product.sellerId)) {
+      throw new Error(`${product.id} is no longer for sale`)
+    }
+
+    // The cart clamps this too, but that is a courtesy and this is the rule —
+    // the client's quantities are no more trusted than its prices.
+    if (item.quantity < product.moq) {
+      throw new Error(
+        `${product.id} has a minimum order of ${product.moq} pieces`,
+      )
+    }
+
     subtotal += product.price * item.quantity
     return [
       {

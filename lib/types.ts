@@ -20,9 +20,24 @@ export type Product = {
   colors?: Localized[]
   description?: Localized
   stock: number
+  /**
+   * Minimum order quantity, in pieces. Undefined means no minimum — every
+   * house product. Wholesalers set it per listing, and it is enforced in the
+   * cart and again server-side when the order is created.
+   */
+  moq?: number
   /** Aggregated from the reviews table — average stars and total count. */
   rating: number
   reviews: number
+  /**
+   * Set when an approved wholesaler listed this rather than the store itself.
+   * Marketplace lines are shown in the wholesale section and kept out of the
+   * ordinary shop listings, but are otherwise bought exactly like any other
+   * product.
+   */
+  sellerId?: string
+  /** The seller's shop name, for the "sold by" line. */
+  sellerName?: string
 }
 
 export type Category = {

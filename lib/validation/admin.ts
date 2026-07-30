@@ -43,4 +43,12 @@ export const productSchema = z.object({
     .transform((value) => (value?.length ? value : null)),
   description: localizedSchema.nullish().transform((value) => value ?? null),
   stock: z.number().int().min(0).max(1_000_000),
+  /** Minimum order quantity. Defaulted so older callers stay valid. */
+  moq: z
+    .number()
+    .int()
+    .min(1, 'The minimum is at least 1 piece')
+    .max(100_000)
+    .nullish()
+    .transform((value) => value ?? 1),
 })

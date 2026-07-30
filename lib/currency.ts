@@ -1,34 +1,26 @@
-import type { Locale } from '@/lib/i18n'
-
 /**
- * Catalogue prices in lib/data are stored in USD. Bangla shoppers see taka,
- * converted at this rate — change it in one place when the rate moves.
+ * Money in this store is taka, everywhere — stored, computed and displayed.
+ * There is no second currency and no conversion step: what an admin or a
+ * seller types into a price field is exactly what a shopper pays.
  */
-export const USD_TO_BDT = 120
 
-/** Free-shipping threshold, quoted in each currency. */
-export const FREE_SHIPPING_USD = 100
+/** Orders at or above this ship free. */
+export const FREE_SHIPPING = 2000
 
 /** Flat delivery charge on orders below the free-shipping threshold. */
-export const SHIPPING_FLAT_USD = 5
+export const SHIPPING_FLAT = 60
 
-export function getShippingCost(subtotalUsd: number): number {
-  if (subtotalUsd === 0 || subtotalUsd >= FREE_SHIPPING_USD) return 0
-  return SHIPPING_FLAT_USD
-}
-
-export function toBdt(usd: number): number {
-  return Math.round(usd * USD_TO_BDT)
+export function getShippingCost(subtotal: number): number {
+  if (subtotal === 0 || subtotal >= FREE_SHIPPING) return 0
+  return SHIPPING_FLAT
 }
 
 /**
- * `$89.99` in English, `৳10,799` in Bangla. Taka amounts drop the paisa —
- * nobody prices a shirt at ৳10,798.80.
+ * `৳1,200`. Whole taka — nobody prices a shirt at ৳1,199.80.
+ *
+ * Grouped with `en-IN` rather than `en-US` so large amounts break at lakh and
+ * crore (`1200000` → `12,00,000`), which is how the number is read here.
  */
-export function formatPrice(usd: number, locale: Locale): string {
-  if (locale === 'bn') {
-    return `৳${toBdt(usd).toLocaleString('en-US')}`
-  }
-
-  return `$${usd.toFixed(2)}`
+export function formatPrice(amount: number): string {
+  return `৳${Math.round(amount).toLocaleString('en-IN')}`
 }

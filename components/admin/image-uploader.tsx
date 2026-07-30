@@ -1,42 +1,60 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { upload } from '@vercel/blob/client'
 import { ImagePlus, Link2, Loader2, Trash2, Upload } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
-import { deleteBlob } from '@/app/actions/media'
+import { deleteImage, isOwnedImage } from '@/app/actions/media'
 import { cn } from '@/lib/utils'
 
 const MAX_BYTES = 5 * 1024 * 1024
 const ACCEPTED = ['image/jpeg', 'image/png', 'image/webp', 'image/avif']
 
-/** "Eid Sale Banner.JPG" → "eid-sale-banner.jpg", so blob keys stay readable. */
-function slugifyFileName(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9.]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-}
+/**
+ * PUTs the file at a presigned URL, reporting progress as it goes.
+ *
+ * `XMLHttpRequest` rather than `fetch` on purpose: fetch cannot report upload
+ * progress, and a 5 MB photo on a phone connection with no progress bar looks
+ * like a frozen page.
+ */
+function putWithProgress(
+  url: string,
+  file: File,
+  onProgress: (percentage: number) => void,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('PUT', url)
+    // Must match the type the URL was signed for, or R2 rejects the signature.
+    xhr.setRequestHeader('Content-Type', file.type)
 
-function isBlobUrl(url: string): boolean {
-  try {
-    return new URL(url).hostname.endsWith('.public.blob.vercel-storage.com')
-  } catch {
-    return false
-  }
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        onProgress(Math.round((event.loaded / event.total) * 100))
+      }
+    }
+    xhr.onload = () =>
+      xhr.status >= 200 && xhr.status < 300
+        ? resolve()
+        : reject(new Error(`Upload failed (${xhr.status})`))
+    xhr.onerror = () =>
+      reject(new Error('Upload failed — check your connection'))
+    xhr.onabort = () => reject(new Error('Upload cancelled'))
+
+    xhr.send(file)
+  })
 }
 
 /**
- * Drop-in replacement for a plain image URL field: uploads straight to Vercel
- * Blob and hands the resulting URL back through `onChange`.
+ * Drop-in replacement for a plain image URL field: uploads straight to
+ * Cloudflare R2 and hands the resulting URL back through `onChange`.
  *
  * The URL-paste escape hatch stays available on purpose — the seed catalogue
- * runs on Unsplash links, and a developer without BLOB_READ_WRITE_TOKEN still
- * needs a way to fill this in.
+ * runs on Unsplash links, and a developer without R2 credentials still needs a
+ * way to fill this in.
  */
 export function ImageUploader({
   value,
@@ -47,7 +65,16 @@ export function ImageUploader({
 }: {
   value: string
   onChange: (url: string) => void
-  folder: 'products' | 'categories'
+  /**
+   * Object-key prefix. The `wholesale-*` pair is what a signed-in non-admin may
+   * write to; the upload route gates on exactly these strings. Hand-duplicated
+   * from `UPLOAD_FOLDERS` because lib/r2.ts is server-only — keep them in step.
+   */
+  folder:
+    | 'products'
+    | 'categories'
+    | 'wholesale-products'
+    | 'wholesale-documents'
   label?: string
   className?: string
 }) {
@@ -72,12 +99,31 @@ export function ImageUploader({
 
     setProgress(0)
     try {
-      const blob = await upload(`${folder}/${slugifyFileName(file.name)}`, file, {
-        access: 'public',
-        handleUploadUrl: '/api/upload',
-        onUploadProgress: ({ percentage }) => setProgress(percentage),
+      // Two steps: ask our server for permission and a signed URL, then send
+      // the bytes straight to R2 so they never cross a route handler.
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          folder,
+          filename: file.name,
+          contentType: file.type,
+          size: file.size,
+        }),
       })
-      onChange(blob.url)
+
+      const result = (await response.json()) as
+        | { uploadUrl: string; url: string }
+        | { error: string }
+
+      if (!response.ok || !('uploadUrl' in result)) {
+        throw new Error(
+          'error' in result ? result.error : 'Could not start the upload',
+        )
+      }
+
+      await putWithProgress(result.uploadUrl, file, setProgress)
+      onChange(result.url)
       toast.success('Image uploaded')
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Upload failed'
@@ -94,9 +140,9 @@ export function ImageUploader({
     onChange('')
 
     // Only ours to delete; pasted URLs are left alone.
-    if (!isBlobUrl(previous)) return
+    if (!(await isOwnedImage(previous))) return
     try {
-      await deleteBlob(previous)
+      await deleteImage(previous)
     } catch {
       // The field is already cleared — an orphaned blob is not worth a
       // failed edit, and /admin/media will be able to sweep these later.

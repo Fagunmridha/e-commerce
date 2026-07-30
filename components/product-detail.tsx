@@ -40,7 +40,10 @@ export function ProductDetail({
   const [selectedImage, setSelectedImage] = useState(0)
   const [selectedSize, setSelectedSize] = useState(product.sizes?.[0] ?? '')
   const [selectedColorIndex, setSelectedColorIndex] = useState(0)
-  const [quantity, setQuantity] = useState(1)
+  // Wholesale listings are sold in lots, so the picker opens at the minimum
+  // rather than at 1 — otherwise the first tap on "−" would appear to do nothing.
+  const minQuantity = product.moq ?? 1
+  const [quantity, setQuantity] = useState(minQuantity)
 
   const name = pick(product.name)
   const category = getCategory(product.category)
@@ -237,10 +240,18 @@ export function ProductDetail({
             <p className="text-sm font-semibold text-foreground">
               {t.product.quantity}
             </p>
+            {minQuantity > 1 && (
+              <p className="text-xs text-muted-foreground">
+                {t.wholesale.moq.hint.replace('{n}', String(minQuantity))}
+              </p>
+            )}
             <div className="flex w-fit items-center rounded-md border border-border">
               <button
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                className="p-2.5 transition-colors hover:bg-muted"
+                onClick={() =>
+                  setQuantity(Math.max(minQuantity, quantity - 1))
+                }
+                disabled={quantity <= minQuantity}
+                className="p-2.5 transition-colors hover:bg-muted disabled:opacity-40"
                 aria-label={t.cart.decrease}
               >
                 <Minus className="size-4" />

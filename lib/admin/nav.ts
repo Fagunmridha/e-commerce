@@ -12,6 +12,7 @@ import {
   Settings,
   ShoppingCart,
   Star,
+  Store,
   Tag,
   Truck,
   Users,
@@ -85,6 +86,14 @@ export const ADMIN_NAV: AdminNavGroup[] = [
         children: [
           { href: '/admin/users', label: 'All customers' },
           { href: '/admin/users?role=admin', label: 'Admins' },
+        ],
+      },
+      {
+        href: '/admin/wholesalers',
+        label: 'Wholesalers',
+        icon: Store,
+        children: [
+          { href: '/admin/wholesalers', label: 'All applications' },
         ],
       },
       { href: '/admin/reviews', label: 'Reviews', icon: Star, planned: true },

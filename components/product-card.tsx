@@ -29,7 +29,7 @@ export function ProductCard({
   const { addToCart, isWishlisted, toggleWishlist } = useStore()
   const [quickViewOpen, setQuickViewOpen] = useState(false)
 
-  const { id, name, price, oldPrice, image, images, badge, rating, reviews, stock } =
+  const { id, name, price, oldPrice, image, images, badge, rating, reviews, stock, moq } =
     product
   const label = pick(name)
   const favorited = isWishlisted(id)
@@ -126,6 +126,14 @@ export function ProductCard({
               </span>
             )}
           </div>
+
+          {/* A wholesale lot size. Quick-add already rounds up to it, so saying
+              so here keeps the jump from 1 to 12 from looking like a bug. */}
+          {moq && moq > 1 && (
+            <p className="mt-1 text-[11px] font-medium text-muted-foreground">
+              {t.wholesale.moq.badge.replace('{n}', String(moq))}
+            </p>
+          )}
 
           <Rating value={rating} reviews={reviews} className="mt-1.5" />
         </div>

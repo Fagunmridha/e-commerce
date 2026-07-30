@@ -10,6 +10,7 @@ import { OrderStatusSelect } from '@/components/admin/order-status-select'
 import { CopyButton } from '@/components/admin/orders/copy-button'
 import { PrintButton } from '@/components/admin/orders/print-button'
 import { getOrderById, getOrderEvents } from '@/lib/orders'
+import { formatPrice } from '@/lib/currency'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,7 +28,7 @@ const PAYMENT_LABEL: Record<string, string> = {
   card: 'Card',
 }
 
-const money = (value: number) => `$${value.toFixed(2)}`
+const money = formatPrice
 
 const dateTime = (value: Date) =>
   value.toLocaleString('en-GB', {

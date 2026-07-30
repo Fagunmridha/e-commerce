@@ -26,6 +26,7 @@ const QUICK_LINKS: { nav?: NavKey; link?: LinkKey; href: string }[][] = [
 ]
 
 const SERVICE_LINKS: { key: LinkKey; href: string }[] = [
+  { key: 'wholesale', href: '/wholesale' },
   { key: 'shippingPolicy', href: '/contact' },
   { key: 'returnPolicy', href: '/contact' },
   { key: 'privacyPolicy', href: '/contact' },

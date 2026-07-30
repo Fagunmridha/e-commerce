@@ -3,6 +3,7 @@ import { count, eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { orders } from '@/lib/db/schema'
 import { isAdmin } from '@/lib/auth'
+import { getPendingApplicationCount } from '@/lib/wholesalers'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AdminSidebar } from '@/components/admin/admin-sidebar'
@@ -18,17 +19,20 @@ export default async function AdminLayout({
   if (!(await isAdmin())) redirect('/')
 
   // The header's bell reflects real work waiting, not a decorative dot.
-  const [pending] = await db
-    .select({ n: count() })
-    .from(orders)
-    .where(eq(orders.status, 'pending'))
+  const [[pending], pendingWholesalers] = await Promise.all([
+    db.select({ n: count() }).from(orders).where(eq(orders.status, 'pending')),
+    getPendingApplicationCount(),
+  ])
 
   return (
     <TooltipProvider delayDuration={0}>
       <SidebarProvider>
         <AdminSidebar />
         <SidebarInset className="min-w-0">
-          <AdminHeader pendingOrders={pending?.n ?? 0} />
+          <AdminHeader
+            pendingOrders={pending?.n ?? 0}
+            pendingWholesalers={pendingWholesalers}
+          />
           <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">{children}</div>
         </SidebarInset>
       </SidebarProvider>

@@ -39,6 +39,8 @@ export type ResolvedCartLine = CartLine & {
   key: string
   product: Product
   lineTotal: number
+  /** Smallest allowed quantity for this line — 1 for everything house-sold. */
+  moq: number
 }
 
 function lineKey(line: Pick<CartLine, 'productId' | 'size' | 'colorEn'>) {
@@ -60,7 +62,7 @@ type StoreContextValue = {
   lines: ResolvedCartLine[]
   itemCount: number
   subtotal: number
-  /** Delivery charge in USD — free above the threshold. */
+  /** Delivery charge in taka — free above the threshold. */
   shipping: number
   /** Preview only. The order's real discount is computed server-side. */
   discount: number
@@ -106,32 +108,58 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     window.localStorage.setItem(WISHLIST_KEY, JSON.stringify(wishlistIds))
   }, [wishlistIds, hydrated])
 
-  const addToCart = useCallback((line: CartLine) => {
-    setCart((current) => {
-      const key = lineKey(line)
-      const existing = current.find((item) => lineKey(item) === key)
+  // Wholesale listings carry a minimum order. Clamping here rather than at each
+  // call site means every route into the cart — card, quick view, detail page,
+  // wishlist — respects it. The server re-checks at checkout regardless.
+  const minFor = useCallback(
+    (productId: string) => getProductById(productId)?.moq ?? 1,
+    [getProductById],
+  )
 
-      if (existing) {
-        return current.map((item) =>
-          lineKey(item) === key
-            ? { ...item, quantity: item.quantity + line.quantity }
-            : item,
-        )
-      }
+  const addToCart = useCallback(
+    (line: CartLine) => {
+      const min = minFor(line.productId)
 
-      return [...current, line]
-    })
-  }, [])
+      setCart((current) => {
+        const key = lineKey(line)
+        const existing = current.find((item) => lineKey(item) === key)
 
-  const setQuantity = useCallback((key: string, quantity: number) => {
-    setCart((current) =>
-      quantity <= 0
-        ? current.filter((item) => lineKey(item) !== key)
-        : current.map((item) =>
-            lineKey(item) === key ? { ...item, quantity } : item,
-          ),
-    )
-  }, [])
+        if (existing) {
+          return current.map((item) =>
+            lineKey(item) === key
+              ? {
+                  ...item,
+                  quantity: Math.max(item.quantity + line.quantity, min),
+                }
+              : item,
+          )
+        }
+
+        return [...current, { ...line, quantity: Math.max(line.quantity, min) }]
+      })
+    },
+    [minFor],
+  )
+
+  // Zero still removes the line — "take it out" has to stay reachable even when
+  // the minimum is 12. Anything above zero is raised to the minimum instead.
+  const setQuantity = useCallback(
+    (key: string, quantity: number) => {
+      setCart((current) =>
+        quantity <= 0
+          ? current.filter((item) => lineKey(item) !== key)
+          : current.map((item) =>
+              lineKey(item) === key
+                ? {
+                    ...item,
+                    quantity: Math.max(quantity, minFor(item.productId)),
+                  }
+                : item,
+            ),
+      )
+    },
+    [minFor],
+  )
 
   const removeLine = useCallback((key: string) => {
     setCart((current) => current.filter((item) => lineKey(item) !== key))
@@ -169,6 +197,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             key: lineKey(line),
             product,
             lineTotal: product.price * line.quantity,
+            moq: product.moq ?? 1,
           },
         ]
       }),

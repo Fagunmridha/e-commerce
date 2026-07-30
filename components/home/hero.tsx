@@ -70,7 +70,7 @@ export function Hero({ coupon = null }: { coupon?: FeaturedCoupon | null }) {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 lg:gap-5">
             <Reveal delay={100}>
               <Link
-                href="/contact"
+                href="/wholesale/apply"
                 className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card p-5 transition-all sm:p-6 duration-300 hover:-translate-y-1 hover:border-transparent hover:shadow-card-hover focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
               >
                 <h2 className="text-xl leading-tight font-bold text-foreground">
@@ -110,7 +110,7 @@ const CARD_CLASS =
  * copy, so the slot is never empty.
  *
  * Clicking copies the code rather than applying it: the cart is usually empty
- * on the homepage, and applying against a $0 subtotal would fail any coupon
+ * on the homepage, and applying against a ৳0 subtotal would fail any coupon
  * with a minimum — the shopper would see a discount and an error at once.
  */
 function CouponCard({ coupon }: { coupon: FeaturedCoupon | null }) {

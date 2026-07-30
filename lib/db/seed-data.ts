@@ -87,7 +87,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     id: '1',
     name: { en: 'Classic Cotton Polo Shirt', bn: 'ক্লাসিক কটন পোলো শার্ট' },
-    price: 49.99,
+    price: 5990,
     image: u('1586790170083-2f9ceadc732d'),
     category: 'men',
     badge: 'new',
@@ -102,8 +102,8 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     id: '2',
     name: { en: 'Slim Fit Denim Jacket', bn: 'স্লিম ফিট ডেনিম জ্যাকেট' },
-    price: 89.99,
-    oldPrice: 119.99,
+    price: 10790,
+    oldPrice: 14390,
     image: u('1551028719-00167b16eac5'),
     category: 'men',
     badge: 'sale',
@@ -118,7 +118,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     id: '3',
     name: { en: 'Oxford Button-Down Shirt', bn: 'অক্সফোর্ড বাটন-ডাউন শার্ট' },
-    price: 59.99,
+    price: 7190,
     image: u('1596755094514-f87e34085b2c'),
     category: 'men',
     sizes: DEFAULT_SIZES,
@@ -132,8 +132,8 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     id: '4',
     name: { en: 'Merino Wool Sweater', bn: 'মেরিনো উলের সোয়েটার' },
-    price: 99.99,
-    oldPrice: 139.99,
+    price: 11990,
+    oldPrice: 16790,
     image: u('1620799140408-edc6dcb6d633'),
     category: 'men',
     badge: 'sale',
@@ -148,7 +148,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     id: '5',
     name: { en: 'Tailored Chino Trousers', bn: 'টেইলর্ড চিনো ট্রাউজার' },
-    price: 69.99,
+    price: 8390,
     image: u('1473966968600-fa801b869a1a'),
     category: 'men',
     sizes: DEFAULT_SIZES,
@@ -162,7 +162,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     id: '6',
     name: { en: 'Linen Summer Dress', bn: 'লিনেন সামার ড্রেস' },
-    price: 129.99,
+    price: 15590,
     image: u('1496747611176-843222e1e57c'),
     category: 'women',
     badge: 'new',
@@ -177,8 +177,8 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     id: '7',
     name: { en: 'Ribbed Knit Cardigan', bn: 'রিবড নিট কার্ডিগান' },
-    price: 79.99,
-    oldPrice: 109.99,
+    price: 9590,
+    oldPrice: 13190,
     image: u('1434389677669-e08b4cac3105'),
     category: 'women',
     badge: 'sale',
@@ -196,7 +196,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
       en: 'High-Waist Wide Leg Trousers',
       bn: 'হাই-ওয়েস্ট ওয়াইড লেগ ট্রাউজার',
     },
-    price: 94.99,
+    price: 11390,
     image: u('1594633312681-425c7b97ccd1'),
     category: 'women',
     sizes: DEFAULT_SIZES,
@@ -210,7 +210,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     id: '9',
     name: { en: 'Oversized Cotton Blouse', bn: 'ওভারসাইজড কটন ব্লাউজ' },
-    price: 64.99,
+    price: 7790,
     image: u('1485462537746-965f33f7f6a7'),
     category: 'women',
     badge: 'new',
@@ -225,8 +225,8 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     id: '10',
     name: { en: 'Floral Midi Skirt', bn: 'ফ্লোরাল মিডি স্কার্ট' },
-    price: 74.99,
-    oldPrice: 99.99,
+    price: 8990,
+    oldPrice: 11990,
     image: u('1572804013309-59a88b7e92f1'),
     category: 'women',
     badge: 'sale',
@@ -241,7 +241,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     id: '11',
     name: { en: 'Kids Graphic T-Shirt', bn: 'শিশুদের গ্রাফিক টি-শার্ট' },
-    price: 24.99,
+    price: 2990,
     image: u('1519278409-1f56fdda7fe5'),
     category: 'kids',
     badge: 'new',
@@ -256,7 +256,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     id: '12',
     name: { en: 'Kids Hooded Sweatshirt', bn: 'শিশুদের হুডেড সোয়েটশার্ট' },
-    price: 39.99,
+    price: 4790,
     image: u('1622290291468-a28f7a7dc6a8'),
     category: 'kids',
     sizes: KIDS_SIZES,
@@ -270,8 +270,8 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     id: '13',
     name: { en: 'Kids Denim Overalls', bn: 'শিশুদের ডেনিম ওভারঅল' },
-    price: 44.99,
-    oldPrice: 59.99,
+    price: 5390,
+    oldPrice: 7190,
     image: u('1503944583220-79d8926ad5e2'),
     category: 'kids',
     badge: 'sale',
@@ -286,7 +286,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     id: '14',
     name: { en: 'Leather Shoulder Bag', bn: 'চামড়ার শোল্ডার ব্যাগ' },
-    price: 149.99,
+    price: 17990,
     image: u('1548036328-c9fa89d128fa'),
     category: 'accessories',
     badge: 'new',
@@ -300,8 +300,8 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     id: '15',
     name: { en: 'Classic Aviator Sunglasses', bn: 'ক্লাসিক অ্যাভিয়েটর সানগ্লাস' },
-    price: 89.99,
-    oldPrice: 119.99,
+    price: 10790,
+    oldPrice: 14390,
     image: u('1511499767150-a48a237f0083'),
     category: 'accessories',
     badge: 'sale',
@@ -315,7 +315,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
   {
     id: '16',
     name: { en: 'Woven Leather Belt', bn: 'বোনা চামড়ার বেল্ট' },
-    price: 54.99,
+    price: 6590,
     image: u('1624222247344-550fb60583dc'),
     category: 'accessories',
     sizes: ['S', 'M', 'L'],

@@ -43,12 +43,28 @@ export const imageSchema = z
     'Image must be a URL or a path under /public',
   )
 
-/** Money in USD, matching the `doublePrecision` price columns. */
+/**
+ * Bangladeshi mobile: 11 digits starting 013–019, optional +88 prefix.
+ * Shared so the checkout form and the wholesale application agree on what a
+ * valid number looks like.
+ */
+export const BD_PHONE = /^(?:\+?88)?01[3-9]\d{8}$/
+
+export const phoneSchema = z
+  .string()
+  .trim()
+  .regex(BD_PHONE, 'Enter a valid Bangladeshi mobile number')
+
+/**
+ * Money in taka, matching the `doublePrecision` price columns. The ceiling is
+ * one crore — high enough that no real product or coupon hits it, low enough
+ * that a fat-fingered extra digit still gets caught.
+ */
 export const moneySchema = z
   .number()
   .finite('Enter a valid amount')
   .min(0, 'Cannot be negative')
-  .max(1_000_000)
+  .max(10_000_000, 'That is above the ৳1,00,00,000 limit')
 
 /** Accepts a `datetime-local` string or null, and normalises to a Date. */
 export const dateSchema = z

@@ -53,6 +53,8 @@ export type ProductInput = {
   colors?: Localized[] | null
   description?: Localized | null
   stock: number
+  /** Minimum pieces per order. Omit or 1 for no minimum. */
+  moq?: number | null
 }
 
 export async function upsertProduct(input: ProductInput): Promise<void> {
@@ -71,6 +73,7 @@ export async function upsertProduct(input: ProductInput): Promise<void> {
     colors: data.colors,
     description: data.description,
     stock: data.stock,
+    moq: data.moq,
   }
 
   await db

@@ -10,8 +10,18 @@ import type { Category, CategorySlug, Product } from '@/lib/types'
  * so everything they show traces back to the real database.
  */
 type CatalogueValue = {
+  /** The store's own stock — what every shop listing and rail renders. */
   products: Product[]
+  /**
+   * Marketplace listings, shown only under /wholesale/market. Empty unless the
+   * viewer is an approved wholesaler: the root layout does not even fetch them
+   * otherwise, so an ordinary shopper's page never carries this data.
+   */
+  wholesaleProducts: Product[]
+  /** True when the viewer has an approved shop — gates the trade-only links. */
+  isWholesaler: boolean
   categories: Category[]
+  /** Looks in both lists, so a marketplace item in the cart still resolves. */
   getProductById: (id: string) => Product | undefined
   getProductsByCategory: (slug: CategorySlug) => Product[]
   getPopularProducts: (limit?: number) => Product[]
@@ -23,18 +33,29 @@ const CatalogueContext = createContext<CatalogueValue | null>(null)
 
 export function CatalogueProvider({
   products,
+  wholesaleProducts,
+  isWholesaler,
   categories,
   children,
 }: {
   products: Product[]
+  wholesaleProducts: Product[]
+  isWholesaler: boolean
   categories: Category[]
   children: React.ReactNode
 }) {
   const value = useMemo<CatalogueValue>(() => {
-    const byId = new Map(products.map((product) => [product.id, product]))
+    const byId = new Map(
+      [...products, ...wholesaleProducts].map((product) => [
+        product.id,
+        product,
+      ]),
+    )
 
     return {
       products,
+      wholesaleProducts,
+      isWholesaler,
       categories,
       getProductById: (id) => byId.get(id),
       getProductsByCategory: (slug) =>
@@ -46,7 +67,7 @@ export function CatalogueProvider({
       getCategory: (slug) =>
         categories.find((category) => category.slug === slug),
     }
-  }, [products, categories])
+  }, [products, wholesaleProducts, isWholesaler, categories])
 
   return (
     <CatalogueContext.Provider value={value}>

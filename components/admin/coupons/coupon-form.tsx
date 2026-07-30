@@ -17,6 +17,7 @@ import {
   couponStatus,
 } from '@/lib/admin/coupon-status'
 import type { CouponRow } from '@/lib/db/schema'
+import { formatPrice } from '@/lib/currency'
 
 /**
  * `<input type="datetime-local">` speaks local wall-clock time with no zone.
@@ -47,7 +48,7 @@ function generateCode(): string {
 }
 
 /** The order size the worked example below is priced against. */
-const EXAMPLE_SUBTOTAL = 120
+const EXAMPLE_SUBTOTAL = 1500
 
 export function CouponForm({ coupon }: { coupon?: CouponRow }) {
   const router = useRouter()
@@ -167,32 +168,32 @@ export function CouponForm({ coupon }: { coupon?: CouponRow }) {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Field label={isPercent ? 'Percentage' : 'Amount (USD)'}>
+        <Field label={isPercent ? 'Percentage' : 'Amount (৳)'}>
           <Input
             type="number"
-            step={isPercent ? '1' : '0.01'}
+            step="1"
             min={0}
             max={isPercent ? 100 : undefined}
             value={form.value}
             onChange={(e) => set('value', e.target.value)}
           />
         </Field>
-        <Field label="Minimum order (USD)">
+        <Field label="Minimum order (৳)">
           <Input
             type="number"
-            step="0.01"
+            step="1"
             min={0}
             value={form.minOrder}
             onChange={(e) => set('minOrder', e.target.value)}
           />
         </Field>
         <Field
-          label="Max discount (USD)"
+          label="Max discount (৳)"
           hint={isPercent ? 'Blank for no cap' : 'Percentage coupons only'}
         >
           <Input
             type="number"
-            step="0.01"
+            step="1"
             min={0}
             disabled={!isPercent}
             value={isPercent ? form.maxDiscount : ''}
@@ -302,18 +303,19 @@ export function CouponForm({ coupon }: { coupon?: CouponRow }) {
       <p className="rounded-lg bg-muted/60 px-4 py-3 text-sm text-muted-foreground">
         {example.discount > 0 ? (
           <>
-            On a <strong>${EXAMPLE_SUBTOTAL.toFixed(2)}</strong> order this
-            saves <strong>${example.discount.toFixed(2)}</strong> — the customer
-            pays <strong>${example.total.toFixed(2)}</strong> including{' '}
+            On a <strong>{formatPrice(EXAMPLE_SUBTOTAL)}</strong> order this
+            saves <strong>{formatPrice(example.discount)}</strong> — the
+            customer pays <strong>{formatPrice(example.total)}</strong>{' '}
+            including{' '}
             {example.shipping === 0
               ? 'free delivery'
-              : `$${example.shipping.toFixed(2)} delivery`}
+              : `${formatPrice(example.shipping)} delivery`}
             .
           </>
         ) : (
           <>
-            On a ${EXAMPLE_SUBTOTAL.toFixed(2)} order this coupon takes nothing
-            off — check the discount amount and the minimum order.
+            On a {formatPrice(EXAMPLE_SUBTOTAL)} order this coupon takes
+            nothing off — check the discount amount and the minimum order.
           </>
         )}
       </p>

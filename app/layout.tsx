@@ -16,7 +16,12 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
 import { getDictionary } from '@/lib/dictionaries'
 import { getServerLocale } from '@/lib/server-locale'
-import { getAllProducts, getAllCategories } from '@/lib/products'
+import {
+  getAllProducts,
+  getAllCategories,
+  getWholesaleProducts,
+} from '@/lib/products'
+import { getViewerShop } from '@/lib/wholesalers'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -74,9 +79,15 @@ export default async function RootLayout({
 
   // Fetch the catalogue once on the server and hydrate the client context, so
   // every client component reads products from the real database.
-  const [products, categories] = await Promise.all([
+  //
+  // Marketplace listings are fetched only for approved wholesalers. Fetching
+  // them unconditionally would put the whole trade catalogue into every
+  // visitor's HTML, which defeats the point of hiding /wholesale/market.
+  const shop = await getViewerShop()
+  const [products, categories, wholesaleProducts] = await Promise.all([
     getAllProducts(),
     getAllCategories(),
+    shop ? getWholesaleProducts() : Promise.resolve([]),
   ])
 
   return (
@@ -92,7 +103,12 @@ export default async function RootLayout({
             disableTransitionOnChange
           >
           <LanguageProvider initialLocale={locale}>
-            <CatalogueProvider products={products} categories={categories}>
+            <CatalogueProvider
+              products={products}
+              wholesaleProducts={wholesaleProducts}
+              isWholesaler={Boolean(shop)}
+              categories={categories}
+            >
               <StoreProvider>
                 <SkipLink />
                 <ConditionalChrome>

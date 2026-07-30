@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { ProductForm } from '@/components/admin/product-form'
-import { getProductById } from '@/lib/products'
+import { getAdminProductById } from '@/lib/products'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,7 +10,7 @@ export default async function EditProductPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const product = await getProductById(id)
+  const product = await getAdminProductById(id)
   if (!product) notFound()
 
   return (

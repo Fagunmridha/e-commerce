@@ -34,12 +34,15 @@ export function AccountContent({
   name,
   email,
   orders,
+  wholesaleStatus,
 }: {
   name: string | null
   email: string
   orders: AccountOrder[]
+  /** Null when they have never applied. */
+  wholesaleStatus: 'pending' | 'approved' | 'rejected' | 'suspended' | null
 }) {
-  const { pick, price, locale } = useLanguage()
+  const { pick, price, locale, t } = useLanguage()
 
   const label = (value: Localized) => pick(value)
 
@@ -53,6 +56,36 @@ export function AccountContent({
           {name || email}
         </h1>
         {name && <p className="text-sm text-muted-foreground">{email}</p>}
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card p-6">
+        <div>
+          <h2 className="text-sm font-semibold text-foreground">
+            {wholesaleStatus === 'approved'
+              ? t.wholesale.status.approvedTitle
+              : t.wholesale.title}
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {wholesaleStatus === 'approved'
+              ? t.wholesale.status.approvedBody
+              : wholesaleStatus === 'pending'
+                ? t.wholesale.status.pendingTitle
+                : t.wholesale.subtitle}
+          </p>
+        </div>
+        <Button asChild variant={wholesaleStatus ? 'outline' : 'default'} size="sm">
+          <Link
+            href={
+              wholesaleStatus === 'approved'
+                ? '/wholesale/dashboard'
+                : '/wholesale/apply'
+            }
+          >
+            {wholesaleStatus === 'approved'
+              ? t.wholesale.status.approvedCta
+              : t.home.heroCards.wholesaleCta}
+          </Link>
+        </Button>
       </div>
 
       <div className="mt-8">

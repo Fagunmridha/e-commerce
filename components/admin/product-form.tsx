@@ -46,6 +46,9 @@ export function ProductForm({ product }: { product?: Product }) {
     category: (product?.category ?? 'men') as CategorySlug,
     badge: product?.badge ?? '',
     stock: product?.stock?.toString() ?? '0',
+    // Undefined on the type when it is 1 (see lib/products.ts), but the field
+    // should read "1" rather than blank.
+    moq: (product?.moq ?? 1).toString(),
     sizes: product?.sizes?.join(', ') ?? '',
     colors: serializeColors(product?.colors),
     descriptionEn: product?.description?.en ?? '',
@@ -83,6 +86,7 @@ export function ProductForm({ product }: { product?: Product }) {
             }
           : null,
       stock: Number(form.stock) || 0,
+      moq: Number(form.moq) || 1,
     }
 
     setPending(true)
@@ -133,10 +137,10 @@ export function ProductForm({ product }: { product?: Product }) {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Field label="Price (USD)">
+        <Field label="Price (৳)">
           <Input
             type="number"
-            step="0.01"
+            step="1"
             value={form.price}
             onChange={(e) => set('price', e.target.value)}
           />
@@ -144,7 +148,7 @@ export function ProductForm({ product }: { product?: Product }) {
         <Field label="Old price (optional)">
           <Input
             type="number"
-            step="0.01"
+            step="1"
             value={form.oldPrice}
             onChange={(e) => set('oldPrice', e.target.value)}
           />
@@ -185,6 +189,18 @@ export function ProductForm({ product }: { product?: Product }) {
           />
         </Field>
       </div>
+
+      <Field label="Minimum order (pieces)">
+        <Input
+          type="number"
+          min={1}
+          value={form.moq}
+          onChange={(e) => set('moq', e.target.value)}
+        />
+        <p className="text-xs text-muted-foreground">
+          1 means no minimum. Enforced in the cart and again at checkout.
+        </p>
+      </Field>
 
       <Field label="Colors (English|Bangla, comma separated)">
         <Input
