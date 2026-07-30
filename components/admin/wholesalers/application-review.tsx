@@ -110,8 +110,10 @@ export function ApplicationReview({
                 rel="noreferrer"
                 className="group w-48 overflow-hidden rounded-md border border-border"
               >
-                {/* Plain <img>: arbitrary blob URLs, and next/image runs
-                    unoptimized here anyway. */}
+                {/* Plain <img>: an admin-only thumbnail of a document blob,
+                    whose host is not necessarily one next/image is configured
+                    for — and re-encoding a trade licence to AVIF would only
+                    make the small print harder to read. */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={doc.url}

@@ -121,6 +121,13 @@ them. The 5 MB and image-type caps are what keep that from being a file host.
 Without the credentials, uploads fail but the picker's **Paste a URL instead**
 field still works — that is how the seed catalogue's Unsplash images got there.
 
+Image optimisation is on, so a pasted URL must be on a host listed in
+`images.remotePatterns` (next.config.mjs): `images.unsplash.com`, `*.r2.dev`,
+and whatever `R2_PUBLIC_URL` points at. next/image throws on anything else, so
+the picker flags a bad host as you paste it — see `lib/image-hosts.ts`, which
+has to be kept in step with the config by hand. Add a host to both if you need
+one.
+
 ## What changed
 
 - `lib/db/` — Drizzle schema, client, migrations, seed
@@ -135,9 +142,5 @@ field still works — that is how the seed catalogue's Unsplash images got there
 
 - Payment gateway (SSLCommerz / bKash) — checkout currently records the order
   with the chosen method; COD works, online payment is not yet processed.
-- Image optimisation — `next.config.mjs` still sets `images.unoptimized: true`,
-  so uploads are served at full weight. Narrowing `remotePatterns` and turning
-  optimisation on has to happen together (the `**` wildcard is only safe while
-  Next never fetches these URLs server-side).
 - Media library (`/admin/media`) — nothing sweeps up objects orphaned by an
   image replacement yet; `ListObjectsV2` against the R2 bucket would power it.

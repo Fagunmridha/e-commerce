@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { ProductLanding } from '@/components/product-landing'
-import { getProductById, getProductImages } from '@/lib/products'
+import { getProductDetail } from '@/lib/products'
 import { getDictionary } from '@/lib/dictionaries'
 import { getServerLocale } from '@/lib/server-locale'
 
@@ -11,9 +11,11 @@ export async function generateMetadata({
   params,
 }: LandingPageProps): Promise<Metadata> {
   const { id } = await params
-  const locale = await getServerLocale()
+  const [locale, { product }] = await Promise.all([
+    getServerLocale(),
+    getProductDetail(id),
+  ])
   const t = getDictionary(locale)
-  const product = await getProductById(id)
 
   if (!product) {
     return { title: `${t.meta.productNotFound} ${t.meta.suffix}` }
@@ -35,11 +37,9 @@ export async function generateMetadata({
 // this page is its own funnel: see the product, order on the spot.
 export default async function LandingPage({ params }: LandingPageProps) {
   const { id } = await params
-  const product = await getProductById(id)
+  const { product, images } = await getProductDetail(id)
 
   if (!product) notFound()
-
-  const images = await getProductImages(product)
 
   return <ProductLanding product={product} images={images} />
 }

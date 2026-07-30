@@ -1,4 +1,5 @@
 import 'server-only'
+import { cache } from 'react'
 import { and, count, desc, eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
@@ -53,10 +54,11 @@ export async function getApplicationForUser(
  * whether someone sees the marketplace at all, so it is deliberately narrow:
  * pending, rejected and suspended all come back null.
  *
- * Called from the root layout on every request, so it is one join rather than
- * `getCurrentUser()` followed by a second lookup.
+ * Called from the root layout on every request, and again from the product
+ * page's marketplace gate — hence request-scoped, so those share one lookup
+ * instead of two round trips.
  */
-export async function getViewerShop(): Promise<WholesalerApplicationRow | null> {
+export const getViewerShop = cache(async function getViewerShop(): Promise<WholesalerApplicationRow | null> {
   const user = await getCurrentUser()
   if (!user) return null
 
@@ -71,7 +73,7 @@ export async function getViewerShop(): Promise<WholesalerApplicationRow | null> 
     )
 
   return shop ?? null
-}
+})
 
 /**
  * Guards the seller server actions — the mirror of `requireAdmin()`. Throws

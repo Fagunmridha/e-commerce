@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
 import { deleteImage, isOwnedImage } from '@/app/actions/media'
+import { downscaleImage } from '@/lib/downscale'
+import { IMAGE_HOST_ERROR, isRenderableImageUrl } from '@/lib/image-hosts'
 import { cn } from '@/lib/utils'
 
 const MAX_BYTES = 5 * 1024 * 1024
@@ -99,6 +101,14 @@ export function ImageUploader({
 
     setProgress(0)
     try {
+      // Shrink first, then presign: the signature pins both content type and
+      // length, so a URL minted for the original would be rejected once the
+      // resized WebP goes up in its place.
+      const upload = await downscaleImage(
+        file,
+        folder === 'wholesale-documents' ? 'document' : 'photo',
+      )
+
       // Two steps: ask our server for permission and a signed URL, then send
       // the bytes straight to R2 so they never cross a route handler.
       const response = await fetch('/api/upload', {
@@ -106,9 +116,9 @@ export function ImageUploader({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           folder,
-          filename: file.name,
-          contentType: file.type,
-          size: file.size,
+          filename: upload.name,
+          contentType: upload.type,
+          size: upload.size,
         }),
       })
 
@@ -122,7 +132,7 @@ export function ImageUploader({
         )
       }
 
-      await putWithProgress(result.uploadUrl, file, setProgress)
+      await putWithProgress(result.uploadUrl, upload, setProgress)
       onChange(result.url)
       toast.success('Image uploaded')
     } catch (error) {
@@ -165,8 +175,9 @@ export function ImageUploader({
 
       {value ? (
         <div className="flex items-start gap-3 rounded-md border border-border p-3">
-          {/* Plain <img>: the source is arbitrary and next/image is already
-              running unoptimized, so there is nothing to gain here. */}
+          {/* Plain <img>: this is an admin-only 80px thumbnail of a URL that may
+              not be on an allowed host yet (the field is still being edited),
+              which is exactly the case next/image throws on. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={value}
@@ -238,12 +249,21 @@ export function ImageUploader({
       {uploading && <Progress value={progress ?? 0} className="h-1.5" />}
 
       {showUrlField && (
-        <Input
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          placeholder="https://…"
-          disabled={uploading}
-        />
+        <div className="space-y-1.5">
+          <Input
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            placeholder="https://…"
+            disabled={uploading}
+            aria-invalid={!isRenderableImageUrl(value)}
+          />
+          {/* next/image throws on a host it has not been configured for, which
+              would break the storefront rather than just this field — so the
+              admin is told here, while they can still fix it. */}
+          {!isRenderableImageUrl(value) && (
+            <p className="text-xs text-destructive">{IMAGE_HOST_ERROR}</p>
+          )}
+        </div>
       )}
 
       <input

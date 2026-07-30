@@ -62,8 +62,11 @@ export const ACCEPTED_IMAGE_TYPES = [
 ]
 
 /**
- * Images are served unoptimized (see next.config.mjs), so an oversized upload
- * lands on the shopper's phone at full weight.
+ * The ceiling on what may be stored. Shoppers never see this weight — next/image
+ * resizes on delivery, and the uploader re-encodes to a ~1600px WebP before the
+ * bytes leave the browser (lib/downscale.ts) — so this is now a storage and
+ * abuse limit rather than a page-weight one. Kept at 5 MB because the client
+ * falls back to the original file whenever the re-encode cannot run.
  */
 export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024
 

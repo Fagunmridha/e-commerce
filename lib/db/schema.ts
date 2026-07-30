@@ -1,6 +1,7 @@
 import {
   boolean,
   doublePrecision,
+  index,
   integer,
   jsonb,
   pgTable,
@@ -71,7 +72,15 @@ export const products = pgTable('products', {
     onDelete: 'cascade',
   }),
   createdAt: timestamp('created_at').notNull().defaultNow(),
-})
+}, (table) => [
+  // Every catalogue read filters on `seller_id IS NULL` (house stock) or joins
+  // on it (the marketplace), and orders by `created_at`. Postgres will happily
+  // sequential-scan a 16-row table, so this buys nothing today — it is here so
+  // the queries do not quietly turn into scans as the catalogue grows.
+  index('products_seller_id_idx').on(table.sellerId),
+  index('products_category_idx').on(table.category),
+  index('products_created_at_idx').on(table.createdAt),
+])
 
 /** Extra gallery shots; the primary `products.image` is always shown first. */
 export const productImages = pgTable('product_images', {
@@ -81,7 +90,9 @@ export const productImages = pgTable('product_images', {
     .references(() => products.id, { onDelete: 'cascade' }),
   url: text('url').notNull(),
   position: integer('position').notNull().default(0),
-})
+}, (table) => [
+  index('product_images_product_id_idx').on(table.productId, table.position),
+])
 
 /**
  * Discount codes. `usageCount` is incremented with a conditional UPDATE at
@@ -161,7 +172,11 @@ export const orderItems = pgTable('order_items', {
   size: text('size'),
   colorEn: text('color_en'),
   unitPrice: doublePrecision('unit_price').notNull(),
-})
+}, (table) => [
+  index('order_items_order_id_idx').on(table.orderId),
+  // The "256 sold" line on the detail page sums this column per product.
+  index('order_items_product_id_idx').on(table.productId),
+])
 
 /**
  * Append-only status history. `orders.status` is still the current value; this
@@ -196,7 +211,11 @@ export const reviews = pgTable('reviews', {
   rating: integer('rating').notNull(),
   body: text('body').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
-})
+}, (table) => [
+  // Both the per-product review list and the catalogue-wide rating aggregate
+  // group or filter on this column.
+  index('reviews_product_id_idx').on(table.productId),
+])
 
 /**
  * B2B applications. One row per user (`userId` is unique) — a rejected

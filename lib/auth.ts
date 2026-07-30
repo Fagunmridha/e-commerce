@@ -1,4 +1,5 @@
 import 'server-only'
+import { cache } from 'react'
 import { auth, currentUser } from '@clerk/nextjs/server'
 import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
@@ -8,8 +9,11 @@ import { users, type UserRow } from '@/lib/db/schema'
  * Resolves the Clerk-authenticated user to our database row. Falls back to
  * creating the row on first sight, so the app works even if the Clerk webhook
  * has not fired yet (e.g. local dev without a public webhook URL).
+ *
+ * Request-scoped: a single render can reach this through the layout, a page and
+ * several guards, and each call was its own Neon round trip.
  */
-export async function getCurrentUser(): Promise<UserRow | null> {
+export const getCurrentUser = cache(async function getCurrentUser(): Promise<UserRow | null> {
   const { userId } = await auth()
   if (!userId) return null
 
@@ -41,7 +45,7 @@ export async function getCurrentUser(): Promise<UserRow | null> {
     .returning()
 
   return created ?? null
-}
+})
 
 export async function isAdmin(): Promise<boolean> {
   const user = await getCurrentUser()

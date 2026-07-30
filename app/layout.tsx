@@ -80,15 +80,20 @@ export default async function RootLayout({
   // Fetch the catalogue once on the server and hydrate the client context, so
   // every client component reads products from the real database.
   //
+  // `getViewerShop` runs alongside the catalogue rather than ahead of it. It
+  // costs two Neon round trips for a signed-in visitor (Clerk id → user row →
+  // application row), and awaiting it first made every page in the store wait
+  // on them before a single product query had even been sent.
+  const [shop, products, categories] = await Promise.all([
+    getViewerShop(),
+    getAllProducts(),
+    getAllCategories(),
+  ])
+
   // Marketplace listings are fetched only for approved wholesalers. Fetching
   // them unconditionally would put the whole trade catalogue into every
   // visitor's HTML, which defeats the point of hiding /wholesale/market.
-  const shop = await getViewerShop()
-  const [products, categories, wholesaleProducts] = await Promise.all([
-    getAllProducts(),
-    getAllCategories(),
-    shop ? getWholesaleProducts() : Promise.resolve([]),
-  ])
+  const wholesaleProducts = shop ? await getWholesaleProducts() : []
 
   return (
     <ClerkProvider>

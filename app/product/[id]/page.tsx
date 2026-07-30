@@ -6,12 +6,7 @@ import { ProductReviews } from '@/components/product-reviews'
 import { ProductFaq } from '@/components/product-faq'
 import { ProductHelp } from '@/components/product-help'
 import { FeatureBar } from '@/components/feature-bar'
-import {
-  getProductById,
-  getProductImages,
-  getProductsByCategory,
-} from '@/lib/products'
-import { getProductReviews } from '@/lib/reviews'
+import { getAllProducts, getProductDetail } from '@/lib/products'
 import { getDictionary } from '@/lib/dictionaries'
 import { getServerLocale } from '@/lib/server-locale'
 import type { Locale } from '@/lib/i18n'
@@ -43,9 +38,11 @@ export async function generateMetadata({
   params,
 }: ProductPageProps): Promise<Metadata> {
   const { id } = await params
-  const locale = await getServerLocale()
+  const [locale, { product }] = await Promise.all([
+    getServerLocale(),
+    getProductDetail(id),
+  ])
   const t = getDictionary(locale)
-  const product = await getProductById(id)
 
   if (!product) {
     return { title: `${t.meta.productNotFound} ${t.meta.suffix}` }
@@ -64,19 +61,19 @@ export async function generateMetadata({
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { id } = await params
-  const product = await getProductById(id)
 
-  if (!product) notFound()
-
-  const [images, categoryProducts, reviews, locale] = await Promise.all([
-    getProductImages(product),
-    getProductsByCategory(product.category),
-    getProductReviews(product.id),
+  // One batched round trip for the product, its gallery and its reviews; the
+  // catalogue is already cached, so the related rail costs no query at all.
+  const [{ product, images, reviews }, catalogue, locale] = await Promise.all([
+    getProductDetail(id),
+    getAllProducts(),
     getServerLocale(),
   ])
 
-  const related = categoryProducts
-    .filter((item) => item.id !== product.id)
+  if (!product) notFound()
+
+  const related = catalogue
+    .filter((item) => item.category === product.category && item.id !== product.id)
     .slice(0, 4)
 
   // Reviews sit above the FAQ so the product's own content ranks ahead of the
