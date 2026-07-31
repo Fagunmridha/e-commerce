@@ -84,6 +84,13 @@ export default async function AdminOrderDetailPage({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* Not a status — this order is waiting on stock that has not landed
+              yet, which is a different thing from "pending" fulfilment. */}
+          {order.preorder && (
+            <Badge variant="secondary" className="border-0 bg-primary/10 text-primary">
+              Pre-order
+            </Badge>
+          )}
           <Badge
             variant="secondary"
             className={`border-0 capitalize ${STATUS_CLASS[order.status]}`}
@@ -123,6 +130,13 @@ export default async function AdminOrderDetailPage({
                         .filter(Boolean)
                         .join(' • ')}
                     </p>
+                    {/* The date promised when this line was booked, not the
+                        product's current one — see `orderItems.preorderShipsAt`. */}
+                    {line.preorderShipsAt && (
+                      <p className="mt-1 text-xs font-medium text-primary">
+                        Pre-order — ships from {line.preorderShipsAt}
+                      </p>
+                    )}
                   </div>
                   <div className="text-right whitespace-nowrap">
                     <p className="text-sm font-semibold">

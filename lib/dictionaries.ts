@@ -668,6 +668,22 @@ const en = {
     comingDelivery: 'Delivery from',
     comingPreorders: 'Pre-orders',
     comingBook: 'Book Now',
+    /** `{count}` is replaced with the pieces left in the run. */
+    comingLimited: 'Limited stock — {count} pcs left',
+    comingSoldOut: 'Fully booked',
+    comingSoldOutCta: 'Stock out',
+    /** Shown after a booking is added to the basket. */
+    comingBooked: 'Pre-order added',
+    /**
+     * The no-mixing rule, explained where the shopper hits it. Pre-orders ship
+     * weeks out, so letting one hold up in-stock items would be a worse deal
+     * than asking for a second checkout.
+     */
+    comingMixTitle: 'Pre-orders check out separately',
+    comingMixBody:
+      'Your basket has items that are in stock now. Empty it first, or place this pre-order after checking out.',
+    comingMixConfirm: 'Empty basket and pre-order',
+    comingMixCancel: 'Keep my basket',
     flashEyebrow: 'Flash sale',
     flashTitle: 'Today Only',
     flashSubtitle: 'The steepest markdowns in the store, while they last.',
@@ -1432,6 +1448,15 @@ const bn: Dictionary = {
     comingDelivery: 'ডেলিভারি শুরু',
     comingPreorders: 'প্রি-অর্ডার',
     comingBook: 'বুক করুন',
+    comingLimited: 'সীমিত স্টক — আর {count} পিস',
+    comingSoldOut: 'সব বুক হয়ে গেছে',
+    comingSoldOutCta: 'স্টক শেষ',
+    comingBooked: 'প্রি-অর্ডার যোগ হয়েছে',
+    comingMixTitle: 'প্রি-অর্ডার আলাদাভাবে চেকআউট হবে',
+    comingMixBody:
+      'আপনার ব্যাগে এখনই স্টকে আছে এমন পণ্য রয়েছে। আগে সেগুলো চেকআউট করুন, অথবা ব্যাগ খালি করে প্রি-অর্ডার করুন।',
+    comingMixConfirm: 'ব্যাগ খালি করে প্রি-অর্ডার করুন',
+    comingMixCancel: 'ব্যাগ রেখে দিন',
     flashEyebrow: 'ফ্ল্যাশ সেল',
     flashTitle: 'শুধু আজকের জন্য',
     flashSubtitle: 'দোকানের সবচেয়ে বড় ছাড়, স্টক থাকা পর্যন্ত।',

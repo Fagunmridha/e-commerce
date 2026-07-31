@@ -83,6 +83,7 @@ function toProduct(
   agg?: Aggregate,
   sellerName?: string,
   sold?: number,
+  preorderBooked?: number,
 ): Product {
   return {
     id: row.id,
@@ -105,6 +106,11 @@ function toProduct(
     sold: sold || undefined,
     sellerId: row.sellerId ?? undefined,
     sellerName,
+    // False is the overwhelming majority, so it is left undefined rather than
+    // shipped on every row — consumers test it for truthiness either way.
+    preorder: row.preorder || undefined,
+    preorderShipsAt: row.preorderShipsAt ?? undefined,
+    preorderBooked,
   }
 }
 
@@ -389,7 +395,12 @@ export async function getSellerProducts(shopId: string): Promise<Product[]> {
   return rows.map((row) => toProduct(row, aggregates.get(row.id)))
 }
 
-/** Category pages show the store's own stock only. */
+/**
+ * Category pages show the store's own shelf stock only — pre-orders are
+ * excluded here and in `searchProducts` for the same reason they are excluded
+ * from the derived helpers below: a Coming Soon row cannot be added to a cart,
+ * so listing it beside buyable stock would only offer a button that fails.
+ */
 export async function getProductsByCategory(
   slug: CategorySlug,
 ): Promise<Product[]> {
@@ -397,7 +408,13 @@ export async function getProductsByCategory(
     db
       .select()
       .from(products)
-      .where(and(eq(products.category, slug), isNull(products.sellerId))),
+      .where(
+        and(
+          eq(products.category, slug),
+          isNull(products.sellerId),
+          eq(products.preorder, false),
+        ),
+      ),
     reviewAggregates(),
   ])
   return rows.map((row) => toProduct(row, aggregates.get(row.id)))
@@ -406,7 +423,9 @@ export async function getProductsByCategory(
 /** Homepage "Popular Products" — anything carrying a badge. */
 export async function getPopularProducts(limit = 8): Promise<Product[]> {
   const all = await getAllProducts()
-  return all.filter((product) => product.badge).slice(0, limit)
+  return all
+    .filter((product) => product.badge && !product.preorder)
+    .slice(0, limit)
 }
 
 /** Cart drawer / product page suggestions — anything but the item being viewed. */
@@ -415,7 +434,77 @@ export async function getRecommendedProducts(
   limit = 2,
 ): Promise<Product[]> {
   const all = await getAllProducts()
-  return all.filter((product) => product.id !== excludeId).slice(0, limit)
+  return all
+    .filter((product) => product.id !== excludeId && !product.preorder)
+    .slice(0, limit)
+}
+
+/**
+ * Pieces already booked per pre-order product, cancelled orders excluded — the
+ * "N pre-orders" line on the Coming Soon card, and the booked column on the
+ * admin screen.
+ *
+ * Derived rather than counted into a column: `order_items` already holds every
+ * booking, and deriving is what makes the number go back down when an order is
+ * cancelled. `products.stock` moves the other way — it is the allocation that
+ * is *left*, decremented atomically as bookings are taken.
+ */
+async function preorderBookedCounts(): Promise<Map<string, number>> {
+  const rows = await db
+    .select({
+      productId: orderItems.productId,
+      booked: sql<string>`sum(${orderItems.quantity})`,
+    })
+    .from(orderItems)
+    .innerJoin(orders, eq(orderItems.orderId, orders.id))
+    .where(
+      and(
+        sql`${orderItems.preorderShipsAt} is not null`,
+        ne(orders.status, 'cancelled'),
+      ),
+    )
+    .groupBy(orderItems.productId)
+
+  const map = new Map<string, number>()
+  for (const row of rows) {
+    if (row.productId) map.set(row.productId, Number(row.booked))
+  }
+  return map
+}
+
+/**
+ * The Coming Soon rail and the admin pre-order screen. Soonest ship date
+ * first, so the next thing to land leads — rows with no date yet sort last
+ * rather than to the front, which is what `nulls last` buys.
+ */
+async function fetchPreorderProducts(): Promise<Product[]> {
+  const [rows, aggregates, booked] = await Promise.all([
+    db
+      .select()
+      .from(products)
+      .where(and(isNull(products.sellerId), eq(products.preorder, true)))
+      .orderBy(sql`${products.preorderShipsAt} asc nulls last`, asc(products.id)),
+    reviewAggregates(),
+    preorderBookedCounts(),
+  ])
+
+  return rows.map((row) =>
+    toProduct(row, aggregates.get(row.id), undefined, undefined, booked.get(row.id) ?? 0),
+  )
+}
+
+export const getPreorderProducts = unstable_cache(
+  fetchPreorderProducts,
+  ['preorder-products'],
+  { tags: ['catalogue'], revalidate: 60 },
+)
+
+/**
+ * The same list, uncached, for the admin pre-order screen — an admin deciding
+ * whether to open more allocation must never be reading a minute-old count.
+ */
+export async function getAdminPreorderProducts(): Promise<Product[]> {
+  return fetchPreorderProducts()
 }
 
 /**
@@ -449,6 +538,7 @@ export async function searchProducts(query: string): Promise<Product[]> {
       .where(
         and(
           isNull(products.sellerId),
+          eq(products.preorder, false),
           or(
             sql`${products.name}->>'en' ILIKE ${term}`,
             sql`${products.name}->>'bn' ILIKE ${term}`,
@@ -468,7 +558,9 @@ async function fetchAllCategories(): Promise<Category[]> {
       count: sql<string>`count(*)`,
     })
     .from(products)
-    .where(isNull(products.sellerId))
+    // Matches what the category page actually lists, so the "12 items" count
+    // on the tile cannot promise rows the page then filters away.
+    .where(and(isNull(products.sellerId), eq(products.preorder, false)))
     .groupBy(products.category)
 
   const countMap = new Map(counts.map((row) => [row.category, Number(row.count)]))

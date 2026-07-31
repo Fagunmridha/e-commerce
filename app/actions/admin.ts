@@ -56,9 +56,14 @@ export type ProductInput = {
   /** Extra gallery shots. `image` above stays the primary photo. */
   gallery?: string[] | null
   description?: Localized | null
+  /** Pieces available; on a pre-order row, the allocation still open. */
   stock: number
   /** Minimum pieces per order. Omit or 1 for no minimum. */
   moq?: number | null
+  /** Marks the row as upcoming stock, taken on pre-order. */
+  preorder?: boolean | null
+  /** `YYYY-MM-DD`. Required when `preorder` is true. */
+  preorderShipsAt?: string | null
 }
 
 export async function upsertProduct(input: ProductInput): Promise<void> {
@@ -79,6 +84,10 @@ export async function upsertProduct(input: ProductInput): Promise<void> {
     description: data.description,
     stock: data.stock,
     moq: data.moq,
+    preorder: data.preorder,
+    // Cleared when the toggle is off, so a row that stops being a pre-order
+    // does not keep advertising a stale ship date if it is turned back on.
+    preorderShipsAt: data.preorder ? data.preorderShipsAt : null,
   }
 
   await db
@@ -108,6 +117,7 @@ export async function upsertProduct(input: ProductInput): Promise<void> {
 
   updateTag('catalogue')
   revalidatePath('/admin/products')
+  revalidatePath('/admin/preorders')
   revalidatePath('/shop')
   revalidatePath(`/product/${data.id}`)
 }

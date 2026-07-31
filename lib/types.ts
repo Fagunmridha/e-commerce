@@ -58,6 +58,21 @@ export type Product = {
   sellerId?: string
   /** The seller's shop name, for the "sold by" line. */
   sellerName?: string
+  /**
+   * Upcoming stock, taken on pre-order. These are kept out of /shop, the
+   * category pages and search — they surface only in the Coming Soon rail —
+   * so nothing offers "Add to Cart" on something that cannot ship yet.
+   */
+  preorder?: boolean
+  /** `YYYY-MM-DD`; the day bookings are promised to ship from. */
+  preorderShipsAt?: string
+  /**
+   * Pieces already booked, excluding cancelled orders. Only populated by the
+   * queries that render pre-order cards — the ordinary listing queries would
+   * each need an extra aggregate for a number they never show. `stock` is what
+   * is *left* of the allocation, so booked + stock is the original run.
+   */
+  preorderBooked?: number
 }
 
 export type Category = {

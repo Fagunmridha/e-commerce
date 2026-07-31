@@ -103,9 +103,15 @@ export function ProductForm({
     highlights: serializeHighlights(product?.highlights),
     descriptionEn: product?.description?.en ?? '',
     descriptionBn: product?.description?.bn ?? '',
+    preorder: product?.preorder ?? false,
+    // The column is a `date`, so this is already the `YYYY-MM-DD` that
+    // <input type="date"> wants — no parsing or reformatting in between.
+    preorderShipsAt: product?.preorderShipsAt ?? '',
   })
 
-  const set = (key: keyof typeof form, value: string) =>
+  // Generic over the key so `preorder` can be a boolean while the rest stay
+  // strings, instead of every field being stringly typed for the sake of one.
+  const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
     setForm((current) => ({ ...current, [key]: value }))
 
   async function onSubmit(event: React.FormEvent) {
@@ -113,6 +119,13 @@ export function ProductForm({
 
     if (!form.id.trim() || !form.nameEn.trim() || !form.image.trim()) {
       toast.error('ID, English name and image are required')
+      return
+    }
+
+    // The server rejects this too; catching it here saves a round trip and
+    // points at the field rather than surfacing a generic save failure.
+    if (form.preorder && !form.preorderShipsAt) {
+      toast.error('A pre-order product needs a delivery date')
       return
     }
 
@@ -140,6 +153,8 @@ export function ProductForm({
           : null,
       stock: Number(form.stock) || 0,
       moq: Number(form.moq) || 1,
+      preorder: form.preorder,
+      preorderShipsAt: form.preorder ? form.preorderShipsAt : null,
     }
 
     setPending(true)
@@ -206,12 +221,21 @@ export function ProductForm({
             onChange={(e) => set('oldPrice', e.target.value)}
           />
         </Field>
-        <Field label="Stock">
+        <Field
+          label={form.preorder ? 'Limited stock (pieces)' : 'Stock'}
+        >
           <Input
             type="number"
+            min={0}
             value={form.stock}
             onChange={(e) => set('stock', e.target.value)}
           />
+          {form.preorder && (
+            <p className="text-xs text-muted-foreground">
+              The run you are opening bookings for. Counts down as pre-orders
+              come in; at zero the card shows sold out.
+            </p>
+          )}
         </Field>
       </div>
 
@@ -300,6 +324,39 @@ export function ProductForm({
           1 means no minimum. Enforced in the cart and again at checkout.
         </p>
       </Field>
+
+      <div className="space-y-3 rounded-lg border border-border p-4">
+        <label className="flex items-center gap-2.5 text-sm font-medium">
+          <input
+            type="checkbox"
+            checked={form.preorder}
+            onChange={(e) => set('preorder', e.target.checked)}
+            className="size-4 accent-button"
+          />
+          Pre-order (Coming Soon)
+        </label>
+        <p className="text-xs text-muted-foreground">
+          Moves this product out of the shop, category pages and search, and
+          into the homepage Coming Soon rail. Customers book it now and it ships
+          from the delivery date below. Pre-orders check out on their own —
+          they cannot share a basket with in-stock items.
+        </p>
+
+        {form.preorder && (
+          <Field label="Delivery from">
+            <Input
+              type="date"
+              value={form.preorderShipsAt}
+              onChange={(e) => set('preorderShipsAt', e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Shown on the card as “Delivery from …”, and snapshotted onto each
+              booking — moving it later never rewrites what an existing
+              customer was promised.
+            </p>
+          </Field>
+        )}
+      </div>
 
       <Field label="Colors (English|Bangla|#hex, comma separated)">
         <Input

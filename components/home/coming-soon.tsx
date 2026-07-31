@@ -1,9 +1,19 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useState } from 'react'
 import Image from 'next/image'
-import { CalendarDays, Users } from 'lucide-react'
+import { CalendarDays, PackageCheck, Users } from 'lucide-react'
 import { toast } from 'sonner'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { SectionPanel } from '@/components/layout/section-panel'
 import { Reveal } from '@/components/reveal'
 import {
@@ -16,63 +26,84 @@ import {
 import { useLanguage } from '@/components/language-provider'
 import { useCatalogue } from '@/components/catalogue-provider'
 import { useStore } from '@/components/store-provider'
+import type { Product } from '@/lib/types'
 
 /**
- * PLACEHOLDER — the products table has no pre-order columns, so the shipping
- * window below is generated from this lead time rather than read from the
- * database. Add real `preorderShipsAt` / `preorderCount` columns before taking
- * pre-orders from customers; see the note in the section body.
+ * `2026-08-18` → `18 Aug`. Built from the parts rather than `new Date(value)`
+ * so the calendar day the admin chose is the day the customer reads — parsing
+ * the string as an instant would shift it either side of midnight depending on
+ * the reader's timezone.
+ *
+ * Safe to render during SSR, unlike the old lead-time arithmetic this replaced:
+ * the date is a stored value now, not something derived from "today", so server
+ * and client agree and there is no hydration mismatch to dodge.
  */
-const PREORDER_LEAD_DAYS = 18
-const PREORDER_STAGGER_DAYS = 5
+function formatShipDate(value: string | undefined, locale: string): string {
+  if (!value) return '—'
+  const [year, month, day] = value.split('-').map(Number)
+  if (!year || !month || !day) return value
+
+  return new Intl.DateTimeFormat(locale === 'bn' ? 'bn-BD' : 'en-GB', {
+    day: 'numeric',
+    month: 'short',
+    timeZone: 'UTC',
+  }).format(new Date(Date.UTC(year, month - 1, day)))
+}
 
 /**
- * A pre-order rail of upcoming stock. Booking adds the item to the cart, which
- * is the same flow as a normal purchase.
+ * The pre-order rail. Everything here comes from the database: which products
+ * appear, the ship-from date, how many pieces are left of the run and how many
+ * are already booked. An admin controls the lot from the product form and
+ * /admin/preorders.
+ *
+ * Booking puts the item in the cart and the customer checks out normally — but
+ * a pre-order may not share an order with shelf stock, so the basket is
+ * checked first and the shopper is asked before it is emptied.
  */
 export function ComingSoon() {
   const { t, pick, locale, price } = useLanguage()
-  const { products: allProducts } = useCatalogue()
-  const { addToCart } = useStore()
+  const { preorderProducts } = useCatalogue()
+  const { lines, addToCart, clearCart } = useStore()
   const rail = useCardRail({ gridBelowSm: 2 })
 
-  const products = useMemo(
-    () => [...allProducts].reverse().slice(0, 6),
-    [allProducts],
-  )
+  // Set while the basket holds shelf stock and the shopper has to choose.
+  const [pendingBooking, setPendingBooking] = useState<Product | null>(null)
 
-  // Dates depend on "today", so they are computed after mount — otherwise the
-  // server and client HTML disagree and React throws a hydration error.
-  const [shipDates, setShipDates] = useState<string[] | null>(null)
-
-  useEffect(() => {
-    const format = new Intl.DateTimeFormat(locale === 'bn' ? 'bn-BD' : 'en-GB', {
-      day: 'numeric',
-      month: 'short',
-    })
-
-    setShipDates(
-      products.map((_, index) => {
-        const date = new Date()
-        date.setDate(
-          date.getDate() + PREORDER_LEAD_DAYS + index * PREORDER_STAGGER_DAYS,
-        )
-        return format.format(date)
-      }),
-    )
-  }, [products, locale])
-
-  if (products.length === 0) return null
+  if (preorderProducts.length === 0) return null
 
   const title = t.home.comingTitle
+
+  const book = (product: Product) => {
+    addToCart({
+      productId: product.id,
+      quantity: 1,
+      size: product.sizes?.[0],
+      colorEn: product.colors?.[0]?.name.en,
+    })
+    toast.success(t.home.comingBooked, { description: pick(product.name) })
+  }
+
+  const onBook = (product: Product) => {
+    // Another pre-order in the basket is fine — two upcoming items can ship
+    // together. Shelf stock is what cannot, so that is what is tested for.
+    const hasShelfStock = lines.some((line) => !line.product.preorder)
+    if (hasShelfStock) {
+      setPendingBooking(product)
+      return
+    }
+    book(product)
+  }
 
   return (
     <Reveal>
       <SectionPanel title={title} linkLabel={t.sections.viewAll} linkHref="/shop">
         <div className="relative">
           <RailTrack rail={rail} label={title}>
-            {products.map((product, index) => {
+            {preorderProducts.map((product) => {
               const label = pick(product.name)
+              const remaining = product.stock
+              const soldOut = remaining <= 0
+              const booked = product.preorderBooked ?? 0
 
               return (
                 <RailItem
@@ -92,6 +123,11 @@ export function ComingSoon() {
                       <span className="absolute top-3 left-3 rounded-md bg-primary px-2.5 py-1 text-[11px] font-bold text-primary-foreground">
                         {t.home.comingBadge}
                       </span>
+                      {soldOut && (
+                        <span className="absolute top-3 right-3 rounded-md bg-destructive px-2.5 py-1 text-[11px] font-bold text-destructive-foreground">
+                          {t.home.comingSoldOut}
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex flex-1 flex-col p-3 sm:p-4">
@@ -109,33 +145,48 @@ export function ComingSoon() {
                             aria-hidden="true"
                           />
                           <dt className="sr-only">{t.home.comingDelivery}</dt>
-                          {/* Reserve the row before the date lands post-mount. */}
                           <dd>
                             {t.home.comingDelivery}{' '}
-                            {shipDates?.[index] ?? '—'}
+                            {formatShipDate(product.preorderShipsAt, locale)}
                           </dd>
                         </div>
+
                         <div className="flex items-center gap-2">
                           <Users className="size-3.5 shrink-0" aria-hidden="true" />
                           <dt className="sr-only">{t.home.comingPreorders}</dt>
-                          <dd>0 {t.home.comingPreorders}</dd>
+                          <dd>
+                            {booked} {t.home.comingPreorders}
+                          </dd>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <PackageCheck
+                            className="size-3.5 shrink-0"
+                            aria-hidden="true"
+                          />
+                          <dt className="sr-only">{t.home.comingLimited}</dt>
+                          <dd
+                            className={
+                              soldOut ? 'font-semibold text-destructive' : undefined
+                            }
+                          >
+                            {soldOut
+                              ? t.home.comingSoldOut
+                              : t.home.comingLimited.replace(
+                                  '{count}',
+                                  String(remaining),
+                                )}
+                          </dd>
                         </div>
                       </dl>
 
                       <button
                         type="button"
-                        onClick={() => {
-                          addToCart({
-                            productId: product.id,
-                            quantity: 1,
-                            size: product.sizes?.[0],
-                            colorEn: product.colors?.[0]?.name.en,
-                          })
-                          toast.success(t.product.added, { description: label })
-                        }}
-                        className="mt-4 h-10 w-full rounded-lg bg-button text-xs font-bold text-button-foreground transition-colors hover:bg-button/90 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+                        disabled={soldOut}
+                        onClick={() => onBook(product)}
+                        className="mt-4 h-10 w-full rounded-lg bg-button text-xs font-bold text-button-foreground transition-colors hover:bg-button/90 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none disabled:pointer-events-none disabled:bg-muted disabled:text-muted-foreground"
                       >
-                        {t.home.comingBook}
+                        {soldOut ? t.home.comingSoldOutCta : t.home.comingBook}
                       </button>
                     </div>
                   </article>
@@ -153,6 +204,35 @@ export function ComingSoon() {
 
         <RailDots rail={rail} label={title} className="mt-6 hidden sm:flex" />
       </SectionPanel>
+
+      <AlertDialog
+        open={pendingBooking !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingBooking(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t.home.comingMixTitle}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t.home.comingMixBody}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t.home.comingMixCancel}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (!pendingBooking) return
+                clearCart()
+                book(pendingBooking)
+                setPendingBooking(null)
+              }}
+            >
+              {t.home.comingMixConfirm}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Reveal>
   )
 }

@@ -1,5 +1,6 @@
 import {
   boolean,
+  date,
   doublePrecision,
   index,
   integer,
@@ -57,12 +58,30 @@ export const products = pgTable('products', {
   /** Per-product selling points — "100% Cotton", "Breathable". */
   highlights: jsonb('highlights').$type<Localized[]>(),
   description: jsonb('description').$type<Localized>(),
+  /**
+   * Pieces available. For a pre-order row this is the *allocation* the admin
+   * opened — set it to 100 and the hundredth booking takes it to nought, which
+   * is what turns the Coming Soon card over to "sold out".
+   */
   stock: integer('stock').notNull().default(0),
   /**
    * Smallest quantity a buyer may take in one order. 1 means no restriction,
    * which is every house product; wholesalers set their own per listing.
    */
   moq: integer('moq').notNull().default(1),
+  /**
+   * Marks a row as upcoming stock, taken on pre-order rather than sold from the
+   * shelf. Pre-order rows are kept out of /shop, the category pages and search
+   * — they appear only in the Coming Soon rail and on their own detail page —
+   * so "Add to Cart" is never offered on something that cannot ship yet.
+   */
+  preorder: boolean('preorder').notNull().default(false),
+  /**
+   * The date bookings are promised to ship from. A `date`, not a `timestamp`:
+   * the admin picks a calendar day, and storing it as an instant would have it
+   * drift across a timezone boundary on the way to the customer's card.
+   */
+  preorderShipsAt: date('preorder_ships_at', { mode: 'string' }),
   /**
    * Which approved wholesaler listed this. Null is a house product — the store
    * owner's own stock. Non-null rows show in the wholesale marketplace and are
@@ -154,6 +173,13 @@ export const orders = pgTable('orders', {
   })
     .notNull()
     .default('pending'),
+  /**
+   * True when every line is a pre-order. Pre-order and in-stock items cannot
+   * share an order (see `createOrder`), so this is a property of the whole
+   * order rather than something to derive per line — which is what lets the
+   * admin list badge and filter without joining `order_items`.
+   */
+  preorder: boolean('preorder').notNull().default(false),
   placedAt: timestamp('placed_at').notNull().defaultNow(),
 })
 
@@ -172,6 +198,13 @@ export const orderItems = pgTable('order_items', {
   size: text('size'),
   colorEn: text('color_en'),
   unitPrice: doublePrecision('unit_price').notNull(),
+  /**
+   * The ship-from date promised at the time of booking. Null on an ordinary
+   * line. Snapshotted like `nameSnapshot` and `unitPrice`: the admin moving a
+   * product's date afterwards must not silently rewrite what this customer was
+   * told, and two pre-orders with different dates can share one order.
+   */
+  preorderShipsAt: date('preorder_ships_at', { mode: 'string' }),
 }, (table) => [
   index('order_items_order_id_idx').on(table.orderId),
   // The "256 sold" line on the detail page sums this column per product.

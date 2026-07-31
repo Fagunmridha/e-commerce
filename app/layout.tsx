@@ -19,6 +19,7 @@ import { getServerLocale } from '@/lib/server-locale'
 import {
   getAllProducts,
   getAllCategories,
+  getPreorderProducts,
   getWholesaleProducts,
 } from '@/lib/products'
 import { getViewerShop } from '@/lib/wholesalers'
@@ -84,9 +85,13 @@ export default async function RootLayout({
   // costs two Neon round trips for a signed-in visitor (Clerk id → user row →
   // application row), and awaiting it first made every page in the store wait
   // on them before a single product query had even been sent.
-  const [shop, products, categories] = await Promise.all([
+  // Pre-orders come from their own query rather than being filtered out of
+  // `products`: the Coming Soon card needs the booked count, and that is an
+  // aggregate the catalogue-wide query has no reason to pay for.
+  const [shop, products, preorderProducts, categories] = await Promise.all([
     getViewerShop(),
     getAllProducts(),
+    getPreorderProducts(),
     getAllCategories(),
   ])
 
@@ -110,6 +115,7 @@ export default async function RootLayout({
           <LanguageProvider initialLocale={locale}>
             <CatalogueProvider
               products={products}
+              preorderProducts={preorderProducts}
               wholesaleProducts={wholesaleProducts}
               isWholesaler={Boolean(shop)}
               categories={categories}

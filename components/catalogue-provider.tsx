@@ -10,8 +10,16 @@ import type { Category, CategorySlug, Product } from '@/lib/types'
  * so everything they show traces back to the real database.
  */
 type CatalogueValue = {
-  /** The store's own stock — what every shop listing and rail renders. */
+  /**
+   * The store's own shelf stock — what every shop listing and rail renders.
+   * Pre-order rows are filtered out here rather than at each call site, so a
+   * Coming Soon product cannot leak into a grid whose only button is "Add to
+   * Cart". They are still reachable through `getProductById`, which is what
+   * keeps a booked line in the cart resolving.
+   */
   products: Product[]
+  /** Upcoming stock, for the Coming Soon rail. Soonest delivery first. */
+  preorderProducts: Product[]
   /**
    * Marketplace listings, shown only under /wholesale/market. Empty unless the
    * viewer is an approved wholesaler: the root layout does not even fetch them
@@ -33,41 +41,50 @@ const CatalogueContext = createContext<CatalogueValue | null>(null)
 
 export function CatalogueProvider({
   products,
+  preorderProducts,
   wholesaleProducts,
   isWholesaler,
   categories,
   children,
 }: {
   products: Product[]
+  /** Carries the booked counts, which the catalogue-wide query does not. */
+  preorderProducts: Product[]
   wholesaleProducts: Product[]
   isWholesaler: boolean
   categories: Category[]
   children: React.ReactNode
 }) {
   const value = useMemo<CatalogueValue>(() => {
+    // Lookups still see everything: a pre-ordered line in the cart has to
+    // resolve to its product, and so does the Coming Soon card itself.
+    // `preorderProducts` is listed last so its richer rows (they carry the
+    // booked count) win over the same ids coming from the catalogue query.
     const byId = new Map(
-      [...products, ...wholesaleProducts].map((product) => [
-        product.id,
-        product,
-      ]),
+      [...products, ...wholesaleProducts, ...preorderProducts].map(
+        (product) => [product.id, product],
+      ),
     )
 
+    const shelf = products.filter((product) => !product.preorder)
+
     return {
-      products,
+      products: shelf,
+      preorderProducts,
       wholesaleProducts,
       isWholesaler,
       categories,
       getProductById: (id) => byId.get(id),
       getProductsByCategory: (slug) =>
-        products.filter((product) => product.category === slug),
+        shelf.filter((product) => product.category === slug),
       getPopularProducts: (limit = 8) =>
-        products.filter((product) => product.badge).slice(0, limit),
+        shelf.filter((product) => product.badge).slice(0, limit),
       getRecommendedProducts: (excludeId, limit = 2) =>
-        products.filter((product) => product.id !== excludeId).slice(0, limit),
+        shelf.filter((product) => product.id !== excludeId).slice(0, limit),
       getCategory: (slug) =>
         categories.find((category) => category.slug === slug),
     }
-  }, [products, wholesaleProducts, isWholesaler, categories])
+  }, [products, preorderProducts, wholesaleProducts, isWholesaler, categories])
 
   return (
     <CatalogueContext.Provider value={value}>

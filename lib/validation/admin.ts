@@ -82,6 +82,10 @@ export const productSchema = z.object({
     .nullish()
     .transform((value) => (value?.length ? value : [])),
   description: localizedSchema.nullish().transform((value) => value ?? null),
+  /**
+   * Pieces available. On a pre-order row this is the allocation still open —
+   * the run the admin decided to take bookings for, counted down as they come.
+   */
   stock: z.number().int().min(0).max(1_000_000),
   /** Minimum order quantity. Defaulted so older callers stay valid. */
   moq: z
@@ -91,4 +95,33 @@ export const productSchema = z.object({
     .max(100_000)
     .nullish()
     .transform((value) => value ?? 1),
+  /** Marks the row as upcoming stock, taken on pre-order. */
+  preorder: z
+    .boolean()
+    .nullish()
+    .transform((value) => value ?? false),
+  /**
+   * The ship-from date, as the `YYYY-MM-DD` an `<input type="date">` submits.
+   * Kept a plain string rather than coerced to a Date: the column is a `date`,
+   * and turning it into an instant here is exactly how a calendar day drifts
+   * across a timezone boundary.
+   */
+  preorderShipsAt: z
+    .string()
+    .trim()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Pick a delivery date')
+    .nullish()
+    .transform((value) => value || null),
 })
+  // A pre-order with no date promises nothing, and the storefront card has a
+  // "Delivery from" line with nowhere to get a value. Caught here rather than
+  // left to render as an em dash on the customer's card.
+  .superRefine((data, ctx) => {
+    if (data.preorder && !data.preorderShipsAt) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['preorderShipsAt'],
+        message: 'A pre-order product needs a delivery date',
+      })
+    }
+  })

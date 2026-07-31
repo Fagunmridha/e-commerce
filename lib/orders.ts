@@ -51,6 +51,8 @@ export type OrderLine = {
   size: string | null
   colorEn: string | null
   unitPrice: number
+  /** `YYYY-MM-DD` on a pre-ordered line, null on shelf stock. */
+  preorderShipsAt: string | null
 }
 
 export type OrderWithItems = OrderRow & { items: OrderLine[] }
@@ -119,12 +121,44 @@ export async function createOrder(
         size: item.size ?? null,
         colorEn: item.colorEn ?? null,
         unitPrice: product.price,
+        preorder: product.preorder,
+        // Snapshotted, so moving the product's date later never rewrites what
+        // this customer was promised.
+        preorderShipsAt: product.preorder ? product.preorderShipsAt : null,
       },
     ]
   })
 
   if (lines.length === 0) {
     throw new Error('None of the cart items exist any more')
+  }
+
+  // Pre-order and shelf stock cannot share an order: the whole order would
+  // otherwise sit undelivered for weeks behind one upcoming line. The cart
+  // blocks this at the point of adding, but that is a courtesy — this is the
+  // rule, and it is what lets `orders.preorder` be a property of the order.
+  const preorderLines = lines.filter((line) => line.preorder)
+  const isPreorder = preorderLines.length > 0
+
+  if (isPreorder && preorderLines.length !== lines.length) {
+    throw new Error(
+      'Pre-order items must be checked out separately from in-stock items',
+    )
+  }
+
+  // Reserve the allocation *before* the order exists. A plain read-then-write
+  // would let two shoppers racing for the last piece both win it; the
+  // conditional UPDATE below can only succeed for one of them.
+  const reserved: { productId: string; quantity: number }[] = []
+  for (const line of preorderLines) {
+    const taken = await reservePreorderStock(line.productId, line.quantity)
+    if (!taken) {
+      // Hand back whatever this order already claimed, so a sell-out on the
+      // second line does not strand the first line's pieces.
+      await releasePreorderStock(reserved)
+      throw new Error(`${line.productId} is fully booked`)
+    }
+    reserved.push({ productId: line.productId, quantity: line.quantity })
   }
 
   // Re-validate the code against the subtotal we just computed, then reserve a
@@ -164,6 +198,7 @@ export async function createOrder(
       shipping,
       total,
       itemCount,
+      preorder: isPreorder,
     })
     .returning()
 
@@ -182,21 +217,70 @@ export async function createOrder(
         size: line.size,
         colorEn: line.colorEn,
         unitPrice: line.unitPrice,
+        preorderShipsAt: line.preorderShipsAt,
       })),
     ),
     // Opens the timeline, so every order has a first event rather than the
     // history starting only once an admin touches it.
     db.insert(orderEvents).values({ orderId: order.id, status: 'pending' }),
-    // Decrement stock, never below zero.
-    ...lines.map((line) =>
-      db
-        .update(products)
-        .set({ stock: sql`greatest(0, ${products.stock} - ${line.quantity})` })
-        .where(eq(products.id, line.productId)),
-    ),
+    // Decrement stock, never below zero. Pre-order lines are skipped: their
+    // allocation was already claimed by the conditional UPDATE above, and
+    // decrementing twice would take the run down at double rate.
+    ...lines
+      .filter((line) => !line.preorder)
+      .map((line) =>
+        db
+          .update(products)
+          .set({ stock: sql`greatest(0, ${products.stock} - ${line.quantity})` })
+          .where(eq(products.id, line.productId)),
+      ),
   ])
 
   return { orderNumber }
+}
+
+/**
+ * Claims `quantity` pieces of a pre-order run, or returns false if they are no
+ * longer there. The `stock >= quantity` test lives in the WHERE clause so the
+ * check and the decrement are one statement — the same shape `redeemCoupon`
+ * uses, and the only way two simultaneous bookings for the last piece cannot
+ * both succeed.
+ */
+async function reservePreorderStock(
+  productId: string,
+  quantity: number,
+): Promise<boolean> {
+  const claimed = await db
+    .update(products)
+    .set({ stock: sql`${products.stock} - ${quantity}` })
+    .where(
+      and(
+        eq(products.id, productId),
+        eq(products.preorder, true),
+        gte(products.stock, quantity),
+      ),
+    )
+    .returning({ id: products.id })
+
+  return claimed.length > 0
+}
+
+/**
+ * Undoes reservations when a later line in the same order sells out. Plain
+ * concurrent statements rather than `db.batch`: this is a compensating path
+ * that only runs on the way to throwing, and each row is independent.
+ */
+async function releasePreorderStock(
+  taken: { productId: string; quantity: number }[],
+): Promise<void> {
+  await Promise.all(
+    taken.map((line) =>
+      db
+        .update(products)
+        .set({ stock: sql`${products.stock} + ${line.quantity}` })
+        .where(eq(products.id, line.productId)),
+    ),
+  )
 }
 
 async function attachItems(row: OrderRow): Promise<OrderWithItems> {
@@ -208,6 +292,7 @@ async function attachItems(row: OrderRow): Promise<OrderWithItems> {
       size: orderItems.size,
       colorEn: orderItems.colorEn,
       unitPrice: orderItems.unitPrice,
+      preorderShipsAt: orderItems.preorderShipsAt,
     })
     .from(orderItems)
     .where(eq(orderItems.orderId, row.id))
@@ -235,6 +320,7 @@ export async function getOrderItemsByOrderIds(
       size: orderItems.size,
       colorEn: orderItems.colorEn,
       unitPrice: orderItems.unitPrice,
+      preorderShipsAt: orderItems.preorderShipsAt,
     })
     .from(orderItems)
     .where(inArray(orderItems.orderId, ids))

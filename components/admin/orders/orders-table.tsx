@@ -39,6 +39,8 @@ export type AdminOrderRow = {
   total: number
   paymentMethod: 'cod' | 'mobile' | 'card'
   status: OrderStatus
+  /** Every line is upcoming stock — this order is waiting on a delivery date. */
+  preorder: boolean
   placedAt: string
 }
 
@@ -83,12 +85,22 @@ export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
           <DataTableColumnHeader column={column} title="Order" />
         ),
         cell: ({ row }) => (
-          <Link
-            href={`/admin/orders/${row.original.id}`}
-            className="font-mono text-xs font-semibold text-primary hover:underline"
-          >
-            {row.original.orderNumber}
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/admin/orders/${row.original.id}`}
+              className="font-mono text-xs font-semibold text-primary hover:underline"
+            >
+              {row.original.orderNumber}
+            </Link>
+            {/* Flagged in the list, not just on the detail page: a pre-order
+                sits at "pending" for weeks by design, and without this it
+                looks like an order someone forgot to fulfil. */}
+            {row.original.preorder && (
+              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+                Pre-order
+              </span>
+            )}
+          </div>
         ),
       },
       {
