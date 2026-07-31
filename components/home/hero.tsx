@@ -2,9 +2,10 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { BadgePercent, Copy, Package } from 'lucide-react'
+import { BadgePercent, Copy } from 'lucide-react'
 import { toast } from 'sonner'
 import { Container } from '@/components/layout/container'
+import { WholesaleBoxes } from '@/components/home/wholesale-boxes'
 import { Reveal } from '@/components/reveal'
 import { useLanguage } from '@/components/language-provider'
 import type { FeaturedCoupon } from '@/lib/coupon-math'
@@ -74,20 +75,20 @@ export function Hero({ coupon = null }: { coupon?: FeaturedCoupon | null }) {
                 className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card p-5 transition-all sm:p-6 duration-300 hover:-translate-y-1 hover:border-transparent hover:shadow-card-hover focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
               >
                 <h2 className="text-xl leading-tight font-bold text-foreground">
-                  {cards.wholesaleTitle}
+                  {cards.wholesaleTitle}{' '}
+                  <span className="block text-primary">
+                    {cards.wholesaleHighlight}
+                  </span>
                 </h2>
-                <p className="mt-2 text-sm text-muted-foreground sm:max-w-[11rem]">
+                {/* Held clear of the cartons in the corner. */}
+                <p className="mt-2 max-w-[60%] text-sm text-muted-foreground sm:max-w-[11rem]">
                   {cards.wholesaleBody}
                 </p>
-                <span className="mt-5 inline-flex h-9 w-fit items-center rounded-md border border-primary/40 px-4 text-xs font-semibold text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                <span className="relative mt-5 inline-flex h-9 w-fit items-center rounded-md border border-primary/40 px-4 text-xs font-semibold text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                   {cards.wholesaleCta}
                 </span>
 
-                <Package
-                  aria-hidden="true"
-                  className="pointer-events-none absolute -right-3 -bottom-3 size-28 text-primary/12 transition-transform duration-500 group-hover:scale-110"
-                  strokeWidth={1.25}
-                />
+                <WholesaleBoxes className="pointer-events-none absolute right-3 bottom-3 w-24 origin-bottom-right transition-transform duration-500 group-hover:scale-110 sm:w-28" />
               </Link>
             </Reveal>
 

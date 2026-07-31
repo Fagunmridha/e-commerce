@@ -672,7 +672,9 @@ const en = {
     flashTitle: 'Today Only',
     flashSubtitle: 'The steepest markdowns in the store, while they last.',
     heroCards: {
-      wholesaleTitle: 'Join as a wholesaler',
+      // Split in two so the card can print the key noun in the brand purple.
+      wholesaleTitle: 'Join As a',
+      wholesaleHighlight: 'Wholesaler',
       wholesaleBody: 'Own a shop? List your stock and we handle the selling.',
       wholesaleCta: 'Apply now',
       couponEyebrow: 'Get extra',
@@ -1434,7 +1436,8 @@ const bn: Dictionary = {
     flashTitle: 'শুধু আজকের জন্য',
     flashSubtitle: 'দোকানের সবচেয়ে বড় ছাড়, স্টক থাকা পর্যন্ত।',
     heroCards: {
-      wholesaleTitle: 'হোলসেলার হিসেবে যুক্ত হন',
+      wholesaleTitle: 'যুক্ত হন',
+      wholesaleHighlight: 'হোলসেলার হিসেবে',
       wholesaleBody: 'দোকান আছে? পণ্য তুলে দিন, বিক্রি আমরা সামলাবো।',
       wholesaleCta: 'আবেদন করুন',
       couponEyebrow: 'পান অতিরিক্ত',
