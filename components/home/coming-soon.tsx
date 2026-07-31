@@ -133,7 +133,7 @@ export function ComingSoon() {
                           })
                           toast.success(t.product.added, { description: label })
                         }}
-                        className="mt-4 h-10 w-full rounded-lg bg-primary text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+                        className="mt-4 h-10 w-full rounded-lg bg-button text-xs font-bold text-button-foreground transition-colors hover:bg-button/90 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
                       >
                         {t.home.comingBook}
                       </button>

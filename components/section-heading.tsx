@@ -55,7 +55,7 @@ export function SectionHeading({
           {linkLabel && linkHref && (
             <Link
               href={linkHref}
-              className="group inline-flex items-center gap-1.5 rounded-full border border-border px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:border-primary hover:bg-accent hover:text-primary focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+              className="group inline-flex items-center gap-1.5 rounded-full border border-border px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:border-button hover:bg-accent hover:text-button focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
             >
               {linkLabel}
               <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />

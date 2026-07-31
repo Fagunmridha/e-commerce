@@ -79,7 +79,7 @@ export function OfferStrip() {
                       {text.headline}
                     </p>
 
-                    <span className="mt-4 inline-flex h-9 items-center rounded-md bg-primary px-4 text-xs font-semibold text-primary-foreground transition-colors group-hover:bg-primary/90">
+                    <span className="mt-4 inline-flex h-9 items-center rounded-md bg-button px-4 text-xs font-semibold text-button-foreground transition-colors group-hover:bg-button/90">
                       {copy.cta}
                     </span>
                   </div>

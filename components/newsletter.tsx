@@ -62,7 +62,7 @@ export function Newsletter() {
                 />
                 <button
                   type="submit"
-                  className="h-10 shrink-0 rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+                  className="h-10 shrink-0 rounded-md bg-button px-5 text-sm font-semibold text-button-foreground transition-colors hover:bg-button/90 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
                 >
                   {copy.cta}
                 </button>
