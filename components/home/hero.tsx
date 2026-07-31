@@ -2,9 +2,10 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { BadgePercent, Copy } from 'lucide-react'
+import { Copy } from 'lucide-react'
 import { toast } from 'sonner'
 import { Container } from '@/components/layout/container'
+import { CouponTickets } from '@/components/home/coupon-tickets'
 import { WholesaleBoxes } from '@/components/home/wholesale-boxes'
 import { Reveal } from '@/components/reveal'
 import { useLanguage } from '@/components/language-provider'
@@ -119,11 +120,7 @@ function CouponCard({ coupon }: { coupon: FeaturedCoupon | null }) {
   const cards = t.home.heroCards
 
   const decoration = (
-    <BadgePercent
-      aria-hidden="true"
-      className="pointer-events-none absolute -right-3 -bottom-3 size-28 text-primary/12 transition-transform duration-500 group-hover:scale-110"
-      strokeWidth={1.25}
-    />
+    <CouponTickets className="pointer-events-none absolute right-4 bottom-5 w-24 origin-bottom-right text-primary transition-transform duration-500 group-hover:scale-110 sm:w-28" />
   )
 
   if (!coupon) {
