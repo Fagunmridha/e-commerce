@@ -95,7 +95,7 @@ export function RailEdgeArrows({
   nextLabel: string
 }) {
   const base =
-    'absolute top-1/2 z-10 hidden size-11 -translate-y-1/2 place-items-center rounded-full border border-border bg-background text-foreground shadow-card-hover transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-0 lg:grid'
+    'absolute top-1/2 z-10 hidden size-11 -translate-y-1/2 place-items-center rounded-full border border-border bg-background text-foreground shadow-card-hover transition-colors hover:border-button hover:bg-button hover:text-button-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-0 lg:grid'
 
   return (
     <>
@@ -178,7 +178,7 @@ export function RailArrows({
   className?: string
 }) {
   const base =
-    'grid size-11 place-items-center rounded-full border border-border bg-background text-foreground transition-all hover:border-primary hover:bg-primary hover:text-primary-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-35'
+    'grid size-11 place-items-center rounded-full border border-border bg-background text-foreground transition-all hover:border-button hover:bg-button hover:text-button-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-35'
 
   return (
     <div className={cn('hidden items-center gap-2 sm:flex', className)}>

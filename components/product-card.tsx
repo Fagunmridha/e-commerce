@@ -56,7 +56,7 @@ export function ProductCard({
   }
 
   const action =
-    'flex h-11 items-center justify-center text-muted-foreground transition-colors hover:bg-primary hover:text-primary-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none focus-visible:-outline-offset-2 disabled:pointer-events-none disabled:opacity-40'
+    'flex h-11 items-center justify-center text-muted-foreground transition-colors hover:bg-button hover:text-button-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none focus-visible:-outline-offset-2 disabled:pointer-events-none disabled:opacity-40'
 
   return (
     <>

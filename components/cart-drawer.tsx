@@ -47,7 +47,7 @@ export function CartDrawer({
           >
             <ShoppingBag className="size-5" />
             {hydrated && itemCount > 0 && (
-              <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-badge-sale text-[10px] font-bold text-badge-sale-foreground">
+              <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-badge-count text-[10px] font-bold text-badge-count-foreground">
                 {itemCount}
               </span>
             )}

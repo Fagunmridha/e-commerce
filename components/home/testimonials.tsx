@@ -28,7 +28,7 @@ export function Testimonials() {
   // Two 40px arrows plus gaps eat a fifth of a 390px panel, so on phones the
   // rail is dragged and paged by the dots below instead.
   const arrow =
-    'hidden size-10 shrink-0 place-items-center rounded-full border border-border bg-background text-foreground sm:grid transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-35'
+    'hidden size-10 shrink-0 place-items-center rounded-full border border-border bg-background text-foreground sm:grid transition-colors hover:border-button hover:bg-button hover:text-button-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-35'
 
   return (
     <section className="py-3 lg:py-4">

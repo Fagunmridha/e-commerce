@@ -102,7 +102,7 @@ export default async function AdminOrdersPage({
               className={cn(
                 'rounded-full border px-3 py-1 text-xs font-medium capitalize transition-colors',
                 active === value
-                  ? 'border-transparent bg-primary text-primary-foreground'
+                  ? 'border-transparent bg-button text-button-foreground'
                   : 'border-border text-muted-foreground hover:bg-muted',
               )}
             >

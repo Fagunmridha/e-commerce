@@ -31,7 +31,7 @@ export function MobileBottomNav() {
     )
 
   const badge =
-    'absolute top-1.5 right-[22%] flex min-w-4 items-center justify-center rounded-full bg-badge-sale px-1 text-[9px] font-bold text-badge-sale-foreground'
+    'absolute top-1.5 right-[22%] flex min-w-4 items-center justify-center rounded-full bg-badge-count px-1 text-[9px] font-bold text-badge-count-foreground'
 
   return (
     <nav

@@ -28,7 +28,7 @@ export function Hero({ coupon = null }: { coupon?: FeaturedCoupon | null }) {
       <Container>
         <div className="grid gap-4 lg:grid-cols-[1fr_20rem] lg:gap-5 xl:grid-cols-[1fr_22rem]">
           <Reveal>
-            <div className="relative h-full overflow-hidden rounded-2xl bg-secondary">
+            <div className="relative h-full overflow-hidden rounded-2xl bg-surface">
               <div className="grid h-full items-center sm:grid-cols-2">
                 <div className="px-5 pt-8 pb-6 sm:py-12 sm:pl-10 lg:py-16 lg:pl-12">
                   <p className="text-sm font-semibold tracking-wide text-primary">
@@ -46,7 +46,7 @@ export function Hero({ coupon = null }: { coupon?: FeaturedCoupon | null }) {
 
                   <Link
                     href="/shop"
-                    className="mt-6 inline-flex h-12 items-center justify-center rounded-lg bg-primary px-8 text-sm font-semibold text-primary-foreground sm:mt-8 shadow-lg shadow-primary/25 transition-all hover:-translate-y-0.5 hover:bg-primary/90 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+                    className="mt-6 inline-flex h-12 items-center justify-center rounded-lg bg-button px-8 text-sm font-semibold text-button-foreground sm:mt-8 shadow-lg shadow-button/25 transition-all hover:-translate-y-0.5 hover:bg-button/90 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
                   >
                     {copy.cta}
                   </Link>
@@ -85,7 +85,7 @@ export function Hero({ coupon = null }: { coupon?: FeaturedCoupon | null }) {
                 <p className="mt-2 max-w-[60%] text-sm text-muted-foreground sm:max-w-[11rem]">
                   {cards.wholesaleBody}
                 </p>
-                <span className="relative mt-5 inline-flex h-9 w-fit items-center rounded-md border border-primary/40 px-4 text-xs font-semibold text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                <span className="relative mt-5 inline-flex h-9 w-fit items-center rounded-md border border-button/40 px-4 text-xs font-semibold text-button transition-colors group-hover:bg-button group-hover:text-button-foreground">
                   {cards.wholesaleCta}
                 </span>
 
@@ -141,7 +141,7 @@ function CouponCard({ coupon }: { coupon: FeaturedCoupon | null }) {
         <p className="mt-2 text-sm text-muted-foreground sm:max-w-[11rem]">
           {cards.couponBody}
         </p>
-        <span className="mt-5 inline-flex h-9 w-fit items-center rounded-md border border-primary/40 px-4 text-xs font-semibold text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+        <span className="mt-5 inline-flex h-9 w-fit items-center rounded-md border border-button/40 px-4 text-xs font-semibold text-button transition-colors group-hover:bg-button group-hover:text-button-foreground">
           {cards.couponCta}
         </span>
         {decoration}
@@ -175,7 +175,7 @@ function CouponCard({ coupon }: { coupon: FeaturedCoupon | null }) {
           void navigator.clipboard.writeText(coupon.code)
           toast.success(t.coupon.copied)
         }}
-        className="relative mt-4 inline-flex h-9 w-fit items-center gap-2 rounded-md border border-dashed border-primary/50 bg-primary/5 px-3 font-mono text-sm font-bold tracking-wider text-primary transition-colors hover:bg-primary/10 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+        className="relative mt-4 inline-flex h-9 w-fit items-center gap-2 rounded-md border border-dashed border-button/50 bg-button/5 px-3 font-mono text-sm font-bold tracking-wider text-button transition-colors hover:bg-button/10 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
         aria-label={`${t.coupon.copyCode}: ${coupon.code}`}
       >
         {coupon.code}
@@ -184,7 +184,7 @@ function CouponCard({ coupon }: { coupon: FeaturedCoupon | null }) {
 
       <Link
         href="/shop"
-        className="relative mt-3 inline-flex h-9 w-fit items-center rounded-md border border-primary/40 px-4 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+        className="relative mt-3 inline-flex h-9 w-fit items-center rounded-md border border-button/40 px-4 text-xs font-semibold text-button transition-colors hover:bg-button hover:text-button-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
       >
         {cards.couponCta}
       </Link>

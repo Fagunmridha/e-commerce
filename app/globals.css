@@ -4,7 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(1 0 0);
+  --background: #fefefe;
   --foreground: oklch(0.16 0.01 265);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.16 0.01 265);
@@ -27,6 +27,16 @@
   --badge-new-foreground: oklch(1 0 0);
   --badge-sale: oklch(0.6 0.235 27.5);
   --badge-sale-foreground: oklch(1 0 0);
+  /* The cart and wishlist counters. Their own token, not `badge-sale`: that
+     one is the red "Sale" tag on product cards and must stay red. */
+  --badge-count: #8f81f4;
+  --badge-count-foreground: #ffffff;
+  /* Filled buttons run a shade deeper than `--primary`, which stays the
+     lighter accent used for headline highlights, links and icons. */
+  --button: #4631e5;
+  --button-foreground: #ffffff;
+  /* The tinted panel behind the hero. */
+  --surface: #f6f7f9;
   --chart-1: oklch(0.55 0.21 283);
   --chart-2: oklch(0.65 0.16 283);
   --chart-3: oklch(0.36 0.06 172);
@@ -56,6 +66,12 @@
   --badge-new-foreground: oklch(1 0 0);
   --badge-sale: oklch(0.62 0.22 27.5);
   --badge-sale-foreground: oklch(1 0 0);
+  --badge-count: #8f81f4;
+  --badge-count-foreground: oklch(0.145 0 0);
+  /* Lifted on dark, where the light-theme indigo would read as near-black. */
+  --button: oklch(0.62 0.19 283);
+  --button-foreground: oklch(1 0 0);
+  --surface: oklch(0.205 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -194,6 +210,11 @@
   --color-badge-new-foreground: var(--badge-new-foreground);
   --color-badge-sale: var(--badge-sale);
   --color-badge-sale-foreground: var(--badge-sale-foreground);
+  --color-badge-count: var(--badge-count);
+  --color-badge-count-foreground: var(--badge-count-foreground);
+  --color-button: var(--button);
+  --color-button-foreground: var(--button-foreground);
+  --color-surface: var(--surface);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
