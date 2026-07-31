@@ -1,14 +1,14 @@
 'use client'
 
-import { Headphones, RotateCcw, ShieldCheck, Truck } from 'lucide-react'
+import { Headphones, LockKeyhole, RefreshCcw, Truck } from 'lucide-react'
 import { Container } from '@/components/layout/container'
 import { Reveal } from '@/components/reveal'
 import { useLanguage } from '@/components/language-provider'
 
-const ICONS = [Truck, RotateCcw, ShieldCheck, Headphones]
+const ICONS = [Truck, RefreshCcw, LockKeyhole, Headphones]
 
 /**
- * The four service promises, as one row split by hairline dividers. Used on the
+ * The four service promises, as one row split by hairline rules. Used on the
  * homepage and at the foot of the shop and category pages.
  */
 export function FeatureBar() {
@@ -17,9 +17,8 @@ export function FeatureBar() {
   return (
     <section className="py-6 lg:py-8">
       <Container>
-        {/* Four across on phones as a compact icon strip, two up at sm, four
-            again at lg — so the promises never turn into four stacked rows. */}
-        <ul className="grid grid-cols-4 rounded-2xl border border-border bg-card sm:grid-cols-2 lg:grid-cols-4">
+        {/* Two up on phones so the promises never become four stacked rows. */}
+        <ul className="grid grid-cols-2 rounded-2xl border border-border bg-card lg:grid-cols-4">
           {t.features.map((feature, index) => {
             const Icon = ICONS[index]
 
@@ -28,18 +27,29 @@ export function FeatureBar() {
                 as="li"
                 key={feature.title}
                 delay={index * 80}
-                // Dividers between columns only, never before the first one.
-                className="border-border [&:nth-child(n+2)]:border-l sm:[&:nth-child(n+3)]:border-t sm:[&:nth-child(odd)]:border-l-0 sm:[&:nth-child(even)]:border-l lg:[&:nth-child(n+2)]:border-l lg:[&:nth-child(n+3)]:border-t-0"
+                className={[
+                  // A short centred rule rather than a full-height border: it
+                  // reads as a separator instead of a table cell wall.
+                  "relative before:absolute before:top-1/2 before:left-0 before:hidden before:h-11 before:w-px before:-translate-y-1/2 before:bg-border before:content-['']",
+                  // Never before the first item of a row: even ones at two
+                  // columns, everything past the first at four.
+                  '[&:nth-child(even)]:before:block lg:[&:nth-child(n+2)]:before:block',
+                  // The second phone row needs its own rule above it.
+                  '[&:nth-child(n+3)]:border-t [&:nth-child(n+3)]:border-border lg:[&:nth-child(n+3)]:border-t-0',
+                ].join(' ')}
               >
-                <div className="group flex flex-col items-center gap-2 px-2 py-4 text-center sm:flex-row sm:gap-4 sm:px-6 sm:py-6 sm:text-left">
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors duration-300 group-hover:bg-primary group-hover:text-primary-foreground sm:size-12">
-                    <Icon className="size-4 sm:size-5" aria-hidden="true" />
-                  </span>
+                <div className="flex items-center gap-3 px-4 py-5 sm:gap-4 sm:px-6 sm:py-6">
+                  {/* Bare outline icons — no tinted disc behind them. */}
+                  <Icon
+                    className="size-7 shrink-0 text-feature-icon sm:size-8"
+                    strokeWidth={1.75}
+                    aria-hidden="true"
+                  />
                   <div className="min-w-0">
-                    <h3 className="text-[11px] leading-tight font-bold text-foreground sm:text-sm">
+                    <h3 className="text-[13px] leading-tight font-bold text-foreground sm:text-[15px]">
                       {feature.title}
                     </h3>
-                    <p className="text-[9px] leading-tight text-muted-foreground sm:mt-0.5 sm:text-xs">
+                    <p className="mt-1 text-[11px] leading-tight text-muted-foreground sm:text-sm">
                       {feature.description}
                     </p>
                   </div>
