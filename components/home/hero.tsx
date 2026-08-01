@@ -55,7 +55,7 @@ export function Hero({ coupon = null }: { coupon?: FeaturedCoupon | null }) {
                 {/* The photo fills the right half and bleeds to the panel edge. */}
                 <div className="relative h-60 sm:h-full sm:min-h-[24rem] lg:min-h-[28rem]">
                   <Image
-                    src="/hero_clothing_rack.png"
+                    src="/hero_clothing.png"
                     alt=""
                     fill
                     // The hero image is the homepage LCP element.
