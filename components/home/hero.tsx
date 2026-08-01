@@ -6,7 +6,6 @@ import { Copy } from 'lucide-react'
 import { toast } from 'sonner'
 import { Container } from '@/components/layout/container'
 import { CouponTickets } from '@/components/home/coupon-tickets'
-import { WholesaleBoxes } from '@/components/home/wholesale-boxes'
 import { Reveal } from '@/components/reveal'
 import { useLanguage } from '@/components/language-provider'
 import type { FeaturedCoupon } from '@/lib/coupon-math'
@@ -52,16 +51,21 @@ export function Hero({ coupon = null }: { coupon?: FeaturedCoupon | null }) {
                   </Link>
                 </div>
 
-                {/* The photo fills the right half and bleeds to the panel edge. */}
+                {/* The photo fills the right half and bleeds to the panel edge.
+                    The cut-out is transparent, so it sits straight on the
+                    panel's own surface in either theme — no plate, no seam.
+                    The nudge left closes the gap to the headline; the asset
+                    carries ~19% empty margin on its right, so what the shift
+                    uncovers on that edge is blank anyway. */}
                 <div className="relative h-60 sm:h-full sm:min-h-[24rem] lg:min-h-[28rem]">
                   <Image
-                    src="/hero_clothing.png"
+                    src="/plant-clothes.png"
                     alt=""
                     fill
                     // The hero image is the homepage LCP element.
                     priority
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 40vw"
-                    className="object-cover object-center"
+                    className="-translate-x-[4%] object-cover object-center"
                   />
                 </div>
               </div>
@@ -89,7 +93,16 @@ export function Hero({ coupon = null }: { coupon?: FeaturedCoupon | null }) {
                   {cards.wholesaleCta}
                 </span>
 
-                <WholesaleBoxes className="pointer-events-none absolute right-3 bottom-3 w-24 origin-bottom-right transition-transform duration-500 group-hover:scale-110 sm:w-28" />
+                {/* The carton stack is a transparent PNG, so it drops straight
+                    onto the card with no plate behind it. */}
+                <Image
+                  src="/wholesale-boxes.png"
+                  alt=""
+                  width={1024}
+                  height={1024}
+                  sizes="112px"
+                  className="pointer-events-none absolute right-3 bottom-3 w-24 origin-bottom-right transition-transform duration-500 group-hover:scale-110 sm:w-28"
+                />
               </Link>
             </Reveal>
 
