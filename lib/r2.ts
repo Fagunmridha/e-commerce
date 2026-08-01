@@ -85,6 +85,12 @@ export function r2(): S3Client {
   client = new S3Client({
     // R2 ignores the region but the SDK insists on one.
     region: 'auto',
+    // Left at the SDK default, this bakes `x-amz-checksum-crc32=AAAAAA==` —
+    // the CRC32 of an empty body — into every presigned PUT, because the
+    // presigner never sees the bytes the browser will actually send. R2 then
+    // has a signed checksum that cannot match the upload. Only compute one
+    // where the operation genuinely requires it.
+    requestChecksumCalculation: 'WHEN_REQUIRED',
     endpoint: `https://${required('R2_ACCOUNT_ID')}.r2.cloudflarestorage.com`,
     credentials: {
       accessKeyId: required('R2_ACCESS_KEY_ID'),
