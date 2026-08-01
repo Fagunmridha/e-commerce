@@ -37,7 +37,10 @@ const en = {
     secondaryCta: 'Browse collections',
     slide: {
       label: 'New Collection',
-      title: 'Best Quality Products For Your',
+      // The headline is split so the break lands after "Products" rather than
+      // wherever the column width happens to put it.
+      title: 'Best Quality Products',
+      titleLead: 'For Your',
       highlight: 'Everyday Needs',
       subtitle: 'High quality fashion for men, women and kids.',
       cta: 'Shop Now',
@@ -833,7 +836,8 @@ const bn: Dictionary = {
     secondaryCta: 'কালেকশন ঘুরে দেখুন',
     slide: {
       label: 'নতুন কালেকশন',
-      title: 'সেরা মানের পণ্য আপনার',
+      title: 'সেরা মানের পণ্য',
+      titleLead: 'আপনার',
       highlight: 'প্রতিদিনের প্রয়োজনে',
       subtitle: 'পুরুষ, নারী ও শিশুদের জন্য উন্নত মানের ফ্যাশন।',
       cta: 'এখনই কিনুন',

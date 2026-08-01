@@ -28,18 +28,34 @@ export function Hero({ coupon = null }: { coupon?: FeaturedCoupon | null }) {
         <div className="grid gap-4 lg:grid-cols-[1fr_20rem] lg:gap-5 xl:grid-cols-[1fr_22rem]">
           <Reveal>
             <div className="relative h-full overflow-hidden rounded-2xl bg-surface">
-              <div className="grid h-full items-center sm:grid-cols-2">
+              {/* The photo takes the larger share so it starts near the
+                  headline instead of waiting for the halfway line — but not so
+                  large that "For Your Everyday Needs" no longer fits on its
+                  own line. */}
+              <div className="grid h-full items-center sm:grid-cols-[1fr_1.05fr]">
                 <div className="px-5 pt-8 pb-6 sm:py-12 sm:pl-10 lg:py-16 lg:pl-12">
-                  <p className="text-sm font-semibold tracking-wide text-primary">
+                  <p className="text-sm font-semibold tracking-wide text-primary lg:text-base">
                     {copy.label}
                   </p>
 
-                  <h1 className="mt-4 text-3xl leading-[1.12] font-extrabold tracking-tight text-balance text-foreground sm:text-4xl lg:text-5xl">
-                    {copy.title}{' '}
-                    <span className="text-primary">{copy.highlight}</span>
+                  {/* Two fixed lines rather than a balanced block: the break
+                      belongs after "Products", not wherever the column width
+                      lands it.
+
+                      The size is fluid rather than stepped because the longer
+                      line — "For Your Everyday Needs" — has to survive on one
+                      line, and a step that fits at 1920 still wraps at 1440.
+                      The clamp tracks the column instead, capped at 3.25rem so
+                      it stops growing once there is room to spare. */}
+                  <h1 className="mt-4 text-[1.75rem] leading-[1.12] font-extrabold tracking-tight text-foreground sm:text-[clamp(1.5rem,calc(3.2vw-2px),2.25rem)] lg:text-[clamp(1.5rem,calc(3.9vw-23px),3.25rem)]">
+                    <span className="block">{copy.title}</span>
+                    <span className="block">
+                      {copy.titleLead}{' '}
+                      <span className="text-primary">{copy.highlight}</span>
+                    </span>
                   </h1>
 
-                  <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground sm:mt-5 sm:text-base">
+                  <p className="mt-4 max-w-sm text-sm leading-relaxed text-muted-foreground sm:mt-5 sm:text-base lg:text-lg">
                     {copy.subtitle}
                   </p>
 
@@ -51,13 +67,16 @@ export function Hero({ coupon = null }: { coupon?: FeaturedCoupon | null }) {
                   </Link>
                 </div>
 
-                {/* The photo fills the right half and bleeds to the panel edge.
-                    The cut-out is transparent, so it sits straight on the
-                    panel's own surface in either theme — no plate, no seam.
-                    The nudge left closes the gap to the headline; the asset
-                    carries ~19% empty margin on its right, so what the shift
-                    uncovers on that edge is blank anyway. */}
-                <div className="relative h-60 sm:h-full sm:min-h-[24rem] lg:min-h-[28rem]">
+                {/* The photo takes the wider column. The cut-out is
+                    transparent, so it sits straight on the panel's own surface
+                    in either theme — no plate, no seam.
+
+                    Contain, not cover: the rack spans the full height of its
+                    own asset, so there is no slack to crop into — cover, or
+                    any scale past it, eats the top rail and the hangers first.
+                    The column carries the size instead, and the nudge left
+                    closes the gap to the headline. */}
+                <div className="relative h-72 sm:h-full sm:min-h-[27rem] lg:min-h-[34rem]">
                   <Image
                     src="/plant-clothes.png"
                     alt=""
@@ -65,7 +84,7 @@ export function Hero({ coupon = null }: { coupon?: FeaturedCoupon | null }) {
                     // The hero image is the homepage LCP element.
                     priority
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 40vw"
-                    className="-translate-x-[4%] object-cover object-center"
+                    className="-translate-x-[3%] object-contain object-center"
                   />
                 </div>
               </div>
