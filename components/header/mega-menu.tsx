@@ -13,6 +13,10 @@ import {
 } from '@/components/ui/navigation-menu'
 import { useLanguage } from '@/components/language-provider'
 import { useCatalogue } from '@/components/catalogue-provider'
+import {
+  NAV_LINK_ACTIVE,
+  NAV_LINK_CLASS,
+} from '@/components/header/nav-link-class'
 import { cn } from '@/lib/utils'
 
 /**
@@ -40,8 +44,12 @@ export function MegaMenu({ active }: { active: boolean }) {
         <NavigationMenuItem>
           <NavigationMenuTrigger
             className={cn(
-              'h-auto gap-1 rounded-full bg-transparent px-3.5 py-2 text-sm font-medium hover:bg-accent hover:text-primary focus:bg-accent data-[state=open]:bg-accent data-[state=open]:text-primary',
-              active && 'text-primary',
+              NAV_LINK_CLASS,
+              'h-auto gap-1 bg-transparent focus:bg-accent data-[state=open]:bg-accent data-[state=open]:text-primary',
+              // The chevron sits inside the button, so the underline stops
+              // short of it and tracks the label alone.
+              'after:right-7',
+              active && NAV_LINK_ACTIVE,
             )}
           >
             {t.nav.shop}

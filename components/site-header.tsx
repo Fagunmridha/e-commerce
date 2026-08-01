@@ -10,6 +10,10 @@ import { AnnouncementBar } from '@/components/header/announcement-bar'
 import { BrandMark } from '@/components/header/brand-mark'
 import { MegaMenu } from '@/components/header/mega-menu'
 import { MobileMenu } from '@/components/header/mobile-menu'
+import {
+  NAV_LINK_ACTIVE,
+  NAV_LINK_CLASS,
+} from '@/components/header/nav-link-class'
 import { SearchPanel } from '@/components/header/search-panel'
 import { useScrolled } from '@/components/header/use-scrolled'
 import { CartDrawer } from '@/components/cart-drawer'
@@ -81,8 +85,8 @@ export function SiteHeader() {
                 <Link
                   href="/"
                   className={cn(
-                    'rounded-full px-3.5 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-primary',
-                    isActive('/') ? 'text-primary' : 'text-foreground',
+                    NAV_LINK_CLASS,
+                    isActive('/') ? NAV_LINK_ACTIVE : 'text-foreground',
                   )}
                 >
                   {t.nav.home}
@@ -96,8 +100,8 @@ export function SiteHeader() {
                   <Link
                     href={link.href}
                     className={cn(
-                      'rounded-full px-3.5 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-primary',
-                      isActive(link.href) ? 'text-primary' : 'text-foreground',
+                      NAV_LINK_CLASS,
+                      isActive(link.href) ? NAV_LINK_ACTIVE : 'text-foreground',
                     )}
                   >
                     {t.nav[link.key]}
