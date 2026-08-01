@@ -28,6 +28,23 @@ const optionalText = (max = 200) =>
 
 const optionalImage = imageSchema.nullish().transform((value) => value || null)
 
+/**
+ * Optional phone: '' and undefined both collapse to null, like `optionalText`.
+ *
+ * `phoneSchema.nullish()` is not enough — it admits null and undefined but not
+ * the empty string, which is exactly what an untouched text input submits. The
+ * form marks alt phone optional and lets blank through, so without this the
+ * server rejects a perfectly good application with "Enter a valid Bangladeshi
+ * mobile number" and sends the applicant hunting through the number they *did*
+ * fill in correctly.
+ */
+const optionalPhone = z
+  .string()
+  .trim()
+  .nullish()
+  .transform((value) => value || null)
+  .pipe(phoneSchema.nullable())
+
 export const wholesaleApplicationSchema = z.object({
   shopName: z
     .string()
@@ -48,7 +65,7 @@ export const wholesaleApplicationSchema = z.object({
 
   contactName: z.string().trim().min(2, 'Contact name is required').max(120),
   phone: phoneSchema,
-  altPhone: phoneSchema.nullish().transform((value) => value || null),
+  altPhone: optionalPhone,
   email: z.string().trim().email('Enter a valid email address').max(200),
   website: optionalText(300),
 
