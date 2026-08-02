@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { eq, inArray } from 'drizzle-orm'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Store } from 'lucide-react'
 import { db } from '@/lib/db'
 import { users } from '@/lib/db/schema'
 import { Badge } from '@/components/ui/badge'
@@ -87,7 +87,10 @@ export default async function AdminOrderDetailPage({
           {/* Not a status — this order is waiting on stock that has not landed
               yet, which is a different thing from "pending" fulfilment. */}
           {order.preorder && (
-            <Badge variant="secondary" className="border-0 bg-primary/10 text-primary">
+            <Badge
+              variant="secondary"
+              className="border-0 bg-primary/10 text-primary"
+            >
               Pre-order
             </Badge>
           )}
@@ -130,6 +133,17 @@ export default async function AdminOrderDetailPage({
                         .filter(Boolean)
                         .join(' • ')}
                     </p>
+                    {/* Marketplace lines: which shop has to be paid for this,
+                        and who ships it. House stock has no seller. */}
+                    {line.sellerName && (
+                      <Badge
+                        variant="secondary"
+                        className="mt-1 border-0 bg-primary/10 text-primary"
+                      >
+                        <Store className="size-3" />
+                        Sold by {line.sellerName}
+                      </Badge>
+                    )}
                     {/* The date promised when this line was booked, not the
                         product's current one — see `orderItems.preorderShipsAt`. */}
                     {line.preorderShipsAt && (

@@ -1,5 +1,17 @@
 import 'server-only'
-import { and, asc, count, desc, eq, gte, ilike, inArray, lte, or, sql } from 'drizzle-orm'
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  gte,
+  ilike,
+  inArray,
+  lte,
+  or,
+  sql,
+} from 'drizzle-orm'
 import { db } from '@/lib/db'
 import {
   orderEvents,
@@ -53,6 +65,12 @@ export type OrderLine = {
   unitPrice: number
   /** `YYYY-MM-DD` on a pre-ordered line, null on shelf stock. */
   preorderShipsAt: string | null
+  /**
+   * The shop that listed this product, or null for the store's own stock. Read
+   * live through `products.seller_id`, so it is null once the listing itself is
+   * deleted — the line survives on its snapshots, the attribution does not.
+   */
+  sellerName?: string | null
 }
 
 export type OrderWithItems = OrderRow & { items: OrderLine[] }
@@ -231,7 +249,9 @@ export async function createOrder(
       .map((line) =>
         db
           .update(products)
-          .set({ stock: sql`greatest(0, ${products.stock} - ${line.quantity})` })
+          .set({
+            stock: sql`greatest(0, ${products.stock} - ${line.quantity})`,
+          })
           .where(eq(products.id, line.productId)),
       ),
   ])
@@ -284,6 +304,8 @@ async function releasePreorderStock(
 }
 
 async function attachItems(row: OrderRow): Promise<OrderWithItems> {
+  // Left joins, both of them: a deleted product leaves `product_id` null, and
+  // a house product has no seller. Either way the line still has to come back.
   const items = await db
     .select({
       name: orderItems.nameSnapshot,
@@ -293,8 +315,14 @@ async function attachItems(row: OrderRow): Promise<OrderWithItems> {
       colorEn: orderItems.colorEn,
       unitPrice: orderItems.unitPrice,
       preorderShipsAt: orderItems.preorderShipsAt,
+      sellerName: wholesalerApplications.shopName,
     })
     .from(orderItems)
+    .leftJoin(products, eq(products.id, orderItems.productId))
+    .leftJoin(
+      wholesalerApplications,
+      eq(wholesalerApplications.id, products.sellerId),
+    )
     .where(eq(orderItems.orderId, row.id))
 
   return { ...row, items }
@@ -452,7 +480,9 @@ export async function getOrderById(id: string): Promise<OrderWithItems | null> {
   return row ? attachItems(row) : null
 }
 
-export async function getOrderEvents(orderId: string): Promise<OrderEventRow[]> {
+export async function getOrderEvents(
+  orderId: string,
+): Promise<OrderEventRow[]> {
   return db
     .select()
     .from(orderEvents)

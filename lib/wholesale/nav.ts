@@ -2,7 +2,6 @@ import {
   BarChart3,
   LayoutDashboard,
   Plus,
-  Settings,
   ShoppingCart,
   Store,
   Wallet,
@@ -56,7 +55,6 @@ export const SELLER_NAV: SellerNavGroup[] = [
         href: '/wholesale/dashboard/orders',
         labelKey: 'orders',
         icon: ShoppingCart,
-        planned: true,
       },
       {
         href: '/wholesale/dashboard/payouts',
@@ -80,12 +78,6 @@ export const SELLER_NAV: SellerNavGroup[] = [
         labelKey: 'market',
         icon: Store,
         external: true,
-      },
-      {
-        href: '/wholesale/dashboard/settings',
-        labelKey: 'settings',
-        icon: Settings,
-        planned: true,
       },
     ],
   },
