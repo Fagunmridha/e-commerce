@@ -1,0 +1,138 @@
+'use client'
+
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { useTheme } from 'next-themes'
+import { UserButton } from '@clerk/nextjs'
+import { Check, Globe, Moon, Plus, Sun } from 'lucide-react'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Separator } from '@/components/ui/separator'
+import { SidebarTrigger } from '@/components/ui/sidebar'
+import { useLanguage } from '@/components/language-provider'
+import { LOCALE_LABELS, LOCALES } from '@/lib/i18n'
+import { sellerCrumb } from '@/lib/wholesale/nav'
+
+function ThemeToggle({
+  light,
+  dark: darkLabel,
+}: {
+  light: string
+  dark: string
+}) {
+  const { resolvedTheme, setTheme } = useTheme()
+  // `resolvedTheme` is undefined until mounted; rendering the icon before then
+  // would mismatch the server HTML.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+
+  const dark = resolvedTheme === 'dark'
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      aria-label={dark ? light : darkLabel}
+      onClick={() => setTheme(dark ? 'light' : 'dark')}
+    >
+      {mounted && dark ? (
+        <Moon className="size-4" />
+      ) : (
+        <Sun className="size-4" />
+      )}
+    </Button>
+  )
+}
+
+function LanguageMenu({ label }: { label: string }) {
+  const { locale, setLocale } = useLanguage()
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" aria-label={label}>
+          <Globe className="size-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>{label}</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {LOCALES.map((code) => (
+          <DropdownMenuItem key={code} onSelect={() => setLocale(code)}>
+            <span className="flex-1">{LOCALE_LABELS[code]}</span>
+            {locale === code && <Check className="size-4" />}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+export function SellerHeader() {
+  const pathname = usePathname()
+  const { t } = useLanguage()
+  const nav = t.wholesale.nav
+  const crumb = sellerCrumb(pathname, t)
+  const onDashboard = pathname === '/wholesale/dashboard'
+
+  return (
+    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 border-b border-border bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <SidebarTrigger className="-ml-1" />
+      <Separator orientation="vertical" className="mr-1 h-4" />
+
+      <Breadcrumb className="hidden sm:block">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            {onDashboard ? (
+              <BreadcrumbPage>{crumb}</BreadcrumbPage>
+            ) : (
+              <BreadcrumbLink asChild>
+                <Link href="/wholesale/dashboard">{nav.listings}</Link>
+              </BreadcrumbLink>
+            )}
+          </BreadcrumbItem>
+          {!onDashboard && (
+            <>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{crumb}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </>
+          )}
+        </BreadcrumbList>
+      </Breadcrumb>
+
+      <div className="ml-auto flex items-center gap-1">
+        <ThemeToggle light={nav.lightTheme} dark={nav.darkTheme} />
+        <LanguageMenu label={nav.language} />
+
+        <Button asChild size="sm" className="ml-1 gap-1.5">
+          <Link href="/wholesale/dashboard/products/new">
+            <Plus className="size-4" />
+            <span className="hidden sm:inline">{nav.addProduct}</span>
+          </Link>
+        </Button>
+
+        <div className="ml-1 flex items-center">
+          <UserButton />
+        </div>
+      </div>
+    </header>
+  )
+}

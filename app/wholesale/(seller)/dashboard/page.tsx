@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { PageHeader } from '@/components/page-header'
 import { SellerDashboard } from '@/components/wholesale/seller-dashboard'
 import { getViewerShop } from '@/lib/wholesalers'
 import { getSellerProducts } from '@/lib/products'
@@ -20,10 +19,5 @@ export default async function SellerDashboardPage() {
 
   const products = await getSellerProducts(shop.id)
 
-  return (
-    <>
-      <PageHeader pageKey="wholesaleDashboard" />
-      <SellerDashboard shopName={shop.shopName} products={products} />
-    </>
-  )
+  return <SellerDashboard shopName={shop.shopName} products={products} />
 }

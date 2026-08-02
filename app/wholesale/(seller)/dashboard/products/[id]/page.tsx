@@ -1,4 +1,7 @@
+import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
+import { ArrowLeft } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { SellerProductForm } from '@/components/wholesale/seller-product-form'
 import { getViewerShop } from '@/lib/wholesalers'
 import { getSellerProductById } from '@/lib/products'
@@ -24,10 +27,25 @@ export default async function EditSellerProductPage({
   if (!product) notFound()
 
   return (
-    <div className="mx-auto max-w-page px-4 py-10 sm:px-6 sm:py-12 lg:px-4">
-      <h1 className="mb-6 text-xl font-bold text-foreground">
-        {t.wholesale.dashboard.editTitle} — {product.name.en}
-      </h1>
+    <div className="max-w-3xl">
+      <div className="mb-6 flex items-center gap-3">
+        <Button asChild variant="ghost" size="icon-sm">
+          <Link
+            href="/wholesale/dashboard"
+            aria-label={t.wholesale.nav.listings}
+          >
+            <ArrowLeft className="size-4" />
+          </Link>
+        </Button>
+        <div className="min-w-0">
+          <h1 className="truncate text-xl font-bold tracking-tight text-foreground">
+            {t.wholesale.dashboard.editTitle}
+          </h1>
+          <p className="truncate text-sm text-muted-foreground">
+            {product.name.en}
+          </p>
+        </div>
+      </div>
       <SellerProductForm product={product} />
     </div>
   )

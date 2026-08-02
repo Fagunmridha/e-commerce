@@ -9,8 +9,11 @@ import { usePathname } from 'next/navigation'
  *    funnel with no nav and no footer.
  *  - `/admin/*` — the admin panel ships its own sidebar and header, so the
  *    storefront chrome would sit on top of it.
+ *  - `/wholesale/dashboard/*` — the seller panel, same reason. The rest of
+ *    /wholesale (the pitch, the apply form, the market) keeps the storefront
+ *    chrome: those are shopping pages and need the cart.
  */
-const BARE_ROUTES = ['/lp', '/admin']
+const BARE_ROUTES = ['/lp', '/admin', '/wholesale/dashboard']
 
 export function ConditionalChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
