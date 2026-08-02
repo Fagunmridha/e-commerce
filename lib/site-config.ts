@@ -6,6 +6,6 @@
 /**
  * WhatsApp number for the floating contact button, in wa.me format:
  * digits only, with country code, no `+` or spaces.
- * `01581587405` → `8801581587405`.
+ * `01872327575` → `8801872327575`.
  */
-export const WHATSAPP_NUMBER = '8801581587405'
+export const WHATSAPP_NUMBER = '8801872327575'

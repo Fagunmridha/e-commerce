@@ -421,7 +421,7 @@ const en = {
     },
     details: [
       { title: 'Email', lines: ['support@cpmarket.com', 'orders@cpmarket.com'] },
-      { title: 'Phone', lines: ['+880 1700 000000', 'Mon–Sat'] },
+      { title: 'Phone', lines: ['+880 1872-327575', 'Mon–Sat'] },
       { title: 'Store', lines: ['House 12, Road 5', 'Dhanmondi, Dhaka 1205'] },
       { title: 'Hours', lines: ['Mon–Sat: 10am – 8pm', 'Sunday: closed'] },
     ],
@@ -608,7 +608,7 @@ const en = {
     },
     contact: {
       address: '92, Banani, Kalurhat, Dhaka, Bangladesh',
-      phone: '+880 1234-567890',
+      phone: '+880 1872-327575',
       email: 'hello@cpmarket.com',
     },
     links: {
@@ -1206,7 +1206,7 @@ const bn: Dictionary = {
     },
     details: [
       { title: 'ইমেইল', lines: ['support@cpmarket.com', 'orders@cpmarket.com'] },
-      { title: 'ফোন', lines: ['+880 1700 000000', 'শনি–শুক্র'] },
+      { title: 'ফোন', lines: ['+880 1872-327575', 'শনি–শুক্র'] },
       { title: 'স্টোর', lines: ['বাড়ি ১২, রোড ৫', 'ধানমন্ডি, ঢাকা ১২০৫'] },
       { title: 'সময়', lines: ['শনি–শুক্র: সকাল ১০টা – রাত ৮টা', 'রবিবার: বন্ধ'] },
     ],
@@ -1390,7 +1390,9 @@ const bn: Dictionary = {
     },
     contact: {
       address: '৯২, বনানী, কালুরঘাট, ঢাকা, বাংলাদেশ',
-      phone: '+৮৮০ ১২৩৪-৫৬৭৮৯০',
+      // Latin digits on purpose: the footer builds `tel:` by stripping
+      // non-`\d` characters, and Bangla numerals would strip to nothing.
+      phone: '+880 1872-327575',
       email: 'hello@cpmarket.com',
     },
     links: {
