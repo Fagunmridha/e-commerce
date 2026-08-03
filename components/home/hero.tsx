@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { Copy } from 'lucide-react'
 import { toast } from 'sonner'
 import { Container } from '@/components/layout/container'
-import { CouponTickets } from '@/components/home/coupon-tickets'
 import { Reveal } from '@/components/reveal'
 import { useLanguage } from '@/components/language-provider'
 import type { FeaturedCoupon } from '@/lib/coupon-math'
@@ -152,7 +151,14 @@ function CouponCard({ coupon }: { coupon: FeaturedCoupon | null }) {
   const cards = t.home.heroCards
 
   const decoration = (
-    <CouponTickets className="pointer-events-none absolute right-4 bottom-5 w-24 origin-bottom-right text-primary transition-transform duration-500 group-hover:scale-110 sm:w-28" />
+    <Image
+      src="/icons/coupon-tickets.png"
+      alt=""
+      width={512}
+      height={398}
+      sizes="112px"
+      className="pointer-events-none absolute right-4 bottom-5 w-24 origin-bottom-right transition-transform duration-500 group-hover:scale-110 sm:w-28"
+    />
   )
 
   if (!coupon) {

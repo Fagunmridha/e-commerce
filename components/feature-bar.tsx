@@ -1,11 +1,18 @@
 'use client'
 
-import { Headphones, LockKeyhole, RefreshCcw, Truck } from 'lucide-react'
+import Image from 'next/image'
 import { Container } from '@/components/layout/container'
 import { Reveal } from '@/components/reveal'
 import { useLanguage } from '@/components/language-provider'
 
-const ICONS = [Truck, RefreshCcw, LockKeyhole, Headphones]
+/** In the order of `t.features`. Trimmed to their artwork so the four sit at
+ *  the same optical size — see `public/icons`. */
+const ICONS = [
+  '/icons/feature-delivery.png',
+  '/icons/feature-returns.png',
+  '/icons/feature-payment.png',
+  '/icons/feature-original.png',
+]
 
 /**
  * The four service promises, as one row split by hairline rules. Used on the
@@ -20,7 +27,7 @@ export function FeatureBar() {
         {/* Two up on phones so the promises never become four stacked rows. */}
         <ul className="grid grid-cols-2 rounded-2xl border border-border bg-card lg:grid-cols-4">
           {t.features.map((feature, index) => {
-            const Icon = ICONS[index]
+            const icon = ICONS[index]
 
             return (
               <Reveal
@@ -40,10 +47,14 @@ export function FeatureBar() {
               >
                 <div className="flex items-center gap-3 px-4 py-5 sm:gap-4 sm:px-6 sm:py-6">
                   {/* Bare outline icons — no tinted disc behind them. */}
-                  <Icon
-                    className="size-7 shrink-0 text-feature-icon sm:size-8"
-                    strokeWidth={1.75}
+                  <Image
+                    src={icon}
+                    alt=""
                     aria-hidden="true"
+                    width={256}
+                    height={256}
+                    sizes="36px"
+                    className="size-8 shrink-0 object-contain sm:size-9"
                   />
                   <div className="min-w-0">
                     <h3 className="text-[13px] leading-tight font-bold text-foreground sm:text-[15px]">

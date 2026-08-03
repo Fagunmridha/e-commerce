@@ -50,7 +50,7 @@ const en = {
     { title: 'Free Delivery', description: 'On all orders over ৳2,000' },
     { title: 'Easy Returns', description: '30 days return policy' },
     { title: 'Secure Payment', description: '100% secure payment' },
-    { title: '24/7 Support', description: 'Dedicated support' },
+    { title: '100% Original', description: 'Authentic products only' },
   ],
   sections: {
     topCategories: 'Top Categories',
@@ -909,7 +909,7 @@ const bn: Dictionary = {
     { title: 'ফ্রি ডেলিভারি', description: '৳2,000-এর বেশি সব অর্ডারে' },
     { title: 'সহজ রিটার্ন', description: '৩০ দিনের রিটার্ন সুবিধা' },
     { title: 'নিরাপদ পেমেন্ট', description: '১০০% নিরাপদ পেমেন্ট' },
-    { title: '২৪/৭ সাপোর্ট', description: 'সার্বক্ষণিক সহায়তা' },
+    { title: '১০০% অরিজিনাল', description: 'শুধুমাত্র আসল পণ্য' },
   ],
   sections: {
     topCategories: 'জনপ্রিয় ক্যাটাগরি',
