@@ -170,7 +170,7 @@ export function ProductForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="max-w-2xl space-y-5">
+    <form onSubmit={onSubmit} className="space-y-5">
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Product ID">
           <Input

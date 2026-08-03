@@ -17,7 +17,7 @@ export default async function EditProductPage({
   const gallery = (await getProductImages(product)).slice(1)
 
   return (
-    <div>
+    <div className="mx-auto w-full max-w-3xl">
       <h2 className="mb-6 text-xl font-bold text-foreground">
         Edit — {product.name.en}
       </h2>

@@ -1,21 +1,10 @@
 import {
-  BarChart3,
-  Bell,
-  Boxes,
   CalendarClock,
-  CreditCard,
-  FileText,
-  Image as ImageIcon,
   LayoutDashboard,
-  MessageSquareText,
   Package,
   Percent,
-  Settings,
   ShoppingCart,
-  Star,
   Store,
-  Tag,
-  Truck,
   Users,
   type LucideIcon,
 } from 'lucide-react'
@@ -36,9 +25,9 @@ export type AdminNavGroup = {
 }
 
 /**
- * The admin navigation tree. `planned: true` marks a module whose page has not
- * been built yet — the sidebar still lists it (so the information architecture
- * is visible) but shows it as disabled rather than linking to a 404.
+ * The admin navigation tree — only modules that have a page. Setting
+ * `planned: true` on an entry lists it as disabled instead of linking to a
+ * 404, which is how a module gets a slot here before its page exists.
  */
 export const ADMIN_NAV: AdminNavGroup[] = [
   {
@@ -61,14 +50,6 @@ export const ADMIN_NAV: AdminNavGroup[] = [
         href: '/admin/preorders',
         label: 'Pre-orders',
         icon: CalendarClock,
-      },
-      { href: '/admin/categories', label: 'Categories', icon: Tag, planned: true },
-      { href: '/admin/brands', label: 'Brands', icon: Boxes, planned: true },
-      {
-        href: '/admin/inventory',
-        label: 'Inventory',
-        icon: Boxes,
-        planned: true,
       },
     ],
   },
@@ -102,7 +83,6 @@ export const ADMIN_NAV: AdminNavGroup[] = [
           { href: '/admin/wholesalers', label: 'All applications' },
         ],
       },
-      { href: '/admin/reviews', label: 'Reviews', icon: Star, planned: true },
       {
         href: '/admin/coupons',
         label: 'Coupons',
@@ -111,65 +91,6 @@ export const ADMIN_NAV: AdminNavGroup[] = [
           { href: '/admin/coupons', label: 'All coupons' },
           { href: '/admin/coupons/new', label: 'Add coupon' },
         ],
-      },
-      {
-        href: '/admin/payments',
-        label: 'Payments',
-        icon: CreditCard,
-        planned: true,
-      },
-      { href: '/admin/shipping', label: 'Shipping', icon: Truck, planned: true },
-    ],
-  },
-  {
-    label: 'Content',
-    items: [
-      { href: '/admin/blog', label: 'Blog', icon: FileText, planned: true },
-      {
-        href: '/admin/media',
-        label: 'Media Library',
-        icon: ImageIcon,
-        planned: true,
-      },
-    ],
-  },
-  {
-    label: 'Insights',
-    items: [
-      {
-        href: '/admin/analytics',
-        label: 'Analytics',
-        icon: BarChart3,
-        planned: true,
-      },
-      {
-        href: '/admin/reports',
-        label: 'Reports',
-        icon: FileText,
-        planned: true,
-      },
-    ],
-  },
-  {
-    label: 'System',
-    items: [
-      {
-        href: '/admin/notifications',
-        label: 'Notifications',
-        icon: Bell,
-        planned: true,
-      },
-      {
-        href: '/admin/settings',
-        label: 'Settings',
-        icon: Settings,
-        planned: true,
-      },
-      {
-        href: '/admin/support',
-        label: 'Support',
-        icon: MessageSquareText,
-        planned: true,
       },
     ],
   },

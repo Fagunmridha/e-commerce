@@ -30,8 +30,11 @@ export default async function SellerDashboardLayout({
         <SellerSidebar shopName={shop.shopName} />
         <SidebarInset className="min-w-0">
           <SellerHeader />
-          <div className="flex flex-1 flex-col gap-6 p-4 md:p-6">
-            {children}
+          {/* Centred on the same grid as /admin — see that layout's note. */}
+          <div className="flex flex-1 flex-col p-4 md:p-6">
+            <div className="mx-auto flex w-full max-w-[1400px] flex-1 flex-col gap-6">
+              {children}
+            </div>
           </div>
         </SidebarInset>
       </SidebarProvider>

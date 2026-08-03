@@ -1,4 +1,7 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { ArrowLeft } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { CouponForm } from '@/components/admin/coupons/coupon-form'
 import { getCouponById } from '@/lib/coupons'
 
@@ -14,10 +17,22 @@ export default async function EditCouponPage({
   if (!coupon) notFound()
 
   return (
-    <div>
-      <h2 className="mb-6 text-xl font-bold text-foreground">
-        Edit — <span className="font-mono">{coupon.code}</span>
-      </h2>
+    <div className="mx-auto w-full max-w-3xl space-y-6">
+      <div>
+        <Button asChild variant="ghost" size="sm" className="-ml-2 mb-1">
+          <Link href="/admin/coupons">
+            <ArrowLeft className="size-4" />
+            All coupons
+          </Link>
+        </Button>
+        <h2 className="text-xl font-bold text-foreground">
+          Edit — <span className="font-mono">{coupon.code}</span>
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Changes apply to every checkout from the moment you save.
+        </p>
+      </div>
+
       <CouponForm coupon={coupon} />
     </div>
   )

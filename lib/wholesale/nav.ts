@@ -1,10 +1,8 @@
 import {
-  BarChart3,
   LayoutDashboard,
   Plus,
   ShoppingCart,
   Store,
-  Wallet,
   type LucideIcon,
 } from 'lucide-react'
 import type { Dictionary } from '@/lib/dictionaries'
@@ -28,9 +26,9 @@ export type SellerNavGroup = {
 }
 
 /**
- * The seller panel's navigation, mirroring the admin sidebar's shape. Only the
- * three real routes link anywhere; the rest carry `planned` so the information
- * architecture is visible without pointing at pages that do not exist.
+ * The seller panel's navigation, mirroring the admin sidebar's shape — only
+ * routes that have a page. `planned: true` lists an entry as disabled instead
+ * of pointing at a page that does not exist yet.
  */
 export const SELLER_NAV: SellerNavGroup[] = [
   {
@@ -55,18 +53,6 @@ export const SELLER_NAV: SellerNavGroup[] = [
         href: '/wholesale/dashboard/orders',
         labelKey: 'orders',
         icon: ShoppingCart,
-      },
-      {
-        href: '/wholesale/dashboard/payouts',
-        labelKey: 'payouts',
-        icon: Wallet,
-        planned: true,
-      },
-      {
-        href: '/wholesale/dashboard/insights',
-        labelKey: 'insights',
-        icon: BarChart3,
-        planned: true,
       },
     ],
   },

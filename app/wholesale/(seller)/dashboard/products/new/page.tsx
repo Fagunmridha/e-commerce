@@ -10,7 +10,7 @@ export default async function NewSellerProductPage() {
   const t = await getServerDictionary()
 
   return (
-    <div className="max-w-3xl">
+    <div className="mx-auto w-full max-w-3xl">
       <div className="mb-6 flex items-center gap-3">
         <Button asChild variant="ghost" size="icon-sm">
           <Link
