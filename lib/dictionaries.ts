@@ -310,6 +310,9 @@ const en = {
       mobileHint: 'You will get payment instructions after ordering',
       card: 'Card',
       cardHint: 'Visa, Mastercard — coming soon',
+      /** Pre-order bookings only; never offered on the cart checkout. */
+      advance_cod: 'Advance paid + cash on delivery',
+      advance_codHint: 'Booking advance received — the balance is paid to the rider',
     },
     orderSummary: 'Order Summary',
     quantityShort: 'Qty',
@@ -326,6 +329,70 @@ const en = {
       email: 'Please enter a valid email address.',
       address: 'Please enter your address.',
       city: 'Please enter your city.',
+    },
+  },
+  preorder: {
+    /* The booking sheet. */
+    sheetTitle: 'Book this pre-order',
+    sheetSubtitle: 'Reserve a piece from the upcoming run.',
+    shipsFrom: 'Ships from',
+    booked: 'already booked',
+    goodsSubtotal: 'Item total',
+    advanceNow: 'Advance now',
+    /** `{pct}` is replaced with the product's advance percentage. */
+    advanceNowPct: 'Advance now ({pct}%)',
+    dueOnDelivery: 'Due on delivery',
+    /** `{amount}` is replaced with the formatted advance. */
+    terms:
+      'I understand this is a pre-order: {amount} is paid now to hold my piece, and delivery starts from the date above.',
+    continueCta: 'Continue to booking',
+    noAdvance: 'No advance needed — pay everything on delivery',
+
+    /* The booking checkout. Every string here has a cash-on-delivery twin,
+       because a run with no advance must not talk about sending money. */
+    title: 'Confirm your booking',
+    subtitle: 'Send the advance, then fill in where it should be delivered.',
+    subtitleCod: 'Tell us where your booking should be delivered.',
+    breadcrumb: 'Booking',
+    payTitle: 'Pay the advance',
+    payVia: 'Pay with',
+    bkash: 'bKash',
+    nagad: 'Nagad',
+    /** `{amount}` is the advance, `{number}` the merchant's mobile number. */
+    paySteps:
+      'Open {method} → Send Money → {number} → send exactly {amount} → copy the transaction ID below.',
+    merchantNumber: 'Send to this number',
+    copyNumber: 'Number',
+    trxId: 'Transaction ID',
+    trxIdPlaceholder: 'e.g. 9F2K1LM4XZ',
+    trxIdHint: 'The ID your payment app showed after the transfer.',
+    senderPhone: 'Number you paid from',
+    senderPhoneHint: 'So we can match your payment. It may differ from your delivery number.',
+    termsRestated:
+      'The advance holds your piece from this run. The balance is paid in cash when the courier delivers.',
+    termsRestatedCod:
+      'Your piece is held from this run. Pay in full, in cash, when the courier delivers.',
+    confirm: 'Confirm booking',
+    confirming: 'Confirming…',
+
+    /* Failures. */
+    soldOutError: 'That run just sold out — the last pieces went to another booking.',
+    genericError: 'Could not confirm your booking. Please try again.',
+
+    /* The confirmation page and the product page banner. */
+    successTitle: 'Booking confirmed',
+    successBody:
+      'We have your advance and will verify it shortly, then call you to confirm delivery.',
+    successBodyCod:
+      'We will call you to confirm, then deliver from the date above. Pay in cash when it arrives.',
+    advancePaid: 'Advance paid',
+    bannerBookCta: 'Book with {amount} advance, rest on delivery',
+    bannerBookCtaCod: 'Book now — pay in cash on delivery',
+    availability: 'Pre-order — ships from {date}',
+
+    errors: {
+      trxId: 'Enter the transaction ID from your payment app.',
+      senderPhone: 'Enter the Bangladeshi number you paid from.',
     },
   },
   landing: {
@@ -729,7 +796,6 @@ const en = {
     comingTitle: 'Coming Soon (Pre-Order Open)',
     comingSubtitle: 'Previewing now — pre-order opens as soon as stock lands.',
     comingBadge: 'Coming Soon',
-    comingPrice: 'TBA',
     comingDelivery: 'Delivery from',
     comingPreorders: 'Pre-orders',
     comingBook: 'Book Now',
@@ -737,18 +803,6 @@ const en = {
     comingLimited: 'Limited stock — {count} pcs left',
     comingSoldOut: 'Fully booked',
     comingSoldOutCta: 'Stock out',
-    /** Shown after a booking is added to the basket. */
-    comingBooked: 'Pre-order added',
-    /**
-     * The no-mixing rule, explained where the shopper hits it. Pre-orders ship
-     * weeks out, so letting one hold up in-stock items would be a worse deal
-     * than asking for a second checkout.
-     */
-    comingMixTitle: 'Pre-orders check out separately',
-    comingMixBody:
-      'Your basket has items that are in stock now. Empty it first, or place this pre-order after checking out.',
-    comingMixConfirm: 'Empty basket and pre-order',
-    comingMixCancel: 'Keep my basket',
     flashEyebrow: 'Flash sale',
     flashTitle: 'Today Only',
     flashSubtitle: 'The steepest markdowns in the store, while they last.',
@@ -1156,6 +1210,8 @@ const bn: Dictionary = {
       mobileHint: 'অর্ডারের পর পেমেন্টের নির্দেশনা পাবেন',
       card: 'কার্ড',
       cardHint: 'ভিসা, মাস্টারকার্ড — শিগগিরই আসছে',
+      advance_cod: 'অগ্রিম পরিশোধ + ক্যাশ অন ডেলিভারি',
+      advance_codHint: 'বুকিং অগ্রিম পেয়েছি — বাকিটা ডেলিভারিম্যানকে দেবেন',
     },
     orderSummary: 'অর্ডার সামারি',
     quantityShort: 'পরিমাণ',
@@ -1172,6 +1228,63 @@ const bn: Dictionary = {
       email: 'সঠিক ইমেইল ঠিকানা লিখুন।',
       address: 'অনুগ্রহ করে ঠিকানা লিখুন।',
       city: 'অনুগ্রহ করে শহরের নাম লিখুন।',
+    },
+  },
+  preorder: {
+    sheetTitle: 'প্রি-অর্ডার বুক করুন',
+    sheetSubtitle: 'আসছে এমন স্টক থেকে আপনার পিসটি রিজার্ভ করুন।',
+    shipsFrom: 'ডেলিভারি শুরু',
+    booked: 'ইতিমধ্যে বুক হয়েছে',
+    goodsSubtotal: 'পণ্যের মোট',
+    advanceNow: 'এখন অগ্রিম',
+    advanceNowPct: 'এখন অগ্রিম ({pct}%)',
+    dueOnDelivery: 'ডেলিভারিতে বাকি',
+    terms:
+      'আমি বুঝেছি এটি একটি প্রি-অর্ডার: পিসটি ধরে রাখতে এখন {amount} দিচ্ছি, আর ডেলিভারি শুরু হবে উপরের তারিখ থেকে।',
+    continueCta: 'বুকিংয়ে এগিয়ে যান',
+    noAdvance: 'অগ্রিম লাগবে না — পুরো টাকা ডেলিভারিতে',
+
+    title: 'বুকিং নিশ্চিত করুন',
+    subtitle: 'অগ্রিম পাঠান, তারপর ডেলিভারির ঠিকানা দিন।',
+    subtitleCod: 'আপনার বুকিং কোথায় ডেলিভারি হবে সেটি জানান।',
+    breadcrumb: 'বুকিং',
+    payTitle: 'অগ্রিম পাঠান',
+    payVia: 'যেভাবে পাঠাবেন',
+    bkash: 'বিকাশ',
+    nagad: 'নগদ',
+    paySteps:
+      '{method} খুলুন → Send Money → {number} → ঠিক {amount} পাঠান → নিচে ট্রানজেকশন আইডি দিন।',
+    merchantNumber: 'এই নম্বরে পাঠান',
+    copyNumber: 'নম্বর',
+    trxId: 'ট্রানজেকশন আইডি',
+    trxIdPlaceholder: 'যেমন 9F2K1LM4XZ',
+    trxIdHint: 'টাকা পাঠানোর পর আপনার অ্যাপে যে আইডি দেখিয়েছে।',
+    senderPhone: 'যে নম্বর থেকে পাঠিয়েছেন',
+    senderPhoneHint:
+      'পেমেন্ট মেলাতে লাগবে। এটি আপনার ডেলিভারি নম্বর থেকে আলাদা হতে পারে।',
+    termsRestated:
+      'অগ্রিম দিয়ে এই লট থেকে আপনার পিসটি বুক থাকবে। বাকি টাকা ডেলিভারিম্যানকে নগদে দেবেন।',
+    termsRestatedCod:
+      'এই লট থেকে আপনার পিসটি বুক থাকবে। পুরো টাকা ডেলিভারিম্যানকে নগদে দেবেন।',
+    confirm: 'বুকিং নিশ্চিত করুন',
+    confirming: 'নিশ্চিত করা হচ্ছে…',
+
+    soldOutError: 'এই লটের সব পিস এইমাত্র বুক হয়ে গেছে।',
+    genericError: 'বুকিং নিশ্চিত করা যায়নি। আবার চেষ্টা করুন।',
+
+    successTitle: 'বুকিং নিশ্চিত হয়েছে',
+    successBody:
+      'আপনার অগ্রিম পেয়েছি। যাচাই করে আমরা ডেলিভারি নিশ্চিত করতে ফোন করব।',
+    successBodyCod:
+      'নিশ্চিত করতে আমরা ফোন করব, তারপর উপরের তারিখ থেকে ডেলিভারি হবে। পণ্য হাতে পেয়ে নগদে টাকা দেবেন।',
+    advancePaid: 'অগ্রিম পরিশোধিত',
+    bannerBookCta: '{amount} অগ্রিম দিয়ে বুক করুন, বাকিটা ডেলিভারিতে',
+    bannerBookCtaCod: 'এখনই বুক করুন — টাকা ডেলিভারিতে নগদে',
+    availability: 'প্রি-অর্ডার — ডেলিভারি {date} থেকে',
+
+    errors: {
+      trxId: 'আপনার পেমেন্ট অ্যাপের ট্রানজেকশন আইডি দিন।',
+      senderPhone: 'যে বাংলাদেশি নম্বর থেকে পাঠিয়েছেন সেটি দিন।',
     },
   },
   landing: {
@@ -1572,19 +1685,12 @@ const bn: Dictionary = {
     comingTitle: 'শীঘ্রই আসছে (প্রি-অর্ডার চালু)',
     comingSubtitle: 'এখন দেখে নিন — স্টক এলেই প্রি-অর্ডার শুরু হবে।',
     comingBadge: 'শীঘ্রই আসছে',
-    comingPrice: 'জানানো হবে',
     comingDelivery: 'ডেলিভারি শুরু',
     comingPreorders: 'প্রি-অর্ডার',
     comingBook: 'বুক করুন',
     comingLimited: 'সীমিত স্টক — আর {count} পিস',
     comingSoldOut: 'সব বুক হয়ে গেছে',
     comingSoldOutCta: 'স্টক শেষ',
-    comingBooked: 'প্রি-অর্ডার যোগ হয়েছে',
-    comingMixTitle: 'প্রি-অর্ডার আলাদাভাবে চেকআউট হবে',
-    comingMixBody:
-      'আপনার ব্যাগে এখনই স্টকে আছে এমন পণ্য রয়েছে। আগে সেগুলো চেকআউট করুন, অথবা ব্যাগ খালি করে প্রি-অর্ডার করুন।',
-    comingMixConfirm: 'ব্যাগ খালি করে প্রি-অর্ডার করুন',
-    comingMixCancel: 'ব্যাগ রেখে দিন',
     flashEyebrow: 'ফ্ল্যাশ সেল',
     flashTitle: 'শুধু আজকের জন্য',
     flashSubtitle: 'দোকানের সবচেয়ে বড় ছাড়, স্টক থাকা পর্যন্ত।',

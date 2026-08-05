@@ -32,6 +32,19 @@ export default async function OrderSuccessPage({
               couponCode: order.couponCode,
               shipping: order.shipping,
               total: order.total,
+              preorder: order.preorder,
+              advanceAmount: order.advanceAmount,
+              dueAmount: order.dueAmount,
+              paymentStatus: order.paymentStatus,
+              advanceTrxId: order.advanceTrxId,
+              // Two pre-ordered lines can carry different dates, so the page
+              // shows the latest — that is when the whole order can ship.
+              preorderShipsAt:
+                order.items
+                  .map((line) => line.preorderShipsAt)
+                  .filter((value): value is string => Boolean(value))
+                  .sort()
+                  .at(-1) ?? null,
             }
           : null
       }

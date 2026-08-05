@@ -111,6 +111,9 @@ function toProduct(
     preorder: row.preorder || undefined,
     preorderShipsAt: row.preorderShipsAt ?? undefined,
     preorderBooked,
+    // Null means "use the store default", which is what `undefined` signals to
+    // `advancePct()`. A stored 0 is a real choice and must survive.
+    preorderAdvancePct: row.preorderAdvancePct ?? undefined,
   }
 }
 
@@ -265,7 +268,7 @@ export const getProductById = cache(async function getProductById(
  * `getProductReviews`.
  */
 async function loadProductDetail(id: string): Promise<ProductDetail> {
-  const [[row], [agg], [sold], imageRows, reviewRows] = await db.batch([
+  const [[row], [agg], [sold], [booked], imageRows, reviewRows] = await db.batch([
     db.select().from(products).where(eq(products.id, id)),
     db
       .select({
@@ -279,6 +282,21 @@ async function loadProductDetail(id: string): Promise<ProductDetail> {
       .from(orderItems)
       .innerJoin(orders, eq(orderItems.orderId, orders.id))
       .where(and(eq(orderItems.productId, id), ne(orders.status, 'cancelled'))),
+    // Bookings, which are *not* the same as `sold`: a product toggled from
+    // shelf stock to pre-order would otherwise count its old sales as
+    // bookings. Scoped to lines that carry a promised ship date, exactly as
+    // `preorderBookedCounts` does. Free — it rides a batch already in flight.
+    db
+      .select({ n: sql<string>`coalesce(sum(${orderItems.quantity}), 0)` })
+      .from(orderItems)
+      .innerJoin(orders, eq(orderItems.orderId, orders.id))
+      .where(
+        and(
+          eq(orderItems.productId, id),
+          sql`${orderItems.preorderShipsAt} is not null`,
+          ne(orders.status, 'cancelled'),
+        ),
+      ),
     db
       .select({ url: productImages.url })
       .from(productImages)
@@ -307,7 +325,13 @@ async function loadProductDetail(id: string): Promise<ProductDetail> {
   if (row.sellerId && !sellerName) return EMPTY_DETAIL
 
   return {
-    product: toProduct(row, aggregate, sellerName, Number(sold?.n ?? 0)),
+    product: toProduct(
+      row,
+      aggregate,
+      sellerName,
+      Number(sold?.n ?? 0),
+      Number(booked?.n ?? 0),
+    ),
     images: [row.image, ...imageRows.map((image) => image.url)],
     reviews: reviewRows.map((review) => ({
       id: review.id,
@@ -505,6 +529,22 @@ export const getPreorderProducts = unstable_cache(
  */
 export async function getAdminPreorderProducts(): Promise<Product[]> {
   return fetchPreorderProducts()
+}
+
+/**
+ * One pre-order product for the booking checkout, resolved out of the list that
+ * page's siblings have already cached rather than with a query of its own — a
+ * round trip to Neon costs more than scanning a handful of rows.
+ *
+ * Returns undefined for an id that is not a pre-order at all, which is what
+ * lets the route `notFound()` on a hand-typed `?p=` instead of rendering a
+ * booking form for shelf stock.
+ */
+export async function getPreorderProductById(
+  id: string,
+): Promise<Product | undefined> {
+  const all = await getPreorderProducts()
+  return all.find((product) => product.id === id)
 }
 
 /**

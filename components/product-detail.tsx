@@ -9,9 +9,12 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Rating } from '@/components/rating'
 import { ColorSwatch, isSwatchable } from '@/components/color-swatch'
+import { BookingSheet } from '@/components/preorder/booking-sheet'
+import { PreorderBanner } from '@/components/preorder/preorder-banner'
 import { useLanguage } from '@/components/language-provider'
 import { useStore } from '@/components/store-provider'
 import { useCatalogue } from '@/components/catalogue-provider'
+import { formatShipDate } from '@/lib/preorder'
 import { cn } from '@/lib/utils'
 import type { Product } from '@/lib/types'
 
@@ -31,7 +34,7 @@ export function ProductDetail({
    *  hydration mismatch around midnight. */
   deliveryWindow: string
 }) {
-  const { t, pick, price: formatPrice } = useLanguage()
+  const { t, pick, locale, price: formatPrice } = useLanguage()
   const { addToCart, isWishlisted, toggleWishlist } = useStore()
   const { getCategory } = useCatalogue()
   const router = useRouter()
@@ -39,6 +42,8 @@ export function ProductDetail({
   const [selectedImage, setSelectedImage] = useState(0)
   const [selectedSize, setSelectedSize] = useState(product.sizes?.[0] ?? '')
   const [selectedColorIndex, setSelectedColorIndex] = useState(0)
+  // Non-null while the booking sheet is open. Only ever set for a pre-order.
+  const [booking, setBooking] = useState<Product | null>(null)
   // Wholesale listings are sold in lots, so the picker opens at the minimum
   // rather than at 1 — otherwise the first tap on "−" would appear to do nothing.
   const minQuantity = product.moq ?? 1
@@ -53,6 +58,15 @@ export function ProductDetail({
   const swatchable = isSwatchable(product.colors)
   const isFavorited = isWishlisted(product.id)
 
+  /**
+   * Upcoming stock. Reached only by a direct link — pre-orders are filtered out
+   * of every grid — but that link is what an ad or a shared URL points at, and
+   * until this branch existed the page offered "Add to Cart" on something that
+   * cannot ship, then let checkout reject the order with a raw error.
+   */
+  const isPreorder = Boolean(product.preorder)
+  // For a pre-order this reads "the allocation is exhausted", which is the same
+  // shape of fact and wants the same disabled buttons — only the label differs.
   const soldOut = product.stock <= 0
   const discount = product.oldPrice
     ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
@@ -250,6 +264,12 @@ export function ProductDetail({
             <p className="mt-1.5 text-sm text-muted-foreground">
               {t.product.freeShippingNote}
             </p>
+
+            {isPreorder && (
+              <div className="mt-4">
+                <PreorderBanner product={product} />
+              </div>
+            )}
           </div>
 
           {product.description && (
@@ -362,23 +382,39 @@ export function ProductDetail({
           </div>
 
           <div className="flex flex-col gap-2 sm:flex-row">
-            <Button
-              size="lg"
-              className="flex-1"
-              onClick={addToBag}
-              disabled={soldOut}
-            >
-              {soldOut ? t.product.outOfStock : t.product.addToBag}
-            </Button>
-            <Button
-              size="lg"
-              variant="secondary"
-              className="flex-1"
-              onClick={buyNow}
-              disabled={soldOut}
-            >
-              {t.product.buyNow}
-            </Button>
+            {/* A pre-order gets one CTA, not three. `addToBag` and `buyNow` are
+                unreachable here by design — both end at a checkout that rejects
+                pre-ordered lines. */}
+            {isPreorder ? (
+              <Button
+                size="lg"
+                className="flex-1"
+                onClick={() => setBooking(product)}
+                disabled={soldOut}
+              >
+                {soldOut ? t.home.comingSoldOutCta : t.home.comingBook}
+              </Button>
+            ) : (
+              <>
+                <Button
+                  size="lg"
+                  className="flex-1"
+                  onClick={addToBag}
+                  disabled={soldOut}
+                >
+                  {soldOut ? t.product.outOfStock : t.product.addToBag}
+                </Button>
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  className="flex-1"
+                  onClick={buyNow}
+                  disabled={soldOut}
+                >
+                  {t.product.buyNow}
+                </Button>
+              </>
+            )}
             <Button
               variant="outline"
               size="lg"
@@ -393,10 +429,21 @@ export function ProductDetail({
           <div className="flex items-start gap-2.5 rounded-lg border border-border bg-muted/40 p-3">
             <Truck className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
             <p className="text-xs text-muted-foreground">
-              <span className="font-medium text-foreground">
-                {t.product.estimatedDelivery}
-              </span>{' '}
-              {deliveryWindow}
+              {isPreorder ? (
+                <>
+                  <span className="font-medium text-foreground">
+                    {t.preorder.shipsFrom}
+                  </span>{' '}
+                  {formatShipDate(product.preorderShipsAt, locale)}
+                </>
+              ) : (
+                <>
+                  <span className="font-medium text-foreground">
+                    {t.product.estimatedDelivery}
+                  </span>{' '}
+                  {deliveryWindow}
+                </>
+              )}
             </p>
           </div>
         </div>
@@ -450,19 +497,43 @@ export function ProductDetail({
               <dt className="text-muted-foreground">
                 {t.product.specAvailability}
               </dt>
-              {/* Reads the real column. This used to say "In stock" always. */}
+              {/* Reads the real column. This used to say "In stock" always —
+                  and on a pre-order, "In stock" was doubly wrong. */}
               <dd
                 className={cn(
                   'font-medium',
                   soldOut ? 'text-muted-foreground' : 'text-badge-new',
                 )}
               >
-                {soldOut ? t.product.outOfStock : t.product.inStock}
+                {soldOut
+                  ? isPreorder
+                    ? t.home.comingSoldOut
+                    : t.product.outOfStock
+                  : isPreorder
+                    ? t.preorder.availability.replace(
+                        '{date}',
+                        formatShipDate(product.preorderShipsAt, locale),
+                      )
+                    : t.product.inStock}
               </dd>
             </div>
           </dl>
         </div>
       </div>
+
+      {/* Seeded with the picks already made above, so opening the sheet is a
+          confirmation step rather than a second round of choosing. */}
+      <BookingSheet
+        product={booking}
+        onOpenChange={(open) => {
+          if (!open) setBooking(null)
+        }}
+        seed={{
+          size: selectedSize || undefined,
+          colorEn: selectedColor?.name.en,
+          quantity,
+        }}
+      />
     </div>
   )
 }

@@ -24,6 +24,7 @@ import {
 import { DataTable } from '@/components/admin/data-table/data-table'
 import { DataTableColumnHeader } from '@/components/admin/data-table/column-header'
 import { useLanguage } from '@/components/language-provider'
+import { PAYMENT_LABEL } from '@/lib/order'
 import type { RecentOrder } from '@/lib/admin/stats'
 
 const STATUS_VARIANT: Record<
@@ -52,11 +53,6 @@ const STATUS_VARIANT: Record<
   },
 }
 
-const PAYMENT_LABEL: Record<RecentOrder['paymentMethod'], string> = {
-  cod: 'Cash on delivery',
-  mobile: 'Mobile banking',
-  card: 'Card',
-}
 
 export function RecentOrdersTable({ orders }: { orders: RecentOrder[] }) {
   const { price } = useLanguage()

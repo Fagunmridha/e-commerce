@@ -83,6 +83,18 @@ export const products = pgTable('products', {
    */
   preorderShipsAt: date('preorder_ships_at', { mode: 'string' }),
   /**
+   * How much of a booking must be paid up front, as a percentage of the line's
+   * goods value. Null falls back to `DEFAULT_ADVANCE_PCT`; 0 means a pre-order
+   * taken on pure cash-on-delivery.
+   *
+   * A percentage rather than a flat amount so it scales with quantity without
+   * anyone having to decide whether "৳500 advance" is per piece or per order,
+   * and so discounting the product does not quietly turn the advance into 90%
+   * of the price. Nullable so the column is additive over pre-orders that were
+   * created before it existed.
+   */
+  preorderAdvancePct: integer('preorder_advance_pct'),
+  /**
    * Which approved wholesaler listed this. Null is a house product — the store
    * owner's own stock. Non-null rows show in the wholesale marketplace and are
    * kept out of the ordinary shop listings.
@@ -154,8 +166,13 @@ export const orders = pgTable('orders', {
   address: text('address').notNull(),
   city: text('city').notNull(),
   notes: text('notes'),
+  /**
+   * `advance_cod` is set by `createOrder` on a pre-order, never chosen by a
+   * shopper. Widening this list emits no SQL — the column is a bare `text` and
+   * Drizzle's `enum` is a compile-time assertion, not a CHECK constraint.
+   */
   paymentMethod: text('payment_method', {
-    enum: ['cod', 'mobile', 'card'],
+    enum: ['cod', 'mobile', 'card', 'advance_cod'],
   }).notNull(),
   subtotal: doublePrecision('subtotal').notNull(),
   /** Defaulted so the column is additive over orders placed before coupons. */
@@ -180,6 +197,44 @@ export const orders = pgTable('orders', {
    * admin list badge and filter without joining `order_items`.
    */
   preorder: boolean('preorder').notNull().default(false),
+  /**
+   * The pre-order advance split. `advanceAmount + dueAmount = total` on every
+   * row that has one, which is what lets the checkout summary, the confirmation
+   * page and the admin card all agree without any of them re-deriving it.
+   *
+   * Both default to 0 so the columns are additive: an ordinary cash-on-delivery
+   * order has no advance, and `paymentStatus` says exactly that rather than
+   * leaving it to be inferred from a zero.
+   */
+  advanceAmount: doublePrecision('advance_amount').notNull().default(0),
+  dueAmount: doublePrecision('due_amount').notNull().default(0),
+  /**
+   * `none` for every ordinary order. A booking starts at `advance_pending` and
+   * an admin moves it once they have matched the transaction in their own
+   * bKash/Nagad statement — there is no gateway, so a human is the verifier.
+   *
+   * There is deliberately no `settled` value for "the cash balance was
+   * collected": `status = 'delivered'` already says that, and a second source
+   * of truth for one fact is how the two drift apart.
+   */
+  paymentStatus: text('payment_status', {
+    enum: ['none', 'advance_pending', 'advance_paid', 'advance_failed'],
+  })
+    .notNull()
+    .default('none'),
+  advanceMethod: text('advance_method', { enum: ['bkash', 'nagad'] }),
+  advanceTrxId: text('advance_trx_id'),
+  /**
+   * Kept separately from `phone`: people pay from a different mobile-money
+   * number than the one they give for delivery, and without this the admin has
+   * nothing to match the transaction against.
+   */
+  advanceSenderPhone: text('advance_sender_phone'),
+  advanceVerifiedAt: timestamp('advance_verified_at'),
+  advanceVerifiedBy: integer('advance_verified_by_user_id').references(
+    () => users.id,
+    { onDelete: 'set null' },
+  ),
   placedAt: timestamp('placed_at').notNull().defaultNow(),
 })
 

@@ -10,6 +10,8 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { ImageUploader } from '@/components/admin/image-uploader'
 import { upsertProduct, type ProductInput } from '@/app/actions/admin'
+import { DEFAULT_ADVANCE_PCT } from '@/lib/preorder'
+import { formatPrice } from '@/lib/currency'
 import type { CategorySlug, Product, ProductColor } from '@/lib/types'
 import type { Localized } from '@/lib/i18n'
 
@@ -107,12 +109,33 @@ export function ProductForm({
     // The column is a `date`, so this is already the `YYYY-MM-DD` that
     // <input type="date"> wants — no parsing or reformatting in between.
     preorderShipsAt: product?.preorderShipsAt ?? '',
+    // Blank means "use the store default", which is a different thing from 0
+    // ("no advance"), so it cannot be defaulted to a number here.
+    preorderAdvancePct: product?.preorderAdvancePct?.toString() ?? '',
   })
 
   // Generic over the key so `preorder` can be a boolean while the rest stay
   // strings, instead of every field being stringly typed for the sake of one.
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
     setForm((current) => ({ ...current, [key]: value }))
+
+  // Spells the percentage out in taka against the price being typed, so an
+  // admin sees what they are actually asking a customer for. Blank and 0 are
+  // different answers and both need saying.
+  const advanceHint = (() => {
+    const price = Number(form.price) || 0
+    const pct =
+      form.preorderAdvancePct === ''
+        ? DEFAULT_ADVANCE_PCT
+        : Number(form.preorderAdvancePct) || 0
+
+    if (pct === 0) {
+      return form.preorderAdvancePct === ''
+        ? 'Blank means cash on delivery, like the rest of the store. Set a number only if you want this run part-paid up front.'
+        : '0% takes the booking on cash on delivery.'
+    }
+    return `${pct}% of ${formatPrice(price)} = ${formatPrice(Math.round((price * pct) / 100))} paid up front per piece, the rest on delivery. Set BKASH_NUMBER / NAGAD_NUMBER first.`
+  })()
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault()
@@ -155,6 +178,10 @@ export function ProductForm({
       moq: Number(form.moq) || 1,
       preorder: form.preorder,
       preorderShipsAt: form.preorder ? form.preorderShipsAt : null,
+      preorderAdvancePct:
+        form.preorder && form.preorderAdvancePct !== ''
+          ? Number(form.preorderAdvancePct)
+          : null,
     }
 
     setPending(true)
@@ -337,24 +364,40 @@ export function ProductForm({
         </label>
         <p className="text-xs text-muted-foreground">
           Moves this product out of the shop, category pages and search, and
-          into the homepage Coming Soon rail. Customers book it now and it ships
-          from the delivery date below. Pre-orders check out on their own —
-          they cannot share a basket with in-stock items.
+          into the homepage Coming Soon rail. Customers book it through their
+          own checkout — never the cart — and pay cash on delivery, unless you
+          ask for an advance below.
         </p>
 
         {form.preorder && (
-          <Field label="Delivery from">
-            <Input
-              type="date"
-              value={form.preorderShipsAt}
-              onChange={(e) => set('preorderShipsAt', e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">
-              Shown on the card as “Delivery from …”, and snapshotted onto each
-              booking — moving it later never rewrites what an existing
-              customer was promised.
-            </p>
-          </Field>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Delivery from">
+              <Input
+                type="date"
+                value={form.preorderShipsAt}
+                onChange={(e) => set('preorderShipsAt', e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Shown on the card as “Delivery from …”, and snapshotted onto each
+                booking — moving it later never rewrites what an existing
+                customer was promised.
+              </p>
+            </Field>
+
+            <Field label="Advance payment (%)">
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                placeholder={String(DEFAULT_ADVANCE_PCT)}
+                value={form.preorderAdvancePct}
+                onChange={(e) => set('preorderAdvancePct', e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                {advanceHint}
+              </p>
+            </Field>
+          </div>
         )}
       </div>
 

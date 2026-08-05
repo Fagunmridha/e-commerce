@@ -7,9 +7,12 @@ import { users } from '@/lib/db/schema'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { OrderStatusSelect } from '@/components/admin/order-status-select'
-import { CopyButton } from '@/components/admin/orders/copy-button'
+import { CopyButton } from '@/components/copy-button'
 import { PrintButton } from '@/components/admin/orders/print-button'
+import { AdvanceVerify } from '@/components/admin/orders/advance-verify'
+import { ADVANCE_VARIANT } from '@/components/admin/orders/orders-table'
 import { getOrderById, getOrderEvents } from '@/lib/orders'
+import { ADVANCE_METHOD_LABEL, PAYMENT_LABEL } from '@/lib/order'
 import { formatPrice } from '@/lib/currency'
 
 export const dynamic = 'force-dynamic'
@@ -20,12 +23,6 @@ const STATUS_CLASS: Record<string, string> = {
   shipped: 'bg-violet-500/12 text-violet-700 dark:text-violet-400',
   delivered: 'bg-emerald-500/12 text-emerald-700 dark:text-emerald-400',
   cancelled: 'bg-rose-500/12 text-rose-700 dark:text-rose-400',
-}
-
-const PAYMENT_LABEL: Record<string, string> = {
-  cod: 'Cash on delivery',
-  mobile: 'Mobile banking (bKash / Nagad)',
-  card: 'Card',
 }
 
 const money = formatPrice
@@ -190,6 +187,20 @@ export default async function AdminOrderDetailPage({
                 <dt>Total</dt>
                 <dd>{money(order.total)}</dd>
               </div>
+              {/* The split, so whoever packs this knows what the rider has to
+                  collect. `advance + due` always equals the total above. */}
+              {order.paymentStatus !== 'none' && (
+                <>
+                  <div className="flex justify-between border-t border-border pt-2 text-muted-foreground">
+                    <dt>Advance paid</dt>
+                    <dd>{money(order.advanceAmount)}</dd>
+                  </div>
+                  <div className="flex justify-between font-medium text-foreground">
+                    <dt>Due on delivery</dt>
+                    <dd>{money(order.dueAmount)}</dd>
+                  </div>
+                </>
+              )}
             </dl>
           </section>
 
@@ -277,6 +288,88 @@ export default async function AdminOrderDetailPage({
             <p className="mt-2 text-sm text-muted-foreground">
               {PAYMENT_LABEL[order.paymentMethod] ?? order.paymentMethod}
             </p>
+
+            {/* Everything needed to match this against the store's own mobile
+                money statement, since there is no gateway to ask. */}
+            {order.paymentStatus !== 'none' && (
+              <div className="mt-4 rounded-lg border border-border bg-muted/40 p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase">
+                    Advance verification
+                  </h4>
+                  <Badge
+                    variant="secondary"
+                    className={`border-0 ${ADVANCE_VARIANT[order.paymentStatus].className}`}
+                  >
+                    {ADVANCE_VARIANT[order.paymentStatus].label}
+                  </Badge>
+                </div>
+
+                <dl className="mt-3 space-y-1.5 text-sm">
+                  <div className="flex justify-between gap-3">
+                    <dt className="text-muted-foreground">Method</dt>
+                    <dd className="font-medium text-foreground">
+                      {order.advanceMethod
+                        ? ADVANCE_METHOD_LABEL[order.advanceMethod]
+                        : '—'}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between gap-3">
+                    <dt className="text-muted-foreground">Amount</dt>
+                    <dd className="font-medium text-foreground">
+                      {money(order.advanceAmount)}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between gap-3">
+                    <dt className="text-muted-foreground">Transaction ID</dt>
+                    <dd className="font-mono text-xs font-medium break-all text-foreground">
+                      {order.advanceTrxId ?? '—'}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between gap-3">
+                    <dt className="text-muted-foreground">Paid from</dt>
+                    <dd className="font-medium text-foreground">
+                      {order.advanceSenderPhone ?? '—'}
+                    </dd>
+                  </div>
+                  {order.advanceVerifiedAt && (
+                    <div className="flex justify-between gap-3">
+                      <dt className="text-muted-foreground">Checked</dt>
+                      <dd className="text-right text-xs text-foreground">
+                        {dateTime(order.advanceVerifiedAt)}
+                        {order.advanceVerifiedBy && (
+                          <>
+                            <br />
+                            by{' '}
+                            {actorNames.get(order.advanceVerifiedBy) ??
+                              `user ${order.advanceVerifiedBy}`}
+                          </>
+                        )}
+                      </dd>
+                    </div>
+                  )}
+                </dl>
+
+                <div className="mt-3 flex flex-wrap gap-2 print:hidden">
+                  {order.advanceTrxId && (
+                    <CopyButton value={order.advanceTrxId} label="Trx ID" />
+                  )}
+                  {order.advanceSenderPhone && (
+                    <CopyButton
+                      value={order.advanceSenderPhone}
+                      label="Sender"
+                    />
+                  )}
+                </div>
+
+                <AdvanceVerify
+                  orderId={order.id}
+                  orderStatus={order.status}
+                  paymentStatus={order.paymentStatus}
+                />
+              </div>
+            )}
+
             {order.notes && (
               <>
                 <h4 className="mt-4 text-xs font-semibold text-muted-foreground uppercase">

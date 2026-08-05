@@ -51,6 +51,7 @@ export default async function AdminOrdersPage({
     paymentMethod: row.paymentMethod,
     status: row.status,
     preorder: row.preorder,
+    paymentStatus: row.paymentStatus,
     placedAt: row.placedAt.toISOString(),
   }))
 

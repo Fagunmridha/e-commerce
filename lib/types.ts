@@ -73,6 +73,13 @@ export type Product = {
    * is *left* of the allocation, so booked + stock is the original run.
    */
   preorderBooked?: number
+  /**
+   * Percentage of the goods value payable up front to hold a booking.
+   * Undefined means the store default (`DEFAULT_ADVANCE_PCT`); 0 means the
+   * pre-order is taken on pure cash-on-delivery. Read it through
+   * `advancePct()` rather than directly, so the fallback lives in one place.
+   */
+  preorderAdvancePct?: number
 }
 
 export type Category = {

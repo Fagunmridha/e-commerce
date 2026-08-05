@@ -3,17 +3,6 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { CalendarDays, PackageCheck, Users } from 'lucide-react'
-import { toast } from 'sonner'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
 import { SectionPanel } from '@/components/layout/section-panel'
 import { Reveal } from '@/components/reveal'
 import {
@@ -25,30 +14,9 @@ import {
 } from '@/components/layout/card-rail'
 import { useLanguage } from '@/components/language-provider'
 import { useCatalogue } from '@/components/catalogue-provider'
-import { useStore } from '@/components/store-provider'
+import { BookingSheet } from '@/components/preorder/booking-sheet'
+import { formatShipDate } from '@/lib/preorder'
 import type { Product } from '@/lib/types'
-
-/**
- * `2026-08-18` → `18 Aug`. Built from the parts rather than `new Date(value)`
- * so the calendar day the admin chose is the day the customer reads — parsing
- * the string as an instant would shift it either side of midnight depending on
- * the reader's timezone.
- *
- * Safe to render during SSR, unlike the old lead-time arithmetic this replaced:
- * the date is a stored value now, not something derived from "today", so server
- * and client agree and there is no hydration mismatch to dodge.
- */
-function formatShipDate(value: string | undefined, locale: string): string {
-  if (!value) return '—'
-  const [year, month, day] = value.split('-').map(Number)
-  if (!year || !month || !day) return value
-
-  return new Intl.DateTimeFormat(locale === 'bn' ? 'bn-BD' : 'en-GB', {
-    day: 'numeric',
-    month: 'short',
-    timeZone: 'UTC',
-  }).format(new Date(Date.UTC(year, month - 1, day)))
-}
 
 /**
  * The pre-order rail. Everything here comes from the database: which products
@@ -56,43 +24,22 @@ function formatShipDate(value: string | undefined, locale: string): string {
  * are already booked. An admin controls the lot from the product form and
  * /admin/preorders.
  *
- * Booking puts the item in the cart and the customer checks out normally — but
- * a pre-order may not share an order with shelf stock, so the basket is
- * checked first and the shopper is asked before it is emptied.
+ * Booking opens a sheet and goes on to its own checkout. Nothing here touches
+ * the cart, which is why the shopper is never asked to empty their basket — a
+ * pre-order and shelf stock cannot share an order, and keeping the two flows
+ * apart is how that rule stops being the shopper's problem.
  */
 export function ComingSoon() {
   const { t, pick, locale, price } = useLanguage()
   const { preorderProducts } = useCatalogue()
-  const { lines, addToCart, clearCart } = useStore()
   const rail = useCardRail({ gridBelowSm: 2 })
 
-  // Set while the basket holds shelf stock and the shopper has to choose.
-  const [pendingBooking, setPendingBooking] = useState<Product | null>(null)
+  // The card the sheet was opened from; null while it is closed.
+  const [selected, setSelected] = useState<Product | null>(null)
 
   if (preorderProducts.length === 0) return null
 
   const title = t.home.comingTitle
-
-  const book = (product: Product) => {
-    addToCart({
-      productId: product.id,
-      quantity: 1,
-      size: product.sizes?.[0],
-      colorEn: product.colors?.[0]?.name.en,
-    })
-    toast.success(t.home.comingBooked, { description: pick(product.name) })
-  }
-
-  const onBook = (product: Product) => {
-    // Another pre-order in the basket is fine — two upcoming items can ship
-    // together. Shelf stock is what cannot, so that is what is tested for.
-    const hasShelfStock = lines.some((line) => !line.product.preorder)
-    if (hasShelfStock) {
-      setPendingBooking(product)
-      return
-    }
-    book(product)
-  }
 
   return (
     <Reveal>
@@ -183,7 +130,7 @@ export function ComingSoon() {
                       <button
                         type="button"
                         disabled={soldOut}
-                        onClick={() => onBook(product)}
+                        onClick={() => setSelected(product)}
                         className="mt-4 h-10 w-full rounded-lg bg-button text-xs font-bold text-button-foreground transition-colors hover:bg-button/90 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none disabled:pointer-events-none disabled:bg-muted disabled:text-muted-foreground"
                       >
                         {soldOut ? t.home.comingSoldOutCta : t.home.comingBook}
@@ -205,34 +152,12 @@ export function ComingSoon() {
         <RailDots rail={rail} label={title} className="mt-6 hidden sm:flex" />
       </SectionPanel>
 
-      <AlertDialog
-        open={pendingBooking !== null}
+      <BookingSheet
+        product={selected}
         onOpenChange={(open) => {
-          if (!open) setPendingBooking(null)
+          if (!open) setSelected(null)
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t.home.comingMixTitle}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t.home.comingMixBody}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t.home.comingMixCancel}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (!pendingBooking) return
-                clearCart()
-                book(pendingBooking)
-                setPendingBooking(null)
-              }}
-            >
-              {t.home.comingMixConfirm}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      />
     </Reveal>
   )
 }

@@ -5,41 +5,17 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { Minus, Plus, ShieldCheck, Truck } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form'
+import { Form } from '@/components/ui/form'
 import { useLanguage } from '@/components/language-provider'
 import { ColorSwatch, isSwatchable } from '@/components/color-swatch'
+import { DeliveryFields } from '@/components/checkout/delivery-fields'
 import { placeOrder } from '@/app/actions/orders'
-import type { Dictionary } from '@/lib/dictionaries'
 import type { Product } from '@/lib/types'
 import { cn } from '@/lib/utils'
-
-/** Bangladeshi mobile: 11 digits starting 013–019, optional +88 prefix. */
-const BD_PHONE = /^(?:\+?88)?01[3-9]\d{8}$/
-
-function buildSchema(errors: Dictionary['checkout']['errors']) {
-  return z.object({
-    name: z.string().min(2, errors.name),
-    phone: z.string().regex(BD_PHONE, errors.phone),
-    address: z.string().min(5, errors.address),
-    city: z.string().min(2, errors.city),
-    notes: z.string().optional(),
-  })
-}
-
-type LandingValues = z.infer<ReturnType<typeof buildSchema>>
+import { buildDeliverySchema, type DeliveryValues } from '@/lib/validation/checkout'
 
 const BADGE_STYLES = {
   new: 'bg-badge-new text-badge-new-foreground',
@@ -66,14 +42,14 @@ export function ProductLanding({
   const swatchable = isSwatchable(product.colors)
   const outOfStock = product.stock <= 0
 
-  const form = useForm<LandingValues>({
-    resolver: zodResolver(buildSchema(t.checkout.errors)),
+  const form = useForm<DeliveryValues>({
+    resolver: zodResolver(buildDeliverySchema(t.checkout.errors)),
     defaultValues: { name: '', phone: '', address: '', city: '', notes: '' },
   })
 
   // Single-product order — no cart involved. `placeOrder` recomputes the price
   // server-side, so we only send the chosen product + variant + quantity.
-  async function onSubmit(values: LandingValues) {
+  async function onSubmit(values: DeliveryValues) {
     setSubmitting(true)
 
     try {
@@ -297,89 +273,7 @@ export function ProductLanding({
                   onSubmit={form.handleSubmit(onSubmit)}
                   className="mt-5 space-y-4"
                 >
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t.checkout.fullName}</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder={t.checkout.fullNamePlaceholder}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t.checkout.phone}</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="tel"
-                            inputMode="tel"
-                            placeholder={t.checkout.phonePlaceholder}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="address"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t.checkout.address}</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder={t.checkout.addressPlaceholder}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="city"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t.checkout.city}</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder={t.checkout.cityPlaceholder}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="notes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t.checkout.notes}</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            rows={2}
-                            placeholder={t.checkout.notesPlaceholder}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <DeliveryFields notesRows={2} />
 
                   <div className="flex items-center justify-between border-t border-border pt-4 text-sm">
                     <span className="text-muted-foreground">

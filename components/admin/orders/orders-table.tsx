@@ -25,6 +25,9 @@ import { DataTable } from '@/components/admin/data-table/data-table'
 import { DataTableColumnHeader } from '@/components/admin/data-table/column-header'
 import { OrderStatusSelect } from '@/components/admin/order-status-select'
 import { useLanguage } from '@/components/language-provider'
+import { cn } from '@/lib/utils'
+import { PAYMENT_LABEL } from '@/lib/order'
+import type { PaymentMethod, PaymentStatus } from '@/lib/order'
 import type { OrderStatus } from '@/lib/orders'
 
 export type AdminOrderRow = {
@@ -37,10 +40,12 @@ export type AdminOrderRow = {
   discount: number
   couponCode: string | null
   total: number
-  paymentMethod: 'cod' | 'mobile' | 'card'
+  paymentMethod: PaymentMethod
   status: OrderStatus
   /** Every line is upcoming stock — this order is waiting on a delivery date. */
   preorder: boolean
+  /** Where the booking advance stands. `none` on every ordinary order. */
+  paymentStatus: PaymentStatus
   placedAt: string
 }
 
@@ -67,10 +72,23 @@ const STATUS_VARIANT: Record<OrderStatus, { label: string; className: string }> 
   },
 }
 
-const PAYMENT_LABEL: Record<AdminOrderRow['paymentMethod'], string> = {
-  cod: 'Cash on delivery',
-  mobile: 'Mobile banking',
-  card: 'Card',
+/** Only shown when there is an advance to speak of, so `none` has no entry. */
+export const ADVANCE_VARIANT: Record<
+  Exclude<PaymentStatus, 'none'>,
+  { label: string; className: string }
+> = {
+  advance_pending: {
+    label: 'Advance pending',
+    className: 'bg-amber-500/12 text-amber-700 dark:text-amber-400',
+  },
+  advance_paid: {
+    label: 'Advance verified',
+    className: 'bg-emerald-500/12 text-emerald-700 dark:text-emerald-400',
+  },
+  advance_failed: {
+    label: 'Advance failed',
+    className: 'bg-rose-500/12 text-rose-700 dark:text-rose-400',
+  },
 }
 
 export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
@@ -98,6 +116,18 @@ export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
             {row.original.preorder && (
               <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
                 Pre-order
+              </span>
+            )}
+            {/* An advance nobody has checked yet is work waiting on an admin,
+                so it has to be visible without opening the order. */}
+            {row.original.paymentStatus !== 'none' && (
+              <span
+                className={cn(
+                  'rounded-full px-2 py-0.5 text-[10px] font-bold',
+                  ADVANCE_VARIANT[row.original.paymentStatus].className,
+                )}
+              >
+                {ADVANCE_VARIANT[row.original.paymentStatus].label}
               </span>
             )}
           </div>

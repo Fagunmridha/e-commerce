@@ -9,6 +9,7 @@ import {
   users,
 } from '@/lib/db/schema'
 import type { Localized } from '@/lib/i18n'
+import type { PaymentMethod } from '@/lib/order'
 
 /** Midnight today, in the server's timezone. */
 function startOfToday(): Date {
@@ -275,7 +276,7 @@ export type RecentOrder = {
   customer: string
   phone: string
   items: number
-  paymentMethod: 'cod' | 'mobile' | 'card'
+  paymentMethod: PaymentMethod
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
   total: number
   placedAt: string

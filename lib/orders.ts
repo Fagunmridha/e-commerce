@@ -24,8 +24,9 @@ import {
 } from '@/lib/db/schema'
 import { computeTotals } from '@/lib/coupon-math'
 import { checkCoupon, redeemCoupon } from '@/lib/coupons'
+import { advancePct, splitPayment } from '@/lib/preorder'
 import type { Localized } from '@/lib/i18n'
-import type { PaymentMethod } from '@/lib/order'
+import type { AdvanceInput, PaymentMethod } from '@/lib/order'
 
 export function createOrderNumber(): string {
   const stamp = Date.now().toString(36).toUpperCase().slice(-6)
@@ -54,6 +55,13 @@ export type CreateOrderInput = {
    * re-validated and re-priced here, exactly like item prices are.
    */
   couponCode?: string | null
+  /**
+   * Required on a pre-order, ignored otherwise. Like `couponCode`, only the
+   * *evidence* travels from the client — the amount owed is recomputed here
+   * from the product's percentage, so a crafted request cannot book a ৳2,400
+   * item by claiming it paid ৳1.
+   */
+  advance?: AdvanceInput
 }
 
 export type OrderLine = {
@@ -143,6 +151,11 @@ export async function createOrder(
         // Snapshotted, so moving the product's date later never rewrites what
         // this customer was promised.
         preorderShipsAt: product.preorder ? product.preorderShipsAt : null,
+        // Read from the product row, never from the request. Kept per line so
+        // two pre-orders with different percentages still price correctly.
+        advancePct: advancePct({
+          preorderAdvancePct: product.preorderAdvancePct ?? undefined,
+        }),
       },
     ]
   })
@@ -186,7 +199,11 @@ export async function createOrder(
   let coupon = null
   let couponId: string | null = null
 
-  if (input.couponCode) {
+  // Not on a booking. A pre-order's advance is a percentage of the goods value,
+  // and layering a discount underneath it turns "is the 30% before or after the
+  // coupon?" into a question three surfaces would each have to answer the same
+  // way. The lever for a pre-order incentive is the product's own price.
+  if (input.couponCode && !isPreorder) {
     const check = await checkCoupon(input.couponCode, subtotal)
     if (check.ok) {
       couponId = await redeemCoupon(check.coupon.code)
@@ -198,6 +215,46 @@ export async function createOrder(
   const itemCount = lines.reduce((sum, line) => sum + line.quantity, 0)
   const orderNumber = createOrderNumber()
 
+  // The advance can only be decided here, because it is capped at the final
+  // total. The base is the goods value — delivery is collected in cash with the
+  // balance, so quoting an advance on it would have the shopper pre-paying a
+  // courier. `splitPayment` is the same function the booking sheet quotes from.
+  //
+  // The store currently runs pre-orders on pure cash on delivery
+  // (`DEFAULT_ADVANCE_PCT` is 0), so this whole block usually settles on "no
+  // advance" and the booking is priced exactly like an ordinary COD order.
+  let advanceAmount = 0
+  let dueAmount = 0
+  let paymentStatus: 'none' | 'advance_pending' = 'none'
+
+  if (isPreorder) {
+    const goods = preorderLines.reduce(
+      (sum, line) => sum + line.unitPrice * line.quantity,
+      0,
+    )
+    const weighted = preorderLines.reduce(
+      (sum, line) => sum + line.unitPrice * line.quantity * line.advancePct,
+      0,
+    )
+    // Quantity-weighted, so a basket of two runs at different percentages lands
+    // where each of them said it would rather than on an average of the two.
+    const blendedPct = goods > 0 ? weighted / goods : 0
+    const split = splitPayment(total, goods, blendedPct)
+
+    // Only a booking that actually asks for money up front carries the advance
+    // columns. A 0% run is a cash-on-delivery order in every respect, and
+    // recording `advance_pending` on it would put a booking with nothing to
+    // check into the admin's verification queue for ever.
+    if (split.advance > 0) {
+      if (!input.advance) {
+        throw new Error('A pre-order needs advance payment details')
+      }
+      advanceAmount = split.advance
+      dueAmount = split.due
+      paymentStatus = 'advance_pending'
+    }
+  }
+
   const [order] = await db
     .insert(orders)
     .values({
@@ -208,7 +265,10 @@ export async function createOrder(
       address: input.address,
       city: input.city,
       notes: input.notes ?? null,
-      paymentMethod: input.paymentMethod,
+      // A booking that took an advance is `advance_cod` whatever the client
+      // asked for. One that did not is an ordinary cash-on-delivery order and
+      // should not claim otherwise on the confirmation page.
+      paymentMethod: advanceAmount > 0 ? 'advance_cod' : input.paymentMethod,
       subtotal,
       discount,
       couponCode: coupon?.code ?? null,
@@ -217,6 +277,13 @@ export async function createOrder(
       total,
       itemCount,
       preorder: isPreorder,
+      advanceAmount,
+      dueAmount,
+      paymentStatus,
+      advanceMethod: advanceAmount > 0 ? (input.advance?.method ?? null) : null,
+      advanceTrxId: advanceAmount > 0 ? (input.advance?.trxId ?? null) : null,
+      advanceSenderPhone:
+        advanceAmount > 0 ? (input.advance?.senderPhone ?? null) : null,
     })
     .returning()
 
@@ -509,4 +576,57 @@ export async function updateOrderStatus(
       actorUserId: actorUserId ?? null,
     }),
   ])
+}
+
+export type AdvanceVerdict = 'advance_paid' | 'advance_failed'
+
+/**
+ * Records an admin's verdict on a booking advance, having matched (or failed to
+ * match) the transaction in their own bKash/Nagad statement. There is no
+ * gateway to ask, so a human is the only oracle.
+ *
+ * The timeline entry carries `currentOrderStatus`, not the payment verdict:
+ * `order_events.status` is constrained to the five *order* statuses, and
+ * widening that enum to carry payment facts would blur what the timeline means.
+ * The caller passes the current status in because the admin page already has
+ * it, which saves a read before the write.
+ */
+export async function setAdvanceStatus(
+  orderId: string,
+  verdict: AdvanceVerdict,
+  currentOrderStatus: OrderStatus,
+  actorUserId: number,
+): Promise<void> {
+  await db.batch([
+    db
+      .update(orders)
+      .set({
+        paymentStatus: verdict,
+        advanceVerifiedAt: new Date(),
+        advanceVerifiedBy: actorUserId,
+      })
+      .where(eq(orders.id, orderId)),
+    db.insert(orderEvents).values({
+      orderId,
+      status: currentOrderStatus,
+      note:
+        verdict === 'advance_paid'
+          ? 'Booking advance verified'
+          : 'Booking advance could not be verified',
+      actorUserId,
+    }),
+  ])
+}
+
+/** Bookings whose advance an admin has not ruled on yet, oldest first — the
+ *  queue they work through on /admin/preorders. */
+export async function getPendingAdvanceOrders(limit = 20): Promise<OrderRow[]> {
+  return db
+    .select()
+    .from(orders)
+    .where(
+      and(eq(orders.preorder, true), eq(orders.paymentStatus, 'advance_pending')),
+    )
+    .orderBy(asc(orders.placedAt))
+    .limit(limit)
 }

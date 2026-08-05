@@ -8,43 +8,27 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Banknote, CreditCard, ShoppingBag, Smartphone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form'
+import { Form } from '@/components/ui/form'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/page-header'
 import { CouponField } from '@/components/coupon-field'
+import { DeliveryFields } from '@/components/checkout/delivery-fields'
 import { useLanguage } from '@/components/language-provider'
 import { useStore } from '@/components/store-provider'
 import { placeOrder } from '@/app/actions/orders'
-import type { Dictionary } from '@/lib/dictionaries'
 import type { PaymentMethod } from '@/lib/order'
 import { cn } from '@/lib/utils'
-import { BD_PHONE } from '@/lib/validation/shared'
+import { buildDeliverySchema, type DeliveryValues } from '@/lib/validation/checkout'
 
-function buildSchema(errors: Dictionary['checkout']['errors']) {
-  return z.object({
-    name: z.string().min(2, errors.name),
-    phone: z.string().regex(BD_PHONE, errors.phone),
-    address: z.string().min(5, errors.address),
-    city: z.string().min(2, errors.city),
-    notes: z.string().optional(),
-  })
-}
-
-type CheckoutValues = z.infer<ReturnType<typeof buildSchema>>
-
+/**
+ * `advance_cod` never reaches this form — it belongs to the pre-order booking
+ * checkout, which has its own page. It is listed so the map stays total.
+ */
 const METHOD_ICONS: Record<PaymentMethod, typeof Banknote> = {
   cod: Banknote,
   mobile: Smartphone,
   card: CreditCard,
+  advance_cod: Smartphone,
 }
 
 export function CheckoutContent() {
@@ -55,8 +39,8 @@ export function CheckoutContent() {
   const [method, setMethod] = useState<PaymentMethod>('cod')
   const [submitting, setSubmitting] = useState(false)
 
-  const form = useForm<CheckoutValues>({
-    resolver: zodResolver(buildSchema(t.checkout.errors)),
+  const form = useForm<DeliveryValues>({
+    resolver: zodResolver(buildDeliverySchema(t.checkout.errors)),
     defaultValues: {
       name: '',
       phone: '',
@@ -68,7 +52,7 @@ export function CheckoutContent() {
 
   // Persist the order in the database via a server action. Prices are
   // recomputed server-side, so the confirmation page shows authoritative totals.
-  async function onSubmit(values: CheckoutValues) {
+  async function onSubmit(values: DeliveryValues) {
     setSubmitting(true)
 
     try {
@@ -141,94 +125,7 @@ export function CheckoutContent() {
                   {t.checkout.deliveryDetails}
                 </h2>
 
-                <div className="grid gap-5 sm:grid-cols-2">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t.checkout.fullName}</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder={t.checkout.fullNamePlaceholder}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t.checkout.phone}</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="tel"
-                            inputMode="tel"
-                            placeholder={t.checkout.phonePlaceholder}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="address"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t.checkout.address}</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder={t.checkout.addressPlaceholder}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="city"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t.checkout.city}</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder={t.checkout.cityPlaceholder}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t.checkout.notes}</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          rows={3}
-                          placeholder={t.checkout.notesPlaceholder}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <DeliveryFields layout="two-column" />
               </div>
 
               <fieldset className="space-y-3">

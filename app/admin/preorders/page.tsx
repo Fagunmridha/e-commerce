@@ -2,6 +2,9 @@ import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { getAdminPreorderProducts } from '@/lib/products'
+import { getPendingAdvanceOrders } from '@/lib/orders'
+import { advancePct } from '@/lib/preorder'
+import { ADVANCE_METHOD_LABEL } from '@/lib/order'
 import { formatPrice } from '@/lib/currency'
 
 export const dynamic = 'force-dynamic'
@@ -21,7 +24,10 @@ function formatDay(value?: string): string {
 }
 
 export default async function AdminPreordersPage() {
-  const products = await getAdminPreorderProducts()
+  const [products, awaiting] = await Promise.all([
+    getAdminPreorderProducts(),
+    getPendingAdvanceOrders(),
+  ])
 
   return (
     <div>
@@ -62,6 +68,7 @@ export default async function AdminPreordersPage() {
                 <th className="px-4 py-3 font-semibold">Product</th>
                 <th className="px-4 py-3 font-semibold">Delivery from</th>
                 <th className="px-4 py-3 font-semibold">Price</th>
+                <th className="px-4 py-3 font-semibold">Advance</th>
                 <th className="px-4 py-3 font-semibold">Booked</th>
                 <th className="px-4 py-3 font-semibold">Remaining</th>
                 <th className="px-4 py-3 font-semibold">Status</th>
@@ -72,6 +79,7 @@ export default async function AdminPreordersPage() {
               {products.map((product) => {
                 const booked = product.preorderBooked ?? 0
                 const soldOut = product.stock === 0
+                const pct = advancePct(product)
 
                 return (
                   <tr key={product.id}>
@@ -92,6 +100,27 @@ export default async function AdminPreordersPage() {
                     </td>
                     <td className="px-4 py-3 text-foreground">
                       {formatPrice(product.price)}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      {pct === 0 ? (
+                        <span className="text-muted-foreground">
+                          None — full COD
+                        </span>
+                      ) : (
+                        <>
+                          <span className="font-medium text-foreground">
+                            {pct}%
+                          </span>
+                          <span className="text-muted-foreground">
+                            {' '}
+                            ·{' '}
+                            {formatPrice(
+                              Math.round((product.price * pct) / 100),
+                            )}
+                            /pc
+                          </span>
+                        </>
+                      )}
                     </td>
                     <td className="px-4 py-3 font-medium text-foreground">
                       {booked}
@@ -133,6 +162,78 @@ export default async function AdminPreordersPage() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {/* The verification queue lives here rather than only on /admin/orders,
+          because this is the screen someone opens when they are thinking about
+          pre-orders at all. Each row links through to the order, where the
+          transaction ID can be copied and ruled on. */}
+      {awaiting.length > 0 && (
+        <section className="mt-10">
+          <h3 className="text-lg font-semibold text-foreground">
+            Bookings awaiting verification
+          </h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            The customer says they sent an advance. Match the transaction ID
+            against your bKash or Nagad statement, then mark it on the order.
+          </p>
+
+          <div className="mt-4 overflow-x-auto rounded-lg border border-border">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50 text-left text-xs text-muted-foreground uppercase">
+                <tr>
+                  <th className="px-4 py-3 font-semibold">Order</th>
+                  <th className="px-4 py-3 font-semibold">Customer</th>
+                  <th className="px-4 py-3 font-semibold">Advance</th>
+                  <th className="px-4 py-3 font-semibold">Method</th>
+                  <th className="px-4 py-3 font-semibold">Transaction ID</th>
+                  <th className="px-4 py-3 font-semibold">Paid from</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {awaiting.map((order) => (
+                  <tr key={order.id}>
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/admin/orders/${order.id}`}
+                        className="font-mono text-xs font-semibold text-primary hover:underline"
+                      >
+                        {order.orderNumber}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="font-medium text-foreground">
+                        {order.name}
+                      </span>
+                      <br />
+                      <span className="text-xs text-muted-foreground">
+                        {order.phone}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 font-medium whitespace-nowrap text-foreground">
+                      {formatPrice(order.advanceAmount)}
+                      <span className="text-muted-foreground">
+                        {' '}
+                        of {formatPrice(order.total)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {order.advanceMethod
+                        ? ADVANCE_METHOD_LABEL[order.advanceMethod]
+                        : '—'}
+                    </td>
+                    <td className="px-4 py-3 font-mono text-xs text-foreground">
+                      {order.advanceTrxId ?? '—'}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {order.advanceSenderPhone ?? '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
       )}
     </div>
   )

@@ -5,8 +5,14 @@ import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { productImages, products, users } from '@/lib/db/schema'
 import { requireAdmin } from '@/lib/auth'
-import { updateOrderStatus, type OrderStatus } from '@/lib/orders'
 import {
+  setAdvanceStatus,
+  updateOrderStatus,
+  type AdvanceVerdict,
+  type OrderStatus,
+} from '@/lib/orders'
+import {
+  advanceVerdictSchema,
   orderStatusSchema,
   productSchema,
   roleSchema,
@@ -64,6 +70,8 @@ export type ProductInput = {
   preorder?: boolean | null
   /** `YYYY-MM-DD`. Required when `preorder` is true. */
   preorderShipsAt?: string | null
+  /** Advance share, 0–100. Null uses the store default. */
+  preorderAdvancePct?: number | null
 }
 
 export async function upsertProduct(input: ProductInput): Promise<void> {
@@ -88,6 +96,7 @@ export async function upsertProduct(input: ProductInput): Promise<void> {
     // Cleared when the toggle is off, so a row that stops being a pre-order
     // does not keep advertising a stale ship date if it is turned back on.
     preorderShipsAt: data.preorder ? data.preorderShipsAt : null,
+    preorderAdvancePct: data.preorder ? data.preorderAdvancePct : null,
   }
 
   await db
@@ -142,4 +151,29 @@ export async function setOrderStatus(
   await updateOrderStatus(id, nextStatus, me.id)
   revalidatePath('/admin/orders')
   revalidatePath(`/admin/orders/${id}`)
+}
+
+/**
+ * Records whether a booking's mobile-money advance actually arrived. There is
+ * no gateway to ask, so an admin matches the transaction ID against their own
+ * bKash/Nagad statement and rules on it here.
+ *
+ * `currentOrderStatus` comes from the caller because the page already has the
+ * order loaded, and it is what the timeline entry is stamped with — see
+ * `setAdvanceStatus`.
+ */
+export async function verifyAdvance(
+  orderId: string,
+  verdict: AdvanceVerdict,
+  currentOrderStatus: OrderStatus,
+): Promise<void> {
+  const me = await requireAdmin()
+  const id = parseOrThrow(uuidSchema, orderId)
+  const nextVerdict = parseOrThrow(advanceVerdictSchema, verdict)
+  const status = parseOrThrow(orderStatusSchema, currentOrderStatus)
+
+  await setAdvanceStatus(id, nextVerdict, status, me.id)
+  revalidatePath('/admin/orders')
+  revalidatePath(`/admin/orders/${id}`)
+  revalidatePath('/admin/preorders')
 }

@@ -39,6 +39,10 @@ export const orderStatusSchema = z.enum([
   'cancelled',
 ])
 
+/** An admin's ruling on a booking advance. `advance_pending` is not here —
+ *  that is where a booking starts, not somewhere it can be moved back to. */
+export const advanceVerdictSchema = z.enum(['advance_paid', 'advance_failed'])
+
 export const userIdSchema = z.number().int().positive()
 
 export const uuidSchema = z.string().uuid()
@@ -112,6 +116,18 @@ export const productSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Pick a delivery date')
     .nullish()
     .transform((value) => value || null),
+  /**
+   * Share of the goods value payable up front to hold a booking. Null means the
+   * store default; a stored 0 is a real choice — a pre-order on pure
+   * cash-on-delivery — so no `superRefine` demands a value here.
+   */
+  preorderAdvancePct: z
+    .number()
+    .int()
+    .min(0, 'Cannot be negative')
+    .max(100, 'Cannot be more than 100%')
+    .nullish()
+    .transform((value) => value ?? null),
 })
   // A pre-order with no date promises nothing, and the storefront card has a
   // "Delivery from" line with nowhere to get a value. Caught here rather than
