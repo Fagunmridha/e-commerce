@@ -3,6 +3,7 @@ import { cache } from 'react'
 import { unstable_cache } from 'next/cache'
 import { and, asc, desc, eq, ilike, isNull, ne, or, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
+import { getCurrentUser } from '@/lib/auth'
 import { getViewerShop } from '@/lib/wholesalers'
 import {
   categories,
@@ -13,6 +14,7 @@ import {
   reviews,
   wholesalerApplications,
   type ProductRow,
+  type ReviewRow,
 } from '@/lib/db/schema'
 import type { Localized } from '@/lib/i18n'
 import type {
@@ -21,6 +23,7 @@ import type {
   Product,
   ProductColor,
   Review,
+  ReviewStatus,
 } from '@/lib/types'
 
 type Aggregate = { avg: number; count: number }
@@ -29,12 +32,25 @@ type Aggregate = { avg: number; count: number }
 export type ProductDetail = {
   product?: Product
   images: string[]
+  /** Approved only — `reviews` is what the public sees. */
   reviews: Review[]
+  /**
+   * The signed-in viewer's own review while it is still unapproved. Shown back
+   * to them alone, so submitting does not look like it silently failed.
+   */
+  viewerReview?: Review & { status: ReviewStatus }
 }
 
 const EMPTY_DETAIL: ProductDetail = { product: undefined, images: [], reviews: [] }
 
-/** productId → { average rating, review count } for the whole catalogue. */
+/**
+ * productId → { average rating, review count } for the whole catalogue.
+ *
+ * Approved reviews only. This one filter covers every star rating in the app —
+ * /shop, the category pages, the home rails, search, the wholesale market and
+ * the admin product table all price their rating through here — so a pending
+ * or rejected review can never move a number a shopper sees.
+ */
 async function reviewAggregates(): Promise<Map<string, Aggregate>> {
   const rows = await db
     .select({
@@ -43,6 +59,7 @@ async function reviewAggregates(): Promise<Map<string, Aggregate>> {
       count: sql<string>`count(*)`,
     })
     .from(reviews)
+    .where(eq(reviews.status, 'approved'))
     .groupBy(reviews.productId)
 
   const map = new Map<string, Aggregate>()
@@ -228,7 +245,7 @@ async function reviewAggregate(id: string): Promise<Aggregate | undefined> {
       count: sql<string>`count(*)`,
     })
     .from(reviews)
-    .where(eq(reviews.productId, id))
+    .where(and(eq(reviews.productId, id), eq(reviews.status, 'approved')))
 
   return agg && Number(agg.count) > 0
     ? { avg: Math.round(Number(agg.avg) * 10) / 10, count: Number(agg.count) }
@@ -264,11 +281,20 @@ export const getProductById = cache(async function getProductById(
  * transactions; batch is the supported way to group statements.)
  *
  * The gallery, review list and aggregates all come back together, which is why
- * the page calls this instead of `getProductById` + `getProductImages` +
- * `getProductReviews`.
+ * the page calls this instead of `getProductById` + `getProductImages`.
+ *
+ * This is the one loader in the module whose result depends on *who* is asking:
+ * the last statement fetches the signed-in viewer's own unapproved review so
+ * they can see that their submission landed. That is safe only because the
+ * wrapper below is React `cache()` — request-scoped — and not `unstable_cache`.
+ * If this ever gains a cross-request cache, `viewerReview` has to come out.
  */
-async function loadProductDetail(id: string): Promise<ProductDetail> {
-  const [[row], [agg], [sold], [booked], imageRows, reviewRows] = await db.batch([
+async function loadProductDetail(
+  id: string,
+  viewerId?: number,
+): Promise<ProductDetail> {
+  const [[row], [agg], [sold], [booked], imageRows, reviewRows, viewerRows] =
+    await db.batch([
     db.select().from(products).where(eq(products.id, id)),
     db
       .select({
@@ -276,7 +302,7 @@ async function loadProductDetail(id: string): Promise<ProductDetail> {
         count: sql<string>`count(*)`,
       })
       .from(reviews)
-      .where(eq(reviews.productId, id)),
+      .where(and(eq(reviews.productId, id), eq(reviews.status, 'approved'))),
     db
       .select({ n: sql<string>`coalesce(sum(${orderItems.quantity}), 0)` })
       .from(orderItems)
@@ -305,8 +331,25 @@ async function loadProductDetail(id: string): Promise<ProductDetail> {
     db
       .select()
       .from(reviews)
-      .where(eq(reviews.productId, id))
+      .where(and(eq(reviews.productId, id), eq(reviews.status, 'approved')))
       .orderBy(desc(reviews.createdAt)),
+    // The viewer's own review while it is still waiting on a moderator. Without
+    // it, submitting a review makes it vanish, which reads as a failure and
+    // produces resubmissions. Rides the batch, so it costs no round trip; the
+    // impossible `user_id = -1` is how a signed-out viewer gets a cheap empty
+    // result without branching the batch array.
+    db
+      .select()
+      .from(reviews)
+      .where(
+        and(
+          eq(reviews.productId, id),
+          eq(reviews.userId, viewerId ?? -1),
+          ne(reviews.status, 'approved'),
+        ),
+      )
+      .orderBy(desc(reviews.createdAt))
+      .limit(1),
   ])
 
   if (!row) return EMPTY_DETAIL
@@ -333,14 +376,21 @@ async function loadProductDetail(id: string): Promise<ProductDetail> {
       Number(booked?.n ?? 0),
     ),
     images: [row.image, ...imageRows.map((image) => image.url)],
-    reviews: reviewRows.map((review) => ({
-      id: review.id,
-      productId: review.productId,
-      authorName: review.authorName,
-      rating: review.rating,
-      body: review.body,
-      createdAt: review.createdAt.toISOString(),
-    })),
+    reviews: reviewRows.map(toReview),
+    viewerReview: viewerRows[0]
+      ? { ...toReview(viewerRows[0]), status: viewerRows[0].status }
+      : undefined,
+  }
+}
+
+function toReview(row: ReviewRow): Review {
+  return {
+    id: row.id,
+    productId: row.productId,
+    authorName: row.authorName,
+    rating: row.rating,
+    body: row.body,
+    createdAt: row.createdAt.toISOString(),
   }
 }
 
@@ -369,8 +419,17 @@ async function approvedShopName(sellerId: string): Promise<string | undefined> {
  * Request-scoped so `generateMetadata` and the page body share one fetch.
  * Next calls both for the same render, and without this the whole batch above
  * ran twice.
+ *
+ * The viewer is resolved here rather than passed in, so callers cannot forget
+ * it and cannot ask for someone else's pending review. `getCurrentUser` is
+ * itself `cache()`d and already resolved on almost every render.
  */
-export const getProductDetail = cache(loadProductDetail)
+export const getProductDetail = cache(async function getProductDetail(
+  id: string,
+): Promise<ProductDetail> {
+  const viewer = await getCurrentUser()
+  return loadProductDetail(id, viewer?.id)
+})
 
 /** Admin edit screen — no seller or approval gate, by design. */
 export async function getAdminProductById(

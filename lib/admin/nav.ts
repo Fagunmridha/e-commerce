@@ -1,6 +1,7 @@
 import {
   CalendarClock,
   LayoutDashboard,
+  MessageSquareQuote,
   Package,
   Percent,
   ShoppingCart,
@@ -50,6 +51,18 @@ export const ADMIN_NAV: AdminNavGroup[] = [
         href: '/admin/preorders',
         label: 'Pre-orders',
         icon: CalendarClock,
+      },
+      // Catalogue rather than Sales: approving a review changes a product's
+      // star rating and its detail page. The person doing it is the same one
+      // who lives in Products and Pre-orders; Sales is money and people.
+      {
+        href: '/admin/reviews',
+        label: 'Reviews',
+        icon: MessageSquareQuote,
+        children: [
+          { href: '/admin/reviews', label: 'All reviews' },
+          { href: '/admin/reviews?status=pending', label: 'Pending' },
+        ],
       },
     ],
   },

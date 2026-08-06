@@ -98,3 +98,23 @@ export type Review = {
   body: string
   createdAt: string
 }
+
+/**
+ * Where a review sits in moderation. `pending` is where every submission
+ * starts; only `approved` is ever public.
+ */
+export type ReviewStatus = 'pending' | 'approved' | 'rejected'
+
+/**
+ * A review as the homepage testimonial rail renders it — the product it is
+ * about travels with it, so the quote can be attributed and linked.
+ */
+export type HomeReview = {
+  id: string
+  authorName: string
+  rating: number
+  body: string
+  createdAt: string
+  productId: string
+  productName: Localized
+}

@@ -64,11 +64,12 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   // One batched round trip for the product, its gallery and its reviews; the
   // catalogue is already cached, so the related rail costs no query at all.
-  const [{ product, images, reviews }, catalogue, locale] = await Promise.all([
-    getProductDetail(id),
-    getAllProducts(),
-    getServerLocale(),
-  ])
+  const [{ product, images, reviews, viewerReview }, catalogue, locale] =
+    await Promise.all([
+      getProductDetail(id),
+      getAllProducts(),
+      getServerLocale(),
+    ])
 
   if (!product) notFound()
 
@@ -86,7 +87,13 @@ export default async function ProductPage({ params }: ProductPageProps) {
         deliveryWindow={deliveryWindow(locale)}
       />
       <FeatureBar />
-      <ProductReviews productId={product.id} reviews={reviews} />
+      <ProductReviews
+        productId={product.id}
+        reviews={reviews}
+        viewerReview={viewerReview}
+        rating={product.rating}
+        reviewCount={product.reviews}
+      />
       <ProductFaq />
       <ProductHelp />
       <RelatedProducts products={related} viewAllHref={`/${product.category}`} />

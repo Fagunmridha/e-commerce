@@ -13,6 +13,7 @@ import { Newsletter } from '@/components/newsletter'
 import { useLanguage } from '@/components/language-provider'
 import { useCatalogue } from '@/components/catalogue-provider'
 import type { FeaturedCoupon } from '@/lib/coupon-math'
+import type { HomeReview } from '@/lib/types'
 
 const ROW = 8
 
@@ -23,8 +24,11 @@ const ROW = 8
  */
 export function HomePage({
   featuredCoupon,
+  reviews,
 }: {
   featuredCoupon: FeaturedCoupon | null
+  /** Approved customer reviews for the testimonial rail. */
+  reviews: HomeReview[]
 }) {
   const { t } = useLanguage()
   const { products } = useCatalogue()
@@ -66,7 +70,7 @@ export function HomePage({
 
       <WhyChooseUs />
 
-      <Testimonials />
+      <Testimonials reviews={reviews} />
 
       <Newsletter />
     </>

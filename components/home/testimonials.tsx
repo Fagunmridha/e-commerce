@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { BadgeCheck, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Container } from '@/components/layout/container'
 import { Rating } from '@/components/rating'
@@ -12,6 +13,8 @@ import {
 } from '@/components/layout/card-rail'
 import { useLanguage } from '@/components/language-provider'
 import { cn } from '@/lib/utils'
+import type { Localized } from '@/lib/i18n'
+import type { HomeReview } from '@/lib/types'
 
 const AVATAR_TINTS = [
   'bg-[#e0e7ff] text-[#3730a3]',
@@ -19,11 +22,44 @@ const AVATAR_TINTS = [
   'bg-[#fef3c7] text-[#92400e]',
 ]
 
+/**
+ * What one slide renders, whether it came from the database or the placeholder
+ * list. Normalising both sources into this shape keeps the JSX to a single
+ * branch — `product` is the only thing a placeholder cannot supply.
+ */
+type Card = {
+  key: string
+  name: string
+  text: string
+  rating: number
+  product?: { id: string; name: Localized }
+}
+
 /** One customer quote at a time, paged by the arrows either side. */
-export function Testimonials() {
-  const { t } = useLanguage()
+export function Testimonials({ reviews = [] }: { reviews?: HomeReview[] }) {
+  const { t, pick } = useLanguage()
   const rail = useCardRail()
   const title = t.home.reviewsTitle
+
+  const cards: Card[] = reviews.length
+    ? reviews.map((review) => ({
+        key: review.id,
+        name: review.authorName,
+        text: review.body,
+        rating: review.rating,
+        product: { id: review.productId, name: review.productName },
+      }))
+    : // PLACEHOLDER — invented people, shown only while no review has been
+      // approved yet. See the note on `t.home.testimonials` in
+      // lib/dictionaries.ts: delete this branch and that block together once
+      // real reviews have accumulated. The hardcoded 5 lives here rather than
+      // in the markup so it leaves with the people it belongs to.
+      t.home.testimonials.map((placeholder, index) => ({
+        key: `placeholder-${index}`,
+        name: placeholder.name,
+        text: placeholder.text,
+        rating: 5,
+      }))
 
   // Two 40px arrows plus gaps eat a fifth of a 390px panel, so on phones the
   // rail is dragged and paged by the dots below instead.
@@ -52,8 +88,8 @@ export function Testimonials() {
 
               <div className="min-w-0 flex-1">
                 <RailTrack rail={rail} label={title}>
-                  {t.home.testimonials.map((review, index) => (
-                    <RailItem key={review.name} className="basis-full">
+                  {cards.map((card, index) => (
+                    <RailItem key={card.key} className="basis-full">
                       {/* The avatar + quote group is centred in the bar, with
                           the text itself left-aligned beside the avatar. */}
                       <figure className="mx-auto flex max-w-2xl flex-col items-center justify-center gap-5 text-center sm:flex-row sm:text-left">
@@ -64,23 +100,27 @@ export function Testimonials() {
                           )}
                           aria-hidden="true"
                         >
-                          {review.name.charAt(0)}
+                          {card.name.charAt(0)}
                         </span>
 
                         <div className="min-w-0">
                           <Rating
-                            value={5}
+                            value={card.rating}
                             size="sm"
                             className="justify-center sm:justify-start"
                           />
 
-                          <blockquote className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                            &ldquo;{review.text}&rdquo;
+                          {/* Real reviews run from ten characters to two
+                              thousand; without a clamp the one-slide rail
+                              jumps in height between quotes. The full text
+                              stays on the product page. */}
+                          <blockquote className="mt-2 line-clamp-5 text-sm leading-relaxed text-muted-foreground">
+                            &ldquo;{card.text}&rdquo;
                           </blockquote>
 
                           <figcaption className="mt-2">
                             <span className="block text-sm font-semibold text-foreground">
-                              – {review.name}
+                              – {card.name}
                             </span>
                             <span className="mt-0.5 inline-flex items-center gap-1 text-xs text-muted-foreground">
                               {t.home.verifiedBuyer}
@@ -89,6 +129,17 @@ export function Testimonials() {
                                 aria-hidden="true"
                               />
                             </span>
+                            {card.product && (
+                              <Link
+                                href={`/product/${card.product.id}`}
+                                className="mt-0.5 block text-xs text-muted-foreground transition-colors hover:text-primary"
+                              >
+                                {t.home.reviewsOnProduct.replace(
+                                  '{product}',
+                                  pick(card.product.name),
+                                )}
+                              </Link>
+                            )}
                           </figcaption>
                         </div>
                       </figure>

@@ -108,11 +108,13 @@ function LanguageMenu() {
 export function AdminHeader({
   pendingOrders,
   pendingWholesalers = 0,
+  pendingReviews = 0,
 }: {
   pendingOrders: number
   pendingWholesalers?: number
+  pendingReviews?: number
 }) {
-  const pendingTotal = pendingOrders + pendingWholesalers
+  const pendingTotal = pendingOrders + pendingWholesalers + pendingReviews
   const pathname = usePathname()
   const router = useRouter()
   const [paletteOpen, setPaletteOpen] = useState(false)
@@ -206,6 +208,14 @@ export function AdminHeader({
                 <Link href="/admin/wholesalers">
                   {pendingWholesalers} wholesale application
                   {pendingWholesalers === 1 ? '' : 's'} to review
+                </Link>
+              </DropdownMenuItem>
+            )}
+            {pendingReviews > 0 && (
+              <DropdownMenuItem asChild>
+                <Link href="/admin/reviews?status=pending">
+                  {pendingReviews} review{pendingReviews === 1 ? '' : 's'} to
+                  approve
                 </Link>
               </DropdownMenuItem>
             )}

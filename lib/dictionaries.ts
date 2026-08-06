@@ -152,6 +152,25 @@ const en = {
     highlights: 'Highlights',
     /** `{n}` is the review count; the whole thing links to the reviews section. */
     reviewsLabel: '{n} Reviews',
+    /** The reviews section on the product page, including its moderation copy. */
+    reviews: {
+      title: 'Customer Reviews',
+      yourRating: 'Your rating',
+      placeholder: 'Share what you thought about this product…',
+      submit: 'Submit review',
+      submitting: 'Submitting…',
+      signIn: 'Sign in',
+      signInSuffix: 'to write a review.',
+      empty: 'No reviews yet — be the first to review this product.',
+      /** Sets the expectation *before* the shopper writes anything. */
+      moderationNote: 'Reviews are published after a quick check by our team.',
+      submitted: 'Thanks! Your review will appear once we have approved it.',
+      pendingBadge: 'Pending approval',
+      pendingNote: 'Only you can see this until it is approved.',
+      alreadyReviewed: 'You have already reviewed this product.',
+      notFound: 'That product is no longer available.',
+      error: 'Could not submit your review.',
+    },
     sold: '{n} sold',
     off: 'OFF',
     linkCopied: 'Link copied',
@@ -858,23 +877,27 @@ const en = {
       seconds: 'Secs',
       saveLabel: 'You save',
     },
-    reviewsEyebrow: 'Reviews',
     reviewsTitle: 'What Our Customers Say',
     verifiedBuyer: 'Verified Buyer',
+    /** `{product}` is the product the review was written about. */
+    reviewsOnProduct: 'on {product}',
+    /**
+     * PLACEHOLDER — invented people, rendered only while the store has no
+     * approved reviews at all. `components/home/testimonials.tsx` falls back to
+     * this list; delete this block, its Bangla twin and that fallback branch
+     * once real reviews have accumulated. Nothing else reads it.
+     */
     testimonials: [
       {
         name: 'Nusrat Jahan',
-        location: 'Dhaka',
         text: 'The linen dress fits exactly like the size chart said. Delivery took two days and the packaging was lovely.',
       },
       {
         name: 'Tanvir Ahmed',
-        location: 'Chattogram',
         text: 'I have washed the polo a dozen times and it still looks new. Finally a shop where the quality matches the photos.',
       },
       {
         name: 'Farhana Kabir',
-        location: 'Sylhet',
         text: 'Ordered two hoodies for my kids. Soft fabric, strong stitching, and cash on delivery made it easy.',
       },
     ],
@@ -1059,6 +1082,23 @@ const bn: Dictionary = {
     buyNow: 'এখনই কিনুন',
     highlights: 'বৈশিষ্ট্য',
     reviewsLabel: '{n}টি রিভিউ',
+    reviews: {
+      title: 'ক্রেতাদের রিভিউ',
+      yourRating: 'আপনার রেটিং',
+      placeholder: 'এই পণ্যটি নিয়ে আপনার মতামত লিখুন…',
+      submit: 'রিভিউ জমা দিন',
+      submitting: 'জমা দেওয়া হচ্ছে…',
+      signIn: 'সাইন ইন করুন',
+      signInSuffix: 'রিভিউ লিখতে।',
+      empty: 'এখনো কোনো রিভিউ নেই — প্রথম রিভিউটি আপনিই দিন।',
+      moderationNote: 'আমাদের টিম যাচাই করার পর রিভিউ প্রকাশিত হয়।',
+      submitted: 'ধন্যবাদ! অনুমোদনের পরই আপনার রিভিউটি প্রকাশিত হবে।',
+      pendingBadge: 'অনুমোদনের অপেক্ষায়',
+      pendingNote: 'অনুমোদন না হওয়া পর্যন্ত এটি শুধু আপনিই দেখতে পাচ্ছেন।',
+      alreadyReviewed: 'আপনি এই পণ্যটির রিভিউ আগেই দিয়েছেন।',
+      notFound: 'পণ্যটি আর পাওয়া যাচ্ছে না।',
+      error: 'আপনার রিভিউ জমা দেওয়া যায়নি।',
+    },
     sold: '{n}টি বিক্রি হয়েছে',
     off: 'ছাড়',
     linkCopied: 'লিংক কপি হয়েছে',
@@ -1745,23 +1785,21 @@ const bn: Dictionary = {
       seconds: 'সেকেন্ড',
       saveLabel: 'সাশ্রয়',
     },
-    reviewsEyebrow: 'রিভিউ',
     reviewsTitle: 'ক্রেতারা যা বলছেন',
     verifiedBuyer: 'যাচাইকৃত ক্রেতা',
+    reviewsOnProduct: '{product} সম্পর্কে',
+    /** PLACEHOLDER — see the English block. Delete both together. */
     testimonials: [
       {
         name: 'নুসরাত জাহান',
-        location: 'ঢাকা',
         text: 'লিনেন ড্রেসটা সাইজ চার্ট অনুযায়ী একদম ঠিক হয়েছে। দুই দিনে ডেলিভারি পেয়েছি, প্যাকেজিংও সুন্দর ছিল।',
       },
       {
         name: 'তানভীর আহমেদ',
-        location: 'চট্টগ্রাম',
         text: 'পোলো শার্টটা বারো বারের বেশি ধুয়েছি, এখনো নতুনের মতো। ছবির সাথে মান মেলে এমন দোকান পাওয়া কঠিন।',
       },
       {
         name: 'ফারহানা কবির',
-        location: 'সিলেট',
         text: 'বাচ্চাদের জন্য দুইটা হুডি নিয়েছি। কাপড় নরম, সেলাই মজবুত, আর ক্যাশ অন ডেলিভারি থাকায় সুবিধা হয়েছে।',
       },
     ],

@@ -287,6 +287,20 @@ export const orderEvents = pgTable('order_events', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })
 
+/**
+ * Customer reviews, moderated before they go public.
+ *
+ * `status` is stored rather than derived, and every read gates on it instead of
+ * deleting rows: a review rejected by mistake is one click from being visible
+ * again, and a rejected one cannot be silently resubmitted by the same
+ * customer. Three states, not the four `wholesaler_applications` carries — a
+ * shop is an ongoing relationship you can pause, a review is a one-shot
+ * artefact, so approved → rejected *is* the un-publish.
+ *
+ * `featured` is purely a homepage concept. The product page shows every
+ * approved review whatever its rating; the Coming Soon-style testimonial rail
+ * shows approved reviews that are either featured or rated 4+.
+ */
 export const reviews = pgTable('reviews', {
   id: uuid('id').primaryKey().defaultRandom(),
   productId: text('product_id')
@@ -298,11 +312,28 @@ export const reviews = pgTable('reviews', {
   authorName: text('author_name').notNull(),
   rating: integer('rating').notNull(),
   body: text('body').notNull(),
+  status: text('status', { enum: ['pending', 'approved', 'rejected'] })
+    .notNull()
+    .default('pending'),
+  /** Admin-picked for the homepage testimonial rail. */
+  featured: boolean('featured').notNull().default(false),
+  /**
+   * Internal moderation shorthand. Unlike `wholesaler_applications.review_note`
+   * this is never shown back to the customer — a rejected review simply stays
+   * invisible, because publishing the reason invites an argument.
+   */
+  reviewNote: text('review_note'),
+  reviewedByUserId: integer('reviewed_by_user_id').references(() => users.id, {
+    onDelete: 'set null',
+  }),
+  reviewedAt: timestamp('reviewed_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 }, (table) => [
-  // Both the per-product review list and the catalogue-wide rating aggregate
-  // group or filter on this column.
-  index('reviews_product_id_idx').on(table.productId),
+  // Every read now filters on status as well: the per-product list and the
+  // single-product aggregate both narrow by product first.
+  index('reviews_product_id_status_idx').on(table.productId, table.status),
+  // The catalogue-wide aggregate and the homepage feed start from status.
+  index('reviews_status_created_at_idx').on(table.status, table.createdAt),
 ])
 
 /**
