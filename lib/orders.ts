@@ -23,6 +23,7 @@ import {
   type OrderRow,
 } from '@/lib/db/schema'
 import { computeTotals } from '@/lib/coupon-math'
+import type { DeliveryZone } from '@/lib/currency'
 import { checkCoupon, redeemCoupon } from '@/lib/coupons'
 import { advancePct, splitPayment } from '@/lib/preorder'
 import type { Localized } from '@/lib/i18n'
@@ -45,6 +46,8 @@ export type CreateOrderInput = {
   phone: string
   address: string
   city: string
+  /** Which flat rate delivery is charged at. Priced here, never sent as money. */
+  zone: DeliveryZone
   notes?: string
   paymentMethod: PaymentMethod
   items: OrderItemInput[]
@@ -211,7 +214,11 @@ export async function createOrder(
     }
   }
 
-  const { discount, shipping, total } = computeTotals(subtotal, coupon)
+  const { discount, shipping, total } = computeTotals(
+    subtotal,
+    coupon,
+    input.zone,
+  )
   const itemCount = lines.reduce((sum, line) => sum + line.quantity, 0)
   const orderNumber = createOrderNumber()
 
@@ -264,6 +271,7 @@ export async function createOrder(
       phone: input.phone,
       address: input.address,
       city: input.city,
+      deliveryZone: input.zone,
       notes: input.notes ?? null,
       // A booking that took an advance is `advance_cod` whatever the client
       // asked for. One that did not is an ordinary cash-on-delivery order and

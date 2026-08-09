@@ -3,6 +3,7 @@
 import { useFormContext } from 'react-hook-form'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
   FormControl,
   FormField,
@@ -11,7 +12,12 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { useLanguage } from '@/components/language-provider'
+import { formatPrice, SHIPPING_RATES, type DeliveryZone } from '@/lib/currency'
+import { cn } from '@/lib/utils'
 import type { DeliveryValues } from '@/lib/validation/checkout'
+
+/** In display order — the cheaper, more common zone first. */
+const ZONES: DeliveryZone[] = ['dhaka', 'outside']
 
 /**
  * Name / phone / address / city / notes — the block every order path collects.
@@ -97,6 +103,58 @@ export function DeliveryFields({
             <FormLabel>{t.checkout.city}</FormLabel>
             <FormControl>
               <Input placeholder={t.checkout.cityPlaceholder} {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      {/* The delivery charge is priced from this, not from `city` above — see
+          the schema. Two cards rather than a select: it is a two-way choice
+          that changes the total, so it should be readable without opening
+          anything, and each option carries its own price. */}
+      <FormField
+        control={control}
+        name="zone"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t.checkout.deliveryArea}</FormLabel>
+            <FormControl>
+              <RadioGroup
+                value={field.value}
+                onValueChange={field.onChange}
+                className="grid gap-3 sm:grid-cols-2"
+              >
+                {ZONES.map((zone) => (
+                  <FormLabel
+                    key={zone}
+                    // A label wrapping the input: the whole card is the target,
+                    // which on a phone is the difference between a tap and a
+                    // miss.
+                    className={cn(
+                      'flex cursor-pointer items-center gap-3 rounded-lg border p-3.5 font-normal transition-colors',
+                      field.value === zone
+                        ? 'border-primary bg-accent'
+                        : 'border-border hover:border-primary',
+                    )}
+                  >
+                    <RadioGroupItem value={zone} />
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-foreground">
+                        {zone === 'dhaka'
+                          ? t.checkout.zoneDhaka
+                          : t.checkout.zoneOutside}
+                      </span>
+                      <span className="block text-xs text-muted-foreground">
+                        {t.checkout.zoneRate.replace(
+                          '{amount}',
+                          formatPrice(SHIPPING_RATES[zone]),
+                        )}
+                      </span>
+                    </span>
+                  </FormLabel>
+                ))}
+              </RadioGroup>
             </FormControl>
             <FormMessage />
           </FormItem>

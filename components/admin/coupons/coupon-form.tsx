@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/tooltip'
 import { upsertCoupon } from '@/app/actions/coupons'
 import { computeTotals, type PublicCoupon } from '@/lib/coupon-math'
+import { DEFAULT_ZONE } from '@/lib/currency'
 import {
   COUPON_STATUS_CLASS,
   COUPON_STATUS_LABEL,
@@ -114,7 +115,9 @@ export function CouponForm({ coupon }: { coupon?: CouponRow }) {
       isPercent && form.maxDiscount ? Number(form.maxDiscount) : null,
     description: null,
   }
-  const example = computeTotals(EXAMPLE_SUBTOTAL, draft)
+  // A worked example of the discount, not of a real basket — the delivery zone
+  // is irrelevant to what it demonstrates, so it takes the default.
+  const example = computeTotals(EXAMPLE_SUBTOTAL, draft, DEFAULT_ZONE)
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault()

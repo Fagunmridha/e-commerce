@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
@@ -34,8 +34,18 @@ const METHOD_ICONS: Record<PaymentMethod, typeof Banknote> = {
 export function CheckoutContent() {
   const router = useRouter()
   const { t, pick, price } = useLanguage()
-  const { hydrated, lines, subtotal, shipping, discount, total, coupon, clearCart } =
-    useStore()
+  const {
+    hydrated,
+    lines,
+    subtotal,
+    shipping,
+    discount,
+    total,
+    coupon,
+    zone,
+    setZone,
+    clearCart,
+  } = useStore()
   const [method, setMethod] = useState<PaymentMethod>('cod')
   const [submitting, setSubmitting] = useState(false)
 
@@ -46,9 +56,20 @@ export function CheckoutContent() {
       phone: '',
       address: '',
       city: '',
+      // Seeded from the store so a returning shopper's remembered zone is
+      // already selected rather than silently reset to Dhaka.
+      zone,
       notes: '',
     },
   })
+
+  // The summary is rendered from the store, not from the form, because the cart
+  // drawer quotes delivery too. Mirroring the radio back keeps the Delivery line
+  // beside this form moving with it.
+  const selectedZone = form.watch('zone')
+  useEffect(() => {
+    if (selectedZone !== zone) setZone(selectedZone)
+  }, [selectedZone, zone, setZone])
 
   // Persist the order in the database via a server action. Prices are
   // recomputed server-side, so the confirmation page shows authoritative totals.
@@ -61,6 +82,7 @@ export function CheckoutContent() {
         phone: values.phone,
         address: values.address,
         city: values.city,
+        zone: values.zone,
         notes: values.notes || undefined,
         paymentMethod: method,
         items: lines.map((line) => ({

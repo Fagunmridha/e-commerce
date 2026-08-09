@@ -23,7 +23,8 @@ import { CopyButton } from '@/components/copy-button'
 import { DeliveryFields } from '@/components/checkout/delivery-fields'
 import { useLanguage } from '@/components/language-provider'
 import { placeOrder } from '@/app/actions/orders'
-import { formatShipDate } from '@/lib/preorder'
+import { formatShipDate, splitPayment } from '@/lib/preorder'
+import { DEFAULT_ZONE, getShippingCost } from '@/lib/currency'
 import { cn } from '@/lib/utils'
 import { buildAdvanceSchema, buildDeliverySchema } from '@/lib/validation/checkout'
 import type { AdvanceMethod } from '@/lib/order'
@@ -61,11 +62,7 @@ export function PreorderCheckoutContent({
   size,
   colorEn,
   subtotal,
-  shipping,
-  total,
   advancePct,
-  advance,
-  due,
   bkashNumber,
   nagadNumber,
 }: {
@@ -73,13 +70,9 @@ export function PreorderCheckoutContent({
   quantity: number
   size?: string
   colorEn?: string
-  /** All priced on the server; the client only displays them. */
+  /** The goods value, priced on the server. Delivery is added here. */
   subtotal: number
-  shipping: number
-  total: number
   advancePct: number
-  advance: number
-  due: number
   bkashNumber: string
   nagadNumber: string
 }) {
@@ -87,7 +80,11 @@ export function PreorderCheckoutContent({
   const { t, pick, locale, price } = useLanguage()
   const [submitting, setSubmitting] = useState(false)
 
-  const needsAdvance = advance > 0
+  // Read off the advance percentage rather than the advance amount: the amount
+  // now depends on the zone, and a schema that swapped shape mid-form — asking
+  // for a transaction ID only once someone picked "Outside Dhaka" — would be a
+  // form that changes its own rules under the shopper.
+  const needsAdvance = advancePct > 0
   const form = useForm<BookingValues>({
     resolver: zodResolver(
       buildSchema(t.checkout.errors, t.preorder.errors, needsAdvance),
@@ -97,12 +94,22 @@ export function PreorderCheckoutContent({
       phone: '',
       address: '',
       city: '',
+      zone: DEFAULT_ZONE,
       notes: '',
       method: 'bkash',
       trxId: '',
       senderPhone: '',
     },
   })
+
+  // Delivery can only be priced once the shopper says where it is going, which
+  // is why this is here and not on the server page that renders this component.
+  const zone = form.watch('zone')
+  const shipping = getShippingCost(subtotal, zone)
+  const total = subtotal + shipping
+  // The same function `createOrder` splits the booking with, so the sheet, this
+  // summary and the stored order all land on the same two numbers.
+  const { advance, due } = splitPayment(total, subtotal, advancePct)
 
   const method = (form.watch('method') ?? 'bkash') as AdvanceMethod
   const merchantNumber = method === 'bkash' ? bkashNumber : nagadNumber
@@ -120,6 +127,7 @@ export function PreorderCheckoutContent({
         phone: values.phone,
         address: values.address,
         city: values.city,
+        zone: values.zone,
         notes: values.notes || undefined,
         // Ignored server-side for a pre-order, which is always `advance_cod`.
         paymentMethod: 'cod',

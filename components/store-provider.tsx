@@ -16,11 +16,18 @@ import {
   type CouponIssue,
   type PublicCoupon,
 } from '@/lib/coupon-math'
+import { DEFAULT_ZONE, type DeliveryZone } from '@/lib/currency'
 import { previewCoupon } from '@/app/actions/coupons'
 
 const CART_KEY = 'cp_cart'
 const WISHLIST_KEY = 'cp_wishlist'
 const COUPON_KEY = 'cp_coupon'
+/**
+ * The delivery zone the cart is quoted at. Remembered because a returning
+ * shopper's address does not move between visits, and re-picking "Outside
+ * Dhaka" on every return is a step that only ever produces the same answer.
+ */
+const ZONE_KEY = 'cp_zone'
 
 /**
  * Only the choice is stored — name, price and image are always read back from
@@ -62,7 +69,14 @@ type StoreContextValue = {
   lines: ResolvedCartLine[]
   itemCount: number
   subtotal: number
-  /** Delivery charge in taka — free above the threshold. */
+  /**
+   * Where the cart is quoted for delivery. An estimate until the checkout form
+   * asks — which is what `setZone` is for: the form writes its answer back here
+   * so the summary beside it moves with the radio.
+   */
+  zone: DeliveryZone
+  setZone: (zone: DeliveryZone) => void
+  /** Delivery charge in taka for the current zone. */
   shipping: number
   /** Preview only. The order's real discount is computed server-side. */
   discount: number
@@ -91,10 +105,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [wishlistIds, setWishlistIds] = useState<string[]>([])
   const [coupon, setCoupon] = useState<PublicCoupon | null>(null)
   const [couponError, setCouponError] = useState<CouponIssue | null>(null)
+  const [zone, setZone] = useState<DeliveryZone>(DEFAULT_ZONE)
 
   useEffect(() => {
     setCart(read<CartLine[]>(CART_KEY, []))
     setWishlistIds(read<string[]>(WISHLIST_KEY, []))
+    // Anything but the two known zones is discarded rather than trusted: this
+    // value picks a delivery rate, and localStorage is the shopper's to edit.
+    const stored = read<string>(ZONE_KEY, DEFAULT_ZONE)
+    setZone(stored === 'outside' ? 'outside' : DEFAULT_ZONE)
     setHydrated(true)
   }, [])
 
@@ -102,6 +121,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     if (!hydrated) return
     window.localStorage.setItem(CART_KEY, JSON.stringify(cart))
   }, [cart, hydrated])
+
+  useEffect(() => {
+    if (!hydrated) return
+    window.localStorage.setItem(ZONE_KEY, JSON.stringify(zone))
+  }, [zone, hydrated])
 
   useEffect(() => {
     if (!hydrated) return
@@ -272,13 +296,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
   }, [subtotal, coupon])
 
-  const { discount, shipping, total } = computeTotals(subtotal, coupon)
+  const { discount, shipping, total } = computeTotals(subtotal, coupon, zone)
 
   const value: StoreContextValue = {
     hydrated,
     lines,
     itemCount: lines.reduce((sum, line) => sum + line.quantity, 0),
     subtotal,
+    zone,
+    setZone,
     shipping,
     discount,
     total,

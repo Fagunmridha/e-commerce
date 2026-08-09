@@ -165,6 +165,12 @@ export const orders = pgTable('orders', {
   phone: text('phone').notNull(),
   address: text('address').notNull(),
   city: text('city').notNull(),
+  /**
+   * Which rate `shipping` was priced at. Nullable rather than defaulted: orders
+   * placed before delivery zones existed were charged a single flat rate, and
+   * stamping one of these on them would record a choice nobody made.
+   */
+  deliveryZone: text('delivery_zone', { enum: ['dhaka', 'outside'] }),
   notes: text('notes'),
   /**
    * `advance_cod` is set by `createOrder` on a pre-order, never chosen by a

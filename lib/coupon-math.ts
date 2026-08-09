@@ -1,4 +1,8 @@
-import { formatPrice, getShippingCost } from '@/lib/currency'
+import {
+  formatPrice,
+  getShippingCost,
+  type DeliveryZone,
+} from '@/lib/currency'
 import type { Localized } from '@/lib/i18n'
 
 /**
@@ -68,16 +72,16 @@ export function computeDiscount(
 }
 
 /**
- * The order totals. Shipping is charged off the pre-discount subtotal on
- * purpose: the free-shipping threshold tracks what was bought, so a coupon
- * cannot quietly claw back free delivery the shopper had already earned.
+ * The order totals. Delivery is a flat per-zone charge that a discount cannot
+ * move, so the only thing the coupon touches here is the goods.
  */
 export function computeTotals(
   subtotal: number,
   coupon: PublicCoupon | null,
+  zone: DeliveryZone,
 ): { subtotal: number; discount: number; shipping: number; total: number } {
   const discount = coupon ? computeDiscount(coupon, subtotal) : 0
-  const shipping = getShippingCost(subtotal)
+  const shipping = getShippingCost(subtotal, zone)
 
   return {
     subtotal: money(subtotal),

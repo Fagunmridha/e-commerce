@@ -198,7 +198,7 @@ export function ProductQuickView({
 
               <p className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Truck className="size-3.5 shrink-0" />
-                {t.product.freeShippingNote}
+                {t.product.deliveryNote}
               </p>
 
               <DialogClose asChild>

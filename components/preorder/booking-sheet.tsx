@@ -15,7 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { ColorSwatch, isSwatchable } from '@/components/color-swatch'
 import { useLanguage } from '@/components/language-provider'
 import { advancePct, formatShipDate, splitPayment } from '@/lib/preorder'
-import { getShippingCost } from '@/lib/currency'
+import { DEFAULT_ZONE, getShippingCost } from '@/lib/currency'
 import { cn } from '@/lib/utils'
 import type { Product } from '@/lib/types'
 
@@ -91,8 +91,14 @@ export function BookingSheet({
   const goods = shown.price * quantity
   const pct = advancePct(shown)
   // The same three functions the checkout page and `createOrder` use, so the
-  // number quoted here is the number that ends up on the order.
-  const { advance, due } = splitPayment(goods + getShippingCost(goods), goods, pct)
+  // number quoted here is the number that ends up on the order. Delivery is at
+  // the default zone — the sheet has no address, and the checkout form asks for
+  // one on the very next screen.
+  const { advance, due } = splitPayment(
+    goods + getShippingCost(goods, DEFAULT_ZONE),
+    goods,
+    pct,
+  )
 
   const confirm = () => {
     const params = new URLSearchParams({ p: shown.id, q: String(quantity) })

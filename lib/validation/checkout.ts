@@ -17,11 +17,24 @@ export function buildDeliverySchema(errors: Dictionary['checkout']['errors']) {
     phone: z.string().regex(BD_PHONE, errors.phone),
     address: z.string().min(5, errors.address),
     city: z.string().min(2, errors.city),
+    // What the delivery charge is priced from. Kept separate from `city`
+    // because that field is free text — "Dhaka", "ঢাকা" and "Savar" all arrive
+    // through it, and the last one is Dhaka district but not the city rate.
+    zone: z.enum(['dhaka', 'outside']),
     notes: z.string().optional(),
   })
 }
 
 export type DeliveryValues = z.infer<ReturnType<typeof buildDeliverySchema>>
+
+/**
+ * The server-side twin of the form's `zone` field, for `placeOrder`. English
+ * message on purpose — like `preorderAdvanceSchema`, this is a last line of
+ * defence against a crafted request, not something a shopper should ever read.
+ */
+export const deliveryZoneSchema = z.enum(['dhaka', 'outside'], {
+  message: 'Unknown delivery area',
+})
 
 /**
  * The manual mobile-money advance a shopper reports after paying. There is no

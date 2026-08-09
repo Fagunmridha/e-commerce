@@ -3,7 +3,7 @@
 import { CalendarDays, PackageCheck, Users } from 'lucide-react'
 import { useLanguage } from '@/components/language-provider'
 import { advancePct, formatShipDate, splitPayment } from '@/lib/preorder'
-import { getShippingCost } from '@/lib/currency'
+import { DEFAULT_ZONE, getShippingCost } from '@/lib/currency'
 import type { Product } from '@/lib/types'
 
 /**
@@ -20,8 +20,12 @@ export function PreorderBanner({ product }: { product: Product }) {
   const soldOut = product.stock <= 0
   const booked = product.preorderBooked ?? 0
   const pct = advancePct(product)
+  // Quoted at the default zone: there is no address on a product page, and the
+  // booking sheet re-quotes against the real one. Only the advance is shown
+  // here, and the advance is capped at a percentage of the goods — so the zone
+  // moves this number by nothing at the store's current 0% advance.
   const { advance } = splitPayment(
-    product.price + getShippingCost(product.price),
+    product.price + getShippingCost(product.price, DEFAULT_ZONE),
     product.price,
     pct,
   )

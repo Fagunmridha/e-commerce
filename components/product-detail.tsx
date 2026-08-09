@@ -262,7 +262,7 @@ export function ProductDetail({
               )}
             </div>
             <p className="mt-1.5 text-sm text-muted-foreground">
-              {t.product.freeShippingNote}
+              {t.product.deliveryNote}
             </p>
 
             {isPreorder && (

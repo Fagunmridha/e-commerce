@@ -19,7 +19,7 @@ const en = {
     account: 'My account',
     signIn: 'Sign in',
     language: 'Language',
-    announceShipping: 'Free delivery on all orders over ৳2,000',
+    announceShipping: 'Delivery ৳60 inside Dhaka, ৳120 outside — pay on arrival',
     followUs: 'Follow us on',
     mega: {
       shopByCategory: 'Shop by category',
@@ -47,7 +47,7 @@ const en = {
     },
   },
   features: [
-    { title: 'Free Delivery', description: 'On all orders over ৳2,000' },
+    { title: 'Fast Delivery', description: '৳60 inside Dhaka, ৳120 outside' },
     { title: 'Easy Returns', description: '30 days return policy' },
     { title: 'Secure Payment', description: '100% secure payment' },
     { title: '100% Original', description: 'Authentic products only' },
@@ -130,7 +130,7 @@ const en = {
     quantity: 'Quantity',
     size: 'Size',
     color: 'Color',
-    freeShippingNote: 'Free delivery on orders over ৳2,000',
+    deliveryNote: 'Delivery ৳60 inside Dhaka, ৳120 outside',
     favorite: 'Add to favorites',
     showView: 'Show view',
     view: 'view',
@@ -337,6 +337,11 @@ const en = {
     quantityShort: 'Qty',
     subtotal: 'Subtotal',
     shipping: 'Delivery',
+    /* The zone picker. `{amount}` is the charge, preformatted. */
+    deliveryArea: 'Delivery area',
+    zoneDhaka: 'Inside Dhaka',
+    zoneOutside: 'Outside Dhaka',
+    zoneRate: '{amount} delivery',
     free: 'Free',
     total: 'Total',
     discount: 'Discount',
@@ -348,6 +353,7 @@ const en = {
       email: 'Please enter a valid email address.',
       address: 'Please enter your address.',
       city: 'Please enter your city.',
+      zone: 'Please choose a delivery area.',
     },
   },
   preorder: {
@@ -422,6 +428,43 @@ const en = {
     placing: 'Placing order…',
     outOfStock: 'Out of stock',
     deliveryLine: 'Cash on delivery • Fast nationwide shipping',
+    /** The sticky bar on phones, where the form is a long scroll away. */
+    orderShort: 'Order Now',
+    orderFailed: 'Could not place your order. Please check your details and try again.',
+    /** `{n}` is the percentage off the old price. */
+    discountOff: '{n}% OFF',
+    /** `{amount}` arrives preformatted from `formatPrice`. */
+    youSave: 'You save {amount}',
+    estDelivery: 'Estimated delivery',
+    stepsTitle: 'Ordering takes a minute',
+    steps: [
+      'Choose your size and colour',
+      'Fill in name, phone and address',
+      'Pay cash when the rider hands it over',
+    ],
+    trustTitle: 'Why order from us',
+    trust: [
+      {
+        title: 'Cash on delivery',
+        body: 'Pay the rider only once the parcel is in your hands.',
+      },
+      {
+        title: 'Nationwide delivery',
+        body: 'Anywhere in Bangladesh, usually within 3–5 working days.',
+      },
+      {
+        title: '100% authentic',
+        body: 'Every piece is checked by hand before it leaves us.',
+      },
+      {
+        title: 'We call to confirm',
+        body: 'A real person rings you before the parcel is dispatched.',
+      },
+    ],
+    reviewsTitle: 'What customers say',
+    noReviews: 'No reviews on this product yet.',
+    /** The one-line footer under the funnel; `{year}` is the current year. */
+    footerNote: '© {year} CP Market — all prices in Bangladeshi taka.',
   },
   whatsapp: {
     label: 'Chat with us on WhatsApp',
@@ -787,7 +830,7 @@ const en = {
     label: 'Quick navigation',
   },
   ticker: [
-    'Free delivery over ৳2,000',
+    'Nationwide delivery from ৳60',
     'New arrivals every week',
     '30-day easy returns',
     'Cash on delivery available',
@@ -850,7 +893,7 @@ const en = {
       title: 'Why Choose Us?',
       items: [
         { label: 'High Quality Products', note: '' },
-        { label: 'Fast & Free Delivery', note: '' },
+        { label: 'Fast Nationwide Delivery', note: 'From ৳60' },
         { label: 'Easy Returns', note: '30 Days Policy' },
         { label: '24/7 Customer Support', note: '' },
       ],
@@ -931,7 +974,7 @@ const en = {
     suffix: '| CP Market',
     siteTitle: 'CP Market — Premium Clothing for Men, Women & Kids',
     siteDescription:
-      'Discover your style with our premium clothing. High quality fashion for men, women and kids, with free delivery on orders over ৳2,000.',
+      'Discover your style with our premium clothing. High quality fashion for men, women and kids, delivered nationwide with cash on delivery.',
     productNotFound: 'Product not found',
   },
 }
@@ -957,7 +1000,7 @@ const bn: Dictionary = {
     account: 'আমার অ্যাকাউন্ট',
     signIn: 'সাইন ইন',
     language: 'ভাষা',
-    announceShipping: '৳2,000-এর বেশি সব অর্ডারে ফ্রি ডেলিভারি',
+    announceShipping: 'ঢাকার ভেতরে ডেলিভারি ৳60, বাইরে ৳120 — পণ্য পেয়ে টাকা দিন',
     followUs: 'আমাদের ফলো করুন',
     mega: {
       shopByCategory: 'ক্যাটাগরি অনুযায়ী কিনুন',
@@ -983,7 +1026,7 @@ const bn: Dictionary = {
     },
   },
   features: [
-    { title: 'ফ্রি ডেলিভারি', description: '৳2,000-এর বেশি সব অর্ডারে' },
+    { title: 'দ্রুত ডেলিভারি', description: 'ঢাকার ভেতরে ৳60, বাইরে ৳120' },
     { title: 'সহজ রিটার্ন', description: '৩০ দিনের রিটার্ন সুবিধা' },
     { title: 'নিরাপদ পেমেন্ট', description: '১০০% নিরাপদ পেমেন্ট' },
     { title: '১০০% অরিজিনাল', description: 'শুধুমাত্র আসল পণ্য' },
@@ -1061,7 +1104,7 @@ const bn: Dictionary = {
     quantity: 'পরিমাণ',
     size: 'সাইজ',
     color: 'রঙ',
-    freeShippingNote: '৳2,000-এর বেশি অর্ডারে ফ্রি ডেলিভারি',
+    deliveryNote: 'ঢাকার ভেতরে ডেলিভারি ৳60, বাইরে ৳120',
     favorite: 'পছন্দের তালিকায় যোগ করুন',
     showView: 'ছবি দেখুন',
     view: 'ছবি',
@@ -1257,6 +1300,10 @@ const bn: Dictionary = {
     quantityShort: 'পরিমাণ',
     subtotal: 'সাবটোটাল',
     shipping: 'ডেলিভারি',
+    deliveryArea: 'ডেলিভারি এলাকা',
+    zoneDhaka: 'ঢাকার ভেতরে',
+    zoneOutside: 'ঢাকার বাইরে',
+    zoneRate: 'ডেলিভারি {amount}',
     free: 'ফ্রি',
     total: 'সর্বমোট',
     discount: 'ছাড়',
@@ -1268,6 +1315,7 @@ const bn: Dictionary = {
       email: 'সঠিক ইমেইল ঠিকানা লিখুন।',
       address: 'অনুগ্রহ করে ঠিকানা লিখুন।',
       city: 'অনুগ্রহ করে শহরের নাম লিখুন।',
+      zone: 'ডেলিভারি এলাকা বেছে নিন।',
     },
   },
   preorder: {
@@ -1335,6 +1383,39 @@ const bn: Dictionary = {
     placing: 'অর্ডার নেওয়া হচ্ছে…',
     outOfStock: 'স্টক শেষ',
     deliveryLine: 'ক্যাশ অন ডেলিভারি • দ্রুত সারাদেশে ডেলিভারি',
+    orderShort: 'অর্ডার করুন',
+    orderFailed: 'অর্ডারটি নেওয়া যায়নি। তথ্যগুলো দেখে আবার চেষ্টা করুন।',
+    discountOff: '{n}% ছাড়',
+    youSave: 'সাশ্রয় {amount}',
+    estDelivery: 'সম্ভাব্য ডেলিভারি',
+    stepsTitle: 'অর্ডার করতে এক মিনিটও লাগে না',
+    steps: [
+      'সাইজ ও রঙ বেছে নিন',
+      'নাম, ফোন ও ঠিকানা লিখুন',
+      'ডেলিভারিম্যানের কাছ থেকে পণ্য নিয়ে টাকা দিন',
+    ],
+    trustTitle: 'কেন আমাদের কাছ থেকে নেবেন',
+    trust: [
+      {
+        title: 'ক্যাশ অন ডেলিভারি',
+        body: 'পণ্য হাতে পাওয়ার পরেই ডেলিভারিম্যানকে টাকা দেবেন।',
+      },
+      {
+        title: 'সারাদেশে ডেলিভারি',
+        body: 'বাংলাদেশের যেকোনো জায়গায়, সাধারণত ৩–৫ কর্মদিবসে।',
+      },
+      {
+        title: '১০০% অরিজিনাল',
+        body: 'প্রতিটি পণ্য হাতে যাচাই করে তবেই পাঠানো হয়।',
+      },
+      {
+        title: 'ফোনে কনফার্ম করা হয়',
+        body: 'পণ্য পাঠানোর আগে আমাদের একজন আপনাকে ফোন দেবে।',
+      },
+    ],
+    reviewsTitle: 'ক্রেতারা যা বলছেন',
+    noReviews: 'এই পণ্যে এখনো কোনো রিভিউ নেই।',
+    footerNote: '© {year} সিপি মার্কেট — সব দাম বাংলাদেশি টাকায়।',
   },
   whatsapp: {
     label: 'হোয়াটসঅ্যাপে আমাদের সাথে চ্যাট করুন',
@@ -1697,7 +1778,7 @@ const bn: Dictionary = {
     label: 'দ্রুত নেভিগেশন',
   },
   ticker: [
-    '৳2,000-এর বেশি অর্ডারে ফ্রি ডেলিভারি',
+    'সারাদেশে ডেলিভারি ৳60 থেকে',
     'প্রতি সপ্তাহে নতুন পোশাক',
     '৩০ দিনের সহজ রিটার্ন',
     'ক্যাশ অন ডেলিভারি সুবিধা',
@@ -1758,7 +1839,7 @@ const bn: Dictionary = {
       title: 'কেন আমাদের বেছে নেবেন?',
       items: [
         { label: 'উন্নত মানের পণ্য', note: '' },
-        { label: 'দ্রুত ও ফ্রি ডেলিভারি', note: '' },
+        { label: 'দ্রুত সারাদেশে ডেলিভারি', note: '৳60 থেকে' },
         { label: 'সহজ রিটার্ন', note: '৩০ দিনের সুবিধা' },
         { label: '২৪/৭ কাস্টমার সাপোর্ট', note: '' },
       ],
@@ -1833,7 +1914,7 @@ const bn: Dictionary = {
     suffix: '| CP Market',
     siteTitle: 'CP Market — পুরুষ, নারী ও শিশুদের প্রিমিয়াম পোশাক',
     siteDescription:
-      'আমাদের প্রিমিয়াম পোশাকে খুঁজে নিন নিজের স্টাইল। পুরুষ, নারী ও শিশুদের জন্য উন্নত মানের ফ্যাশন, ৳2,000-এর বেশি অর্ডারে ফ্রি ডেলিভারি।',
+      'আমাদের প্রিমিয়াম পোশাকে খুঁজে নিন নিজের স্টাইল। পুরুষ, নারী ও শিশুদের জন্য উন্নত মানের ফ্যাশন, সারাদেশে ক্যাশ অন ডেলিভারিতে।',
     productNotFound: 'পণ্যটি পাওয়া যায়নি',
   },
 }

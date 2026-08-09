@@ -3,8 +3,12 @@
 import { updateTag } from 'next/cache'
 import { createOrder, type OrderItemInput } from '@/lib/orders'
 import { getCurrentUser } from '@/lib/auth'
-import { preorderAdvanceSchema } from '@/lib/validation/checkout'
+import {
+  deliveryZoneSchema,
+  preorderAdvanceSchema,
+} from '@/lib/validation/checkout'
 import { parseOrThrow } from '@/lib/validation/shared'
+import type { DeliveryZone } from '@/lib/currency'
 import type { AdvanceInput, PaymentMethod } from '@/lib/order'
 
 export type PlaceOrderInput = {
@@ -12,6 +16,8 @@ export type PlaceOrderInput = {
   phone: string
   address: string
   city: string
+  /** The zone name only — the server looks up what it costs. */
+  zone: DeliveryZone
   notes?: string
   paymentMethod: PaymentMethod
   items: OrderItemInput[]
@@ -35,10 +41,17 @@ export async function placeOrder(
     ? parseOrThrow(preorderAdvanceSchema, input.advance)
     : undefined
 
+  // The zone is the one delivery field that is money rather than text: it picks
+  // the rate the order is charged at. An unrecognised value would index
+  // `SHIPPING_RATES` to undefined and quietly produce a NaN total, so it is
+  // parsed here rather than trusted.
+  const zone = parseOrThrow(deliveryZoneSchema, input.zone)
+
   // Guest checkout is allowed — userId is simply null when not signed in.
   const user = await getCurrentUser()
   const result = await createOrder({
     ...input,
+    zone,
     advance,
     userId: user?.id ?? null,
   })

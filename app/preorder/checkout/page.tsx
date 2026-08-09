@@ -2,8 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { PreorderCheckoutContent } from '@/components/preorder/preorder-checkout-content'
 import { getPreorderProductById } from '@/lib/products'
-import { getShippingCost } from '@/lib/currency'
-import { advancePct, splitPayment } from '@/lib/preorder'
+import { advancePct } from '@/lib/preorder'
 import { BKASH_NUMBER, NAGAD_NUMBER } from '@/lib/site-config'
 import { getServerDictionary } from '@/lib/server-locale'
 
@@ -52,11 +51,10 @@ export default async function PreorderCheckoutPage({
   const size = first(params.size) || undefined
   const colorEn = first(params.color) || undefined
 
+  // Only the goods value is priced here. Delivery — and therefore the total and
+  // the advance split that hangs off it — depends on the zone the shopper
+  // picks in the form, so the client component owns that arithmetic.
   const subtotal = product.price * quantity
-  const shipping = getShippingCost(subtotal)
-  const total = subtotal + shipping
-  const pct = advancePct(product)
-  const { advance, due } = splitPayment(total, subtotal, pct)
 
   return (
     <PreorderCheckoutContent
@@ -65,11 +63,7 @@ export default async function PreorderCheckoutPage({
       size={size}
       colorEn={colorEn}
       subtotal={subtotal}
-      shipping={shipping}
-      total={total}
-      advancePct={pct}
-      advance={advance}
-      due={due}
+      advancePct={advancePct(product)}
       bkashNumber={BKASH_NUMBER}
       nagadNumber={NAGAD_NUMBER}
     />
