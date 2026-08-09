@@ -4,9 +4,11 @@ import { Container } from '@/components/layout/container'
 import { cn } from '@/lib/utils'
 
 /**
- * The bordered card every homepage section sits in: a title on the left, a
- * "View All" link on the right, and the section's own content below. Shared so
- * categories and product rows stay visually identical.
+ * The frame every homepage section sits in: a title on the left, a "View All"
+ * link on the right, and the section's own content below. Deliberately flat —
+ * no border, background or card padding — so the rows read as part of the page
+ * instead of stacked boxes. Shared so categories and product rows stay
+ * visually identical.
  */
 export function SectionPanel({
   title,
@@ -22,14 +24,9 @@ export function SectionPanel({
   className?: string
 }) {
   return (
-    <section className="py-3 lg:py-4">
+    <section className="py-6 lg:py-8">
       <Container>
-        <div
-          className={cn(
-            'rounded-2xl border border-border bg-card p-4 sm:p-6 lg:p-7',
-            className,
-          )}
-        >
+        <div className={cn(className)}>
           <div className="mb-5 flex flex-wrap items-center justify-between gap-3 sm:mb-6">
             <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
               {title}

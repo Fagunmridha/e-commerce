@@ -67,10 +67,11 @@ export function Testimonials({ reviews = [] }: { reviews?: HomeReview[] }) {
     'hidden size-10 shrink-0 place-items-center rounded-full border border-border bg-background text-foreground sm:grid transition-colors hover:border-button hover:bg-button hover:text-button-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-35'
 
   return (
-    <section className="py-3 lg:py-4">
+    <section className="py-6 lg:py-8">
       <Container>
         <Reveal>
-          <div className="rounded-2xl border border-border bg-card p-4 sm:p-6 lg:p-7">
+          {/* Flat like every other section — see `SectionPanel`. */}
+          <div>
             <h2 className="mb-4 text-xl font-bold tracking-tight text-foreground sm:text-2xl">
               {title}
             </h2>
