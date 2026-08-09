@@ -149,7 +149,7 @@
 @keyframes reveal-up {
   from {
     opacity: 0;
-    transform: translateY(18px);
+    transform: translateY(44px) scale(0.97);
   }
   to {
     opacity: 1;
@@ -169,7 +169,21 @@
 @keyframes reveal-scale {
   from {
     opacity: 0;
-    transform: scale(0.96);
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Cards inside a rail. Shorter travel than `reveal-up`: they arrive one after
+   another, so matching the section's full lift would read as a wave rather
+   than a row settling into place. */
+@keyframes reveal-card {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
   }
   to {
     opacity: 1;
@@ -251,18 +265,85 @@
 @layer components {
   /* Sections animate in as they enter the viewport. `data-reveal` names the
      variant and `data-revealed` is set by the Reveal component; without JS the
-     content simply stays visible. */
+     content simply stays visible.
+
+     Longhands rather than the `animation` shorthand: the scroll-driven block
+     further down swaps only the timeline, and a shorthand there would reset
+     `animation-timeline` back to `auto` every time. */
   [data-reveal] {
     opacity: 0;
+    animation-duration: 0.8s;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    animation-fill-mode: both;
+    animation-delay: var(--reveal-delay, 0s);
   }
   [data-reveal='up'][data-revealed='true'] {
-    animation: reveal-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-name: reveal-up;
   }
   [data-reveal='fade'][data-revealed='true'] {
-    animation: reveal-fade 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-name: reveal-fade;
   }
   [data-reveal='scale'][data-revealed='true'] {
-    animation: reveal-scale 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-name: reveal-scale;
+  }
+
+  /* Rail cards arrive one after another instead of as a single block. Gated on
+     the section's own reveal so the cascade starts when the section scrolls in,
+     and the step is capped so a long rail's last card is never left waiting. */
+  [data-stagger] > * {
+    opacity: 0;
+  }
+  [data-revealed='true'] [data-stagger] > * {
+    animation: reveal-card 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(var(--stagger-index, 0) * 110ms);
+  }
+  [data-stagger] > *:nth-child(2) {
+    --stagger-index: 1;
+  }
+  [data-stagger] > *:nth-child(3) {
+    --stagger-index: 2;
+  }
+  [data-stagger] > *:nth-child(4) {
+    --stagger-index: 3;
+  }
+  [data-stagger] > *:nth-child(5) {
+    --stagger-index: 4;
+  }
+  [data-stagger] > *:nth-child(n + 6) {
+    --stagger-index: 5;
+  }
+
+  /* Where the browser drives animations from scroll, the reveal's progress
+     follows the section's travel into the viewport rather than a 0.8s timer:
+     it eases in as you scroll down and unwinds as you scroll back up. No
+     observer needed either — the timeline decides the frame, so anything
+     already past its range paints in its finished state. Everywhere else the
+     timer above still runs off `data-revealed`. */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      [data-reveal] {
+        animation-timeline: view();
+        /* Spread over more of the entry so the lift is something you watch
+           happen rather than something already finished. Capped short of
+           `entry 100%`: the last section on the page can only ever reach the
+           end of its own entry range, and it must land fully settled. */
+        animation-range: entry 0% entry 75%;
+        animation-duration: auto;
+        animation-timing-function: linear;
+        /* Staggering is a timer idea; on a scroll timeline the scroll itself
+           already spaces the sections out. */
+        animation-delay: 0s;
+      }
+      [data-reveal='up'] {
+        animation-name: reveal-up;
+      }
+      [data-reveal='fade'] {
+        animation-name: reveal-fade;
+      }
+      [data-reveal='scale'] {
+        animation-name: reveal-scale;
+      }
+    }
   }
 
   /* Horizontal card rails — the mobile pattern for every card section. */
@@ -288,14 +369,17 @@
 
   /* Without JS nothing sets data-revealed, so keep the content visible. */
   @media (scripting: none) {
-    [data-reveal] {
+    [data-reveal],
+    [data-stagger] > * {
       opacity: 1;
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
     [data-reveal],
-    [data-reveal][data-revealed='true'] {
+    [data-reveal][data-revealed='true'],
+    [data-stagger] > *,
+    [data-revealed='true'] [data-stagger] > * {
       opacity: 1;
       animation: none;
     }

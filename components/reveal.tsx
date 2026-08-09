@@ -58,7 +58,14 @@ export function Reveal({
       ref={ref as React.Ref<never>}
       data-reveal={variant}
       data-revealed={revealed}
-      style={delay ? { animationDelay: `${delay}ms` } : undefined}
+      // A custom property, not `animation-delay` itself: on a scroll-driven
+      // timeline the stylesheet drops the stagger, and an inline delay would
+      // outrank it.
+      style={
+        delay
+          ? ({ '--reveal-delay': `${delay}ms` } as React.CSSProperties)
+          : undefined
+      }
       className={cn(className)}
     >
       {children}

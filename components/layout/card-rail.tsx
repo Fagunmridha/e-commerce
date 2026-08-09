@@ -213,11 +213,15 @@ export function RailTrack({
   label,
   children,
   className,
+  stagger = false,
 }: {
   rail: CardRail
   label: string
   children: React.ReactNode
   className?: string
+  /** Cascade the slides in as the section scrolls into view. Off by default —
+   *  it only reads as a cascade where several cards are on screen at once. */
+  stagger?: boolean
 }) {
   return (
     <div
@@ -231,6 +235,7 @@ export function RailTrack({
       {/* Negative gutter + per-slide padding keeps gaps even at every basis.
           In grid mode a real `gap` does that job below sm instead. */}
       <div
+        data-stagger={stagger || undefined}
         className={
           rail.gridCols
             ? cn(

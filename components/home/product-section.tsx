@@ -43,7 +43,7 @@ export function ProductSection({
         linkHref={viewAllHref}
       >
         <div className="relative">
-          <RailTrack rail={rail} label={title}>
+          <RailTrack rail={rail} label={title} stagger>
             {products.map((product, index) => (
               <RailItem
                 key={product.id}

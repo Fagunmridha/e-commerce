@@ -45,7 +45,7 @@ export function ComingSoon() {
     <Reveal>
       <SectionPanel title={title} linkLabel={t.sections.viewAll} linkHref="/shop">
         <div className="relative">
-          <RailTrack rail={rail} label={title}>
+          <RailTrack rail={rail} label={title} stagger>
             {preorderProducts.map((product) => {
               const label = pick(product.name)
               const remaining = product.stock

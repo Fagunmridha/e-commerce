@@ -64,7 +64,7 @@ export function CategoryShowcase() {
         linkHref="/shop"
       >
         <div className="relative">
-          <RailTrack rail={rail} label={title}>
+          <RailTrack rail={rail} label={title} stagger>
             {categories.map((category) => (
               <RailItem
                 key={category.slug}
