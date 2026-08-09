@@ -6,14 +6,20 @@ import { WHATSAPP_NUMBER } from '@/lib/site-config'
 
 /**
  * A fixed WhatsApp button at the bottom-right of every page, so customers can
- * message the store directly. Hidden on the admin dashboard; shown everywhere
- * else including the `/lp` ad landing pages.
+ * message the store directly. Shown everywhere the shopper might still have a
+ * question — including the `/lp` ad landing pages.
+ *
+ * Not on the admin dashboard, and not on checkout: once someone is filling in
+ * their address the only thing left to do is finish, and a button that opens
+ * another app there competes with the order rather than helping it.
  */
+const HIDDEN_ON = ['/admin', '/checkout', '/preorder/checkout']
+
 export function FloatingWhatsApp() {
   const pathname = usePathname()
   const { t } = useLanguage()
 
-  if (pathname?.startsWith('/admin')) return null
+  if (HIDDEN_ON.some((route) => pathname?.startsWith(route))) return null
 
   const href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
     t.whatsapp.prefill,

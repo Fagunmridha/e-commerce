@@ -45,7 +45,7 @@ export function DeliveryFields({
     <>
       <div
         className={
-          layout === 'two-column' ? 'grid gap-5 sm:grid-cols-2' : 'space-y-4'
+          layout === 'two-column' ? 'grid gap-6 sm:grid-cols-2' : 'space-y-4'
         }
       >
         <FormField
@@ -134,8 +134,8 @@ export function DeliveryFields({
                     className={cn(
                       'flex cursor-pointer items-center gap-3 rounded-lg border p-3.5 font-normal transition-colors',
                       field.value === zone
-                        ? 'border-primary bg-accent'
-                        : 'border-border hover:border-primary',
+                        ? 'border-primary bg-accent ring-2 ring-ring/20'
+                        : 'border-border hover:border-primary hover:bg-accent/40',
                     )}
                   >
                     <RadioGroupItem value={zone} />

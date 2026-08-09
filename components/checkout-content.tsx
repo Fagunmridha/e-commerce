@@ -1,13 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { Banknote, CreditCard, ShoppingBag, Smartphone } from 'lucide-react'
+import { Banknote, CreditCard, Lock, ShoppingBag, Smartphone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { Form } from '@/components/ui/form'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/page-header'
@@ -138,146 +139,175 @@ export function CheckoutContent() {
     <>
       <PageHeader pageKey="checkout" />
 
-      <section className="mx-auto grid max-w-page gap-10 px-4 py-12 sm:px-6 lg:grid-cols-5 lg:px-4">
-        <div className="lg:col-span-3">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              <div className="space-y-5">
-                <h2 className="text-lg font-semibold text-foreground">
+      {/* A tinted ground so the white cards read as raised panels rather than
+          as sections of one flat page. Scoped to checkout rather than moved
+          into `--background`, which every other page is designed against. */}
+      <div className="bg-secondary/40">
+        <Form {...form}>
+          {/* The form wraps both columns, which is what lets the primary button
+              live in the summary card beside the total it is charging. */}
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="mx-auto grid max-w-page gap-8 px-4 py-10 sm:px-6 md:py-14 lg:grid-cols-[1.5fr_1fr] lg:px-4 xl:gap-12"
+          >
+            <div className="space-y-6">
+              <Card className="gap-0 border-none p-6 shadow-sm md:p-8">
+                <h2 className="text-xl font-semibold tracking-tight text-foreground">
                   {t.checkout.deliveryDetails}
                 </h2>
 
-                <DeliveryFields layout="two-column" />
-              </div>
-
-              <fieldset className="space-y-3">
-                <legend className="mb-3 text-lg font-semibold text-foreground">
-                  {t.checkout.paymentMethod}
-                </legend>
-
-                {methods.map((option) => {
-                  const Icon = METHOD_ICONS[option.value]
-                  const checked = method === option.value
-
-                  return (
-                    <label
-                      key={option.value}
-                      className={cn(
-                        'flex cursor-pointer items-center gap-3 rounded-lg border p-4 transition-colors',
-                        checked
-                          ? 'border-primary bg-accent'
-                          : 'border-border hover:border-primary',
-                      )}
-                    >
-                      <input
-                        type="radio"
-                        name="payment-method"
-                        value={option.value}
-                        checked={checked}
-                        onChange={() => setMethod(option.value)}
-                        className="size-4 accent-primary"
-                      />
-                      <Icon
-                        className={cn(
-                          'size-5',
-                          checked ? 'text-primary' : 'text-muted-foreground',
-                        )}
-                      />
-                      <span className="min-w-0">
-                        <span className="block text-sm font-medium text-foreground">
-                          {option.label}
-                        </span>
-                        <span className="block text-xs text-muted-foreground">
-                          {option.hint}
-                        </span>
-                      </span>
-                    </label>
-                  )
-                })}
-              </fieldset>
-
-              <Button
-                type="submit"
-                size="lg"
-                className="w-full"
-                disabled={submitting}
-              >
-                {submitting ? t.checkout.placing : t.checkout.placeOrder}
-              </Button>
-            </form>
-          </Form>
-        </div>
-
-        {/* Order summary */}
-        <aside className="lg:col-span-2">
-          <div className="rounded-lg border border-border bg-card p-5 lg:sticky lg:top-24">
-            <h2 className="text-lg font-semibold text-foreground">
-              {t.checkout.orderSummary}
-            </h2>
-
-            <ul className="mt-4 space-y-3 border-b border-border pb-4">
-              {lines.map((line) => {
-                const name = pick(line.product.name)
-                const color = line.product.colors?.find(
-                  (item) => item.name.en === line.colorEn,
-                )
-
-                return (
-                  <li key={line.key} className="flex gap-3">
-                    <img
-                      src={line.product.image || '/placeholder.svg'}
-                      alt={name}
-                      className="size-14 shrink-0 rounded-md object-cover"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="line-clamp-1 text-sm font-medium text-foreground">
-                        {name}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {line.size && `${t.cart.size}: ${line.size}`}
-                        {line.size && color && ' • '}
-                        {color && pick(color.name)}
-                        {' • '}
-                        {t.checkout.quantityShort}: {line.quantity}
-                      </p>
-                    </div>
-                    <p className="text-sm font-semibold whitespace-nowrap text-foreground">
-                      {price(line.lineTotal)}
-                    </p>
-                  </li>
-                )
-              })}
-            </ul>
-
-            <CouponField className="mt-4 border-t border-border pt-4" />
-
-            <dl className="mt-4 space-y-2 text-sm">
-              <div className="flex justify-between text-muted-foreground">
-                <dt>{t.checkout.subtotal}</dt>
-                <dd>{price(subtotal)}</dd>
-              </div>
-              {discount > 0 && (
-                <div className="flex justify-between font-medium text-badge-new">
-                  <dt>{t.checkout.discount}</dt>
-                  <dd>−{price(discount)}</dd>
+                <div className="mt-6 space-y-6">
+                  <DeliveryFields layout="two-column" />
                 </div>
-              )}
-              <div className="flex justify-between text-muted-foreground">
-                <dt>{t.checkout.shipping}</dt>
-                <dd
-                  className={cn(shipping === 0 && 'font-medium text-badge-new')}
+              </Card>
+
+              <Card className="gap-0 border-none p-6 shadow-sm md:p-8">
+                <fieldset>
+                  <legend className="text-xl font-semibold tracking-tight text-foreground">
+                    {t.checkout.paymentMethod}
+                  </legend>
+
+                  <div className="mt-6 space-y-3">
+                    {methods.map((option) => {
+                      const Icon = METHOD_ICONS[option.value]
+                      const checked = method === option.value
+
+                      return (
+                        <label
+                          key={option.value}
+                          className={cn(
+                            'flex cursor-pointer items-center gap-3 rounded-lg border p-4 transition-colors',
+                            checked
+                              ? 'border-primary bg-accent ring-2 ring-ring/20'
+                              : 'border-border hover:border-primary hover:bg-accent/40',
+                          )}
+                        >
+                          <input
+                            type="radio"
+                            name="payment-method"
+                            value={option.value}
+                            checked={checked}
+                            onChange={() => setMethod(option.value)}
+                            className="size-4 accent-primary"
+                          />
+                          <Icon
+                            className={cn(
+                              'size-5',
+                              checked ? 'text-primary' : 'text-muted-foreground',
+                            )}
+                          />
+                          <span className="min-w-0">
+                            <span className="block text-sm font-medium text-foreground">
+                              {option.label}
+                            </span>
+                            <span className="block text-xs text-muted-foreground">
+                              {option.hint}
+                            </span>
+                          </span>
+                        </label>
+                      )
+                    })}
+                  </div>
+                </fieldset>
+
+                {/* The reassurance line says what is true here: there is no
+                    gateway, so nothing is charged online in the first place. */}
+                <p className="mt-4 flex items-center gap-2 rounded-md bg-badge-new/10 p-3 text-sm text-badge-new">
+                  <Lock className="size-4 shrink-0" aria-hidden="true" />
+                  {t.checkout.secureNote}
+                </p>
+              </Card>
+            </div>
+
+            {/* Order summary. Sticky so the total and the button stay on screen
+                while the form above is being filled in. */}
+            <aside>
+              <Card className="gap-0 border-none p-6 shadow-sm lg:sticky lg:top-24">
+                <h2 className="text-xl font-semibold tracking-tight text-foreground">
+                  {t.checkout.orderSummary}
+                </h2>
+
+                <ul className="mt-2 divide-y divide-border">
+                  {lines.map((line) => {
+                    const name = pick(line.product.name)
+                    const color = line.product.colors?.find(
+                      (item) => item.name.en === line.colorEn,
+                    )
+
+                    return (
+                      <li key={line.key} className="flex items-center gap-4 py-4">
+                        <div className="relative size-14 shrink-0 overflow-hidden rounded-md bg-muted">
+                          <Image
+                            src={line.product.image || '/placeholder.svg'}
+                            alt={name}
+                            fill
+                            sizes="56px"
+                            className="object-cover transition-transform duration-300 hover:scale-105"
+                          />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="line-clamp-1 text-sm font-medium text-foreground">
+                            {name}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {line.size && `${t.cart.size}: ${line.size}`}
+                            {line.size && color && ' • '}
+                            {color && pick(color.name)}
+                            {' • '}
+                            {t.checkout.quantityShort}: {line.quantity}
+                          </p>
+                        </div>
+                        <p className="ml-auto text-sm font-semibold whitespace-nowrap text-foreground">
+                          {price(line.lineTotal)}
+                        </p>
+                      </li>
+                    )
+                  })}
+                </ul>
+
+                <CouponField className="mt-2 border-t border-border pt-5" />
+
+                <dl className="mt-5 space-y-2.5 text-sm">
+                  <div className="flex justify-between text-muted-foreground">
+                    <dt>{t.checkout.subtotal}</dt>
+                    <dd className="text-foreground">{price(subtotal)}</dd>
+                  </div>
+                  {discount > 0 && (
+                    <div className="flex justify-between font-medium text-badge-new">
+                      <dt>{t.checkout.discount}</dt>
+                      <dd>−{price(discount)}</dd>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-muted-foreground">
+                    <dt>{t.checkout.shipping}</dt>
+                    <dd className="text-foreground">
+                      {shipping === 0 ? t.checkout.free : price(shipping)}
+                    </dd>
+                  </div>
+                  <div className="flex items-baseline justify-between border-t border-border pt-3.5">
+                    <dt className="text-lg font-bold text-foreground">
+                      {t.checkout.total}
+                    </dt>
+                    <dd className="text-lg font-bold text-foreground">
+                      {price(total)}
+                    </dd>
+                  </div>
+                </dl>
+
+                <Button
+                  type="submit"
+                  className="mt-6 h-14 w-full rounded-lg text-base font-semibold shadow-md"
+                  disabled={submitting}
                 >
-                  {shipping === 0 ? t.checkout.free : price(shipping)}
-                </dd>
-              </div>
-              <div className="flex justify-between border-t border-border pt-3 text-base font-semibold text-foreground">
-                <dt>{t.checkout.total}</dt>
-                <dd>{price(total)}</dd>
-              </div>
-            </dl>
-          </div>
-        </aside>
-      </section>
+                  {submitting
+                    ? t.checkout.placing
+                    : t.checkout.placeOrderTotal.replace('{amount}', price(total))}
+                </Button>
+              </Card>
+            </aside>
+          </form>
+        </Form>
+      </div>
     </>
   )
 }

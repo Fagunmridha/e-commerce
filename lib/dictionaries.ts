@@ -346,6 +346,11 @@ const en = {
     total: 'Total',
     discount: 'Discount',
     placeOrder: 'Place Order',
+    /** The primary button, which carries the amount. `{amount}` is preformatted. */
+    placeOrderTotal: 'Place Order — {amount}',
+    /* Reassurance under the payment choice. Says what is actually true of this
+       checkout: nothing is charged online, because there is no gateway. */
+    secureNote: 'No online payment — pay cash when the parcel reaches you.',
     placing: 'Placing order…',
     errors: {
       name: 'Please enter your name.',
@@ -1308,6 +1313,8 @@ const bn: Dictionary = {
     total: 'সর্বমোট',
     discount: 'ছাড়',
     placeOrder: 'অর্ডার নিশ্চিত করুন',
+    placeOrderTotal: 'অর্ডার নিশ্চিত করুন — {amount}',
+    secureNote: 'অনলাইনে কোনো পেমেন্ট নেই — পণ্য হাতে পেয়ে ক্যাশে টাকা দেবেন।',
     placing: 'অর্ডার নেওয়া হচ্ছে…',
     errors: {
       name: 'অনুগ্রহ করে আপনার নাম লিখুন।',
