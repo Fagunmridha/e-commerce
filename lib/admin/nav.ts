@@ -109,15 +109,78 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   },
 ]
 
-/** Human-readable label for a admin pathname, used by the header breadcrumb. */
-export function adminBreadcrumb(pathname: string): string[] {
-  if (pathname === '/admin') return ['Dashboard']
+/**
+ * Sections with a `[id]` detail page, and the word the crumb shows until the
+ * page hands up the row's real name.
+ *
+ * An explicit table rather than detecting an id by its shape, because that
+ * cannot work here: product ids are hand-written slugs (`w-karims-cotton-shirt`),
+ * character-for-character indistinguishable from a static child like
+ * `add-product`, and user ids are plain integers.
+ *
+ * Add a row when a section gains a detail page, or its breadcrumb goes back to
+ * humanising the raw id.
+ */
+const DETAIL_SECTIONS: Record<string, string> = {
+  orders: 'Order',
+  users: 'Customer',
+  wholesalers: 'Wholesaler',
+  coupons: 'Coupon',
+  products: 'Product',
+}
+
+/** Children of those sections that are pages in their own right, not an id. */
+const STATIC_CHILDREN: Record<string, string> = { new: 'New' }
+
+/**
+ * Sections whose URL and sidebar label disagree. Not derived from `ADMIN_NAV`
+ * programmatically — its `children` hrefs carry query strings that collapse onto
+ * the same path and would collide in a map.
+ */
+const SECTION_LABELS: Record<string, string> = {
+  users: 'Customers',
+  preorders: 'Pre-orders',
+}
+
+export type AdminCrumb = { label: string; href?: string }
+
+/**
+ * The breadcrumb trail for an admin pathname.
+ *
+ * `entityLabel` is what the open detail page calls the row it loaded — empty
+ * until it registers, see `components/breadcrumb-label.tsx`.
+ */
+export function adminBreadcrumb(
+  pathname: string,
+  entityLabel = '',
+): AdminCrumb[] {
+  if (pathname === '/admin') return [{ label: 'Dashboard' }]
 
   const segments = pathname.replace(/^\/admin\/?/, '').split('/').filter(Boolean)
 
-  return segments.map((segment) =>
-    segment.length <= 3
-      ? segment.toUpperCase()
-      : segment.charAt(0).toUpperCase() + segment.slice(1).replace(/-/g, ' '),
-  )
+  return segments.map((segment, index) => {
+    // Every section is a real page, so a non-terminal crumb can always link to
+    // its own path. The last one is the current page and stays unlinked.
+    const href =
+      index === segments.length - 1
+        ? undefined
+        : `/admin/${segments.slice(0, index + 1).join('/')}`
+
+    const section = index > 0 ? DETAIL_SECTIONS[segments[index - 1]] : undefined
+    if (section && !STATIC_CHILDREN[segment]) {
+      return { label: entityLabel || section, href }
+    }
+
+    return {
+      label: STATIC_CHILDREN[segment] ?? SECTION_LABELS[segment] ?? humanize(segment),
+      href,
+    }
+  })
+}
+
+/** `add-product` → "Add product". Short segments are read as acronyms. */
+function humanize(segment: string): string {
+  return segment.length <= 3
+    ? segment.toUpperCase()
+    : segment.charAt(0).toUpperCase() + segment.slice(1).replace(/-/g, ' ')
 }

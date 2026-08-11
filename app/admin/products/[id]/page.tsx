@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { ProductForm } from '@/components/admin/product-form'
+import { SetBreadcrumbLabel } from '@/components/breadcrumb-label'
 import { getAdminProductById, getProductImages } from '@/lib/products'
 
 export const dynamic = 'force-dynamic'
@@ -18,6 +19,7 @@ export default async function EditProductPage({
 
   return (
     <div className="mx-auto w-full max-w-3xl">
+      <SetBreadcrumbLabel label={product.name.en} />
       <h2 className="mb-6 text-xl font-bold text-foreground">
         Edit — {product.name.en}
       </h2>

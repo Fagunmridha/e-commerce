@@ -44,6 +44,7 @@ import { Separator } from '@/components/ui/separator'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { Kbd } from '@/components/ui/kbd'
 import { useLanguage } from '@/components/language-provider'
+import { useBreadcrumbLabel } from '@/components/breadcrumb-label'
 import { LOCALE_LABELS, LOCALES } from '@/lib/i18n'
 import { ADMIN_NAV, adminBreadcrumb } from '@/lib/admin/nav'
 
@@ -118,7 +119,10 @@ export function AdminHeader({
   const pathname = usePathname()
   const router = useRouter()
   const [paletteOpen, setPaletteOpen] = useState(false)
-  const crumbs = adminBreadcrumb(pathname)
+  // The open detail page's own name for the row it loaded, so the trail ends in
+  // "CP-LLR33S" rather than the id out of the URL.
+  const entityLabel = useBreadcrumbLabel(pathname)
+  const crumbs = adminBreadcrumb(pathname, entityLabel)
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -143,14 +147,26 @@ export function AdminHeader({
               <Link href="/admin">Admin</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
-          {crumbs.map((crumb, index) => (
-            <span key={crumb} className="contents">
+          {crumbs.map((crumb) => (
+            // Keyed by path rather than label: two segments can humanise alike,
+            // and a label key would remount the crumb the moment the real name
+            // replaces the placeholder.
+            <span key={crumb.href ?? pathname} className="contents">
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                {index === crumbs.length - 1 ? (
-                  <BreadcrumbPage>{crumb}</BreadcrumbPage>
+                {crumb.href ? (
+                  // `asChild` matters — a bare BreadcrumbLink renders an <a>
+                  // with no href, which styles itself as a link and does
+                  // nothing.
+                  <BreadcrumbLink asChild>
+                    <Link href={crumb.href}>{crumb.label}</Link>
+                  </BreadcrumbLink>
                 ) : (
-                  <BreadcrumbLink>{crumb}</BreadcrumbLink>
+                  // A shop name or a product title can run long; the header is
+                  // one row tall and the controls to its right must stay put.
+                  <BreadcrumbPage className="inline-block max-w-56 truncate align-bottom md:max-w-96">
+                    {crumb.label}
+                  </BreadcrumbPage>
                 )}
               </BreadcrumbItem>
             </span>

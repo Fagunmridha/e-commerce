@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SellerProductForm } from '@/components/wholesale/seller-product-form'
+import { SetBreadcrumbLabel } from '@/components/breadcrumb-label'
 import { getViewerShop } from '@/lib/wholesalers'
 import { getSellerProductById } from '@/lib/products'
 import { getServerDictionary } from '@/lib/server-locale'
@@ -28,6 +29,9 @@ export default async function EditSellerProductPage({
 
   return (
     <div className="mx-auto w-full max-w-3xl">
+      {/* Seller names are stored as { en: name, bn: name } — the two locales are
+          identical by construction, so `.en` needs no locale pick. */}
+      <SetBreadcrumbLabel label={product.name.en} />
       <div className="mb-6 flex items-center gap-3">
         <Button asChild variant="ghost" size="icon-sm">
           <Link

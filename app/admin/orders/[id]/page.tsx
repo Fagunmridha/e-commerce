@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { OrderStatusSelect } from '@/components/admin/order-status-select'
 import { CopyButton } from '@/components/copy-button'
+import { SetBreadcrumbLabel } from '@/components/breadcrumb-label'
 import { PrintButton } from '@/components/admin/orders/print-button'
 import { AdvanceVerify } from '@/components/admin/orders/advance-verify'
 import { ADVANCE_VARIANT } from '@/components/admin/orders/orders-table'
@@ -64,6 +65,7 @@ export default async function AdminOrderDetailPage({
 
   return (
     <div className="space-y-6">
+      <SetBreadcrumbLabel label={order.orderNumber} />
       <div className="flex flex-wrap items-start justify-between gap-4 print:hidden">
         <div>
           <Button asChild variant="ghost" size="sm" className="-ml-2 mb-1">

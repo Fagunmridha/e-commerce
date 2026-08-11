@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { eq } from 'drizzle-orm'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { SetBreadcrumbLabel } from '@/components/breadcrumb-label'
 import {
   ApplicationReview,
   type ApplicationDetailView,
@@ -112,6 +113,7 @@ export default async function AdminWholesalerPage({
 
   return (
     <div>
+      <SetBreadcrumbLabel label={application.shopName} />
       <div className="mb-6 flex items-center gap-3">
         <Button asChild variant="ghost" size="icon" className="size-8">
           <Link href="/admin/wholesalers">

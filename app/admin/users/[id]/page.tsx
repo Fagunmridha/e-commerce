@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { RoleToggle } from '@/components/admin/role-toggle'
+import { SetBreadcrumbLabel } from '@/components/breadcrumb-label'
 import { StatCard } from '@/components/admin/dashboard/stat-card'
 import { getCurrentUser } from '@/lib/auth'
 import { getCustomerById, getCustomerOrders } from '@/lib/admin/customers'
@@ -42,6 +43,7 @@ export default async function AdminCustomerDetailPage({
 
   return (
     <div className="space-y-6">
+      <SetBreadcrumbLabel label={customer.name || customer.email} />
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <Button asChild variant="ghost" size="sm" className="-ml-2 mb-1">

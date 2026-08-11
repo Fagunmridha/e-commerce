@@ -74,13 +74,21 @@ export const SELLER_NAV: SellerNavGroup[] = [
  * form routes are nested under the dashboard and have no nav entry of their
  * own, so they resolve to their form titles.
  */
-export function sellerCrumb(pathname: string, t: Dictionary): string {
+export function sellerCrumb(
+  pathname: string,
+  t: Dictionary,
+  entityLabel = '',
+): string {
   const copy = t.wholesale
 
+  // Checked before the prefix test below, so "Add a product" never picks up a
+  // listing's name.
   if (pathname === '/wholesale/dashboard/products/new')
     return copy.dashboard.newTitle
   if (pathname.startsWith('/wholesale/dashboard/products/'))
-    return copy.dashboard.editTitle
+    // The listing's own name once the page registers it; until then the form's
+    // title, which is at least true.
+    return entityLabel || copy.dashboard.editTitle
 
   const match = SELLER_NAV.flatMap((group) => group.items).find(
     (item) => item.href === pathname,

@@ -26,6 +26,7 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { useLanguage } from '@/components/language-provider'
+import { useBreadcrumbLabel } from '@/components/breadcrumb-label'
 import { LOCALE_LABELS, LOCALES } from '@/lib/i18n'
 import { sellerCrumb } from '@/lib/wholesale/nav'
 
@@ -88,7 +89,10 @@ export function SellerHeader() {
   const pathname = usePathname()
   const { t } = useLanguage()
   const nav = t.wholesale.nav
-  const crumb = sellerCrumb(pathname, t)
+  // The listing's own name when a product page is open, so the trail reads
+  // "Listings › Cotton Panjabi" rather than a generic "Edit listing".
+  const entityLabel = useBreadcrumbLabel(pathname)
+  const crumb = sellerCrumb(pathname, t, entityLabel)
   const onDashboard = pathname === '/wholesale/dashboard'
 
   return (
@@ -111,7 +115,9 @@ export function SellerHeader() {
             <>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>{crumb}</BreadcrumbPage>
+                <BreadcrumbPage className="inline-block max-w-56 truncate align-bottom md:max-w-96">
+                  {crumb}
+                </BreadcrumbPage>
               </BreadcrumbItem>
             </>
           )}

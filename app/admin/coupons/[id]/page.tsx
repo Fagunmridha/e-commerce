@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CouponForm } from '@/components/admin/coupons/coupon-form'
+import { SetBreadcrumbLabel } from '@/components/breadcrumb-label'
 import { getCouponById } from '@/lib/coupons'
 
 export const dynamic = 'force-dynamic'
@@ -18,6 +19,7 @@ export default async function EditCouponPage({
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6">
+      <SetBreadcrumbLabel label={coupon.code} />
       <div>
         <Button asChild variant="ghost" size="sm" className="-ml-2 mb-1">
           <Link href="/admin/coupons">
