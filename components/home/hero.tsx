@@ -24,7 +24,11 @@ export function Hero({ coupon = null }: { coupon?: FeaturedCoupon | null }) {
   return (
     <section className="pt-4 pb-5 lg:pt-6 lg:pb-8">
       <Container>
-        <div className="grid gap-4 lg:grid-cols-[1fr_20rem] lg:gap-5 xl:grid-cols-[1fr_22rem]">
+        {/* The rail takes a wider share than the offers strictly need, so the
+            two cards read as their own column rather than a margin note — and
+            the panel it leaves behind is narrow enough that the photo lands
+            beside the headline instead of across a gap from it. */}
+        <div className="grid gap-4 lg:grid-cols-[1fr_22rem] lg:gap-5 xl:grid-cols-[1fr_24rem]">
           <Reveal>
             <div className="relative h-full overflow-hidden rounded-2xl bg-surface">
               {/* The photo takes the larger share so it starts near the
@@ -83,7 +87,7 @@ export function Hero({ coupon = null }: { coupon?: FeaturedCoupon | null }) {
                     // The hero image is the homepage LCP element.
                     priority
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 40vw"
-                    className="-translate-x-[3%] object-contain object-center"
+                    className="-translate-x-[6%] object-contain object-center"
                   />
                 </div>
               </div>
@@ -104,7 +108,7 @@ export function Hero({ coupon = null }: { coupon?: FeaturedCoupon | null }) {
                   </span>
                 </h2>
                 {/* Held clear of the cartons in the corner. */}
-                <p className="mt-2 max-w-[60%] text-sm text-muted-foreground sm:max-w-[11rem]">
+                <p className="mt-2 max-w-[60%] text-sm text-muted-foreground sm:max-w-[13rem]">
                   {cards.wholesaleBody}
                 </p>
                 <span className="relative mt-5 inline-flex h-9 w-fit items-center rounded-md border border-button/40 px-4 text-xs font-semibold text-button transition-colors group-hover:bg-button group-hover:text-button-foreground">
@@ -118,8 +122,8 @@ export function Hero({ coupon = null }: { coupon?: FeaturedCoupon | null }) {
                   alt=""
                   width={1024}
                   height={1024}
-                  sizes="112px"
-                  className="pointer-events-none absolute right-3 bottom-3 w-24 origin-bottom-right transition-transform duration-500 group-hover:scale-110 sm:w-28"
+                  sizes="128px"
+                  className="pointer-events-none absolute right-3 bottom-3 w-24 origin-bottom-right transition-transform duration-500 group-hover:scale-110 sm:w-28 lg:w-32"
                 />
               </Link>
             </Reveal>
@@ -156,8 +160,8 @@ function CouponCard({ coupon }: { coupon: FeaturedCoupon | null }) {
       alt=""
       width={512}
       height={398}
-      sizes="112px"
-      className="pointer-events-none absolute right-4 bottom-5 w-24 origin-bottom-right transition-transform duration-500 group-hover:scale-110 sm:w-28"
+      sizes="128px"
+      className="pointer-events-none absolute right-4 bottom-5 w-24 origin-bottom-right transition-transform duration-500 group-hover:scale-110 sm:w-28 lg:w-32"
     />
   )
 
@@ -176,7 +180,7 @@ function CouponCard({ coupon }: { coupon: FeaturedCoupon | null }) {
         <p className="mt-0.5 text-2xl font-extrabold tracking-tight text-primary">
           {cards.couponHighlight}
         </p>
-        <p className="mt-2 text-sm text-muted-foreground sm:max-w-[11rem]">
+        <p className="mt-2 text-sm text-muted-foreground sm:max-w-[13rem]">
           {cards.couponBody}
         </p>
         <span className="mt-5 inline-flex h-9 w-fit items-center rounded-md border border-button/40 px-4 text-xs font-semibold text-button transition-colors group-hover:bg-button group-hover:text-button-foreground">
