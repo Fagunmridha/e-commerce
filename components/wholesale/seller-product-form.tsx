@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { ImageUploader } from '@/components/admin/image-uploader'
+import { LoadingOverlay } from '@/components/loading-overlay'
 import { useLanguage } from '@/components/language-provider'
 import { useCatalogue } from '@/components/catalogue-provider'
 import { upsertSellerProduct } from '@/app/actions/seller-products'
@@ -84,6 +85,7 @@ export function SellerProductForm({ product }: { product?: Product }) {
 
   return (
     <form onSubmit={onSubmit} className="max-w-2xl space-y-5">
+      <LoadingOverlay show={pending} label={copy.saving} />
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label={copy.name}>
           <Input

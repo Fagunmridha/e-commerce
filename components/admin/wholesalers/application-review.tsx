@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
+import { LoadingOverlay } from '@/components/loading-overlay'
 import {
   WHOLESALER_STATUS_CLASS,
   WHOLESALER_STATUS_LABEL,
@@ -60,6 +61,10 @@ export function ApplicationReview({
 
   return (
     <div className="space-y-6">
+      {/* A decision revalidates and re-renders the whole page; without this the
+          admin gets no answer to a click on Approve until it lands. */}
+      <LoadingOverlay show={pending} label="Saving decision…" />
+
       <section className="rounded-lg border border-border p-5">
         <div className="mb-4 flex items-center justify-between gap-4">
           <h3 className="text-sm font-semibold text-foreground">Application</h3>

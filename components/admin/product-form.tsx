@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { ImageUploader } from '@/components/admin/image-uploader'
+import { LoadingOverlay } from '@/components/loading-overlay'
 import { upsertProduct, type ProductInput } from '@/app/actions/admin'
 import { DEFAULT_ADVANCE_PCT } from '@/lib/preorder'
 import { formatPrice } from '@/lib/currency'
@@ -198,6 +199,7 @@ export function ProductForm({
 
   return (
     <form onSubmit={onSubmit} className="space-y-5">
+      <LoadingOverlay show={pending} label="Saving…" />
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Product ID">
           <Input
@@ -445,7 +447,7 @@ export function ProductForm({
 
       <div className="flex gap-3">
         <Button type="submit" disabled={pending}>
-          {isEdit ? 'Save changes' : 'Create product'}
+          {pending ? 'Saving…' : isEdit ? 'Save changes' : 'Create product'}
         </Button>
         <Button
           type="button"

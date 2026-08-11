@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Spinner } from '@/components/ui/spinner'
 import { useLanguage } from '@/components/language-provider'
 import { useStore } from '@/components/store-provider'
 import { cn } from '@/lib/utils'
@@ -95,6 +96,7 @@ export function CouponField({ className }: { className?: string }) {
           disabled={checking || !code.trim()}
           onClick={() => void submit()}
         >
+          {checking && <Spinner className="size-4" />}
           {checking ? t.coupon.applying : t.coupon.apply}
         </Button>
       </div>

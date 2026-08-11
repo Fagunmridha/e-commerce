@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/form'
 import { PageHeader } from '@/components/page-header'
 import { CopyButton } from '@/components/copy-button'
+import { LoadingOverlay } from '@/components/loading-overlay'
 import { DeliveryFields } from '@/components/checkout/delivery-fields'
 import { useLanguage } from '@/components/language-provider'
 import { placeOrder } from '@/app/actions/orders'
@@ -162,6 +163,8 @@ export function PreorderCheckoutContent({
 
   return (
     <>
+      <LoadingOverlay show={submitting} label={t.preorder.confirming} />
+
       <PageHeader
         title={t.preorder.title}
         description={

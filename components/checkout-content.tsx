@@ -13,6 +13,7 @@ import { Form } from '@/components/ui/form'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/page-header'
 import { CouponField } from '@/components/coupon-field'
+import { LoadingOverlay } from '@/components/loading-overlay'
 import { DeliveryFields } from '@/components/checkout/delivery-fields'
 import { useLanguage } from '@/components/language-provider'
 import { useStore } from '@/components/store-provider'
@@ -142,6 +143,8 @@ export function CheckoutContent() {
       {/* A tinted ground so the white cards read as raised panels rather than
           as sections of one flat page. Scoped to checkout rather than moved
           into `--background`, which every other page is designed against. */}
+      <LoadingOverlay show={submitting} label={t.checkout.placing} />
+
       <div className="bg-secondary/40">
         <Form {...form}>
           {/* The form wraps both columns, which is what lets the primary button

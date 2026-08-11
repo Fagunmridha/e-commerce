@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ImageUploader } from '@/components/admin/image-uploader'
+import { LoadingOverlay } from '@/components/loading-overlay'
 import {
   Form,
   FormControl,
@@ -164,6 +165,10 @@ export function WholesaleForm({
 
   return (
     <Form {...form}>
+      <LoadingOverlay
+        show={form.formState.isSubmitting}
+        label={copy.submitting}
+      />
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 sm:space-y-10">
         <Section title={copy.businessSection}>
           <div className="grid gap-5 sm:grid-cols-2">

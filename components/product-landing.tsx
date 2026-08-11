@@ -12,6 +12,7 @@ import { Form } from '@/components/ui/form'
 import { BrandMark } from '@/components/header/brand-mark'
 import { Rating } from '@/components/rating'
 import { ProductHelp } from '@/components/product-help'
+import { LoadingOverlay } from '@/components/loading-overlay'
 import { useLanguage } from '@/components/language-provider'
 import { ColorSwatch, isSwatchable } from '@/components/color-swatch'
 import { DeliveryFields } from '@/components/checkout/delivery-fields'
@@ -133,6 +134,8 @@ export function ProductLanding({
 
   return (
     <div className="min-h-dvh bg-background">
+      <LoadingOverlay show={submitting} label={t.landing.placing} />
+
       {/* Minimal top bar — the only route back to the full store. */}
       <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="mx-auto flex h-16 max-w-page items-center justify-between px-4 sm:px-6 lg:px-4">

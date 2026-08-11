@@ -7,6 +7,7 @@ import { Star } from 'lucide-react'
 import { useUser } from '@clerk/nextjs'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
 import { Rating } from '@/components/rating'
 import { useLanguage } from '@/components/language-provider'
@@ -166,6 +167,11 @@ export function ProductReviews({
                     type="submit"
                     disabled={submitting || body.trim().length < 3}
                   >
+                    {/* A spinner in the button rather than the page-wide
+                        overlay the checkout flows use: posting a review does
+                        not navigate anywhere, so blocking the page for it
+                        would be out of proportion. */}
+                    {submitting && <Spinner className="size-4" />}
                     {submitting ? copy.submitting : copy.submit}
                   </Button>
                   {/* Says so before they write, which is where the expectation

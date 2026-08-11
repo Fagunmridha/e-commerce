@@ -22,6 +22,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { LoadingOverlay } from '@/components/loading-overlay'
 import { upsertCoupon } from '@/app/actions/coupons'
 import { computeTotals, type PublicCoupon } from '@/lib/coupon-math'
 import { DEFAULT_ZONE } from '@/lib/currency'
@@ -158,6 +159,7 @@ export function CouponForm({ coupon }: { coupon?: CouponRow }) {
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
+      <LoadingOverlay show={pending} label="Saving…" />
       <Card>
         <CardHeader className="border-b">
           <CardTitle>Discount</CardTitle>
