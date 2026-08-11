@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/form'
 import { useLanguage } from '@/components/language-provider'
 import { useCatalogue } from '@/components/catalogue-provider'
+import { cn } from '@/lib/utils'
 import { submitWholesaleApplication } from '@/app/actions/wholesale'
 import { BUSINESS_TYPES } from '@/lib/validation/wholesalers'
 import { BD_PHONE } from '@/lib/validation/shared'
@@ -163,7 +164,7 @@ export function WholesaleForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 sm:space-y-10">
         <Section title={copy.businessSection}>
           <div className="grid gap-5 sm:grid-cols-2">
             <Text name="shopName" label={copy.shopName} placeholder={copy.shopNamePlaceholder} form={form} />
@@ -218,7 +219,7 @@ export function WholesaleForm({
         </Section>
 
         <Section title={copy.documentsSection} hint={copy.documentsHint}>
-          <div className="grid gap-5 sm:grid-cols-3">
+          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
             <ImageUploader
               value={documents.taxTokenImage}
               onChange={(url) => setDocument({ taxTokenImage: url })}
@@ -258,45 +259,72 @@ export function WholesaleForm({
           />
         </Section>
 
-        <FormField
-          control={form.control}
-          name="agree"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-start gap-3 space-y-0">
-              <FormControl>
-                <Checkbox
-                  checked={field.value === true}
-                  onCheckedChange={(checked) =>
-                    field.onChange(checked === true ? true : undefined)
-                  }
-                />
-              </FormControl>
-              <div className="space-y-1 leading-none">
-                <FormLabel className="font-normal">{copy.agree}</FormLabel>
-                <FormMessage />
-              </div>
-            </FormItem>
-          )}
-        />
+        {/* Consent and the submit sit in the field column, under the same rule
+            every section carries, so the form ends where the fields end. */}
+        <div className={cn(SECTION_GRID, 'border-t border-border pt-8')}>
+          <div className="space-y-6 lg:col-start-2">
+            <FormField
+              control={form.control}
+              name="agree"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start gap-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value === true}
+                      onCheckedChange={(checked) =>
+                        field.onChange(checked === true ? true : undefined)
+                      }
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="font-normal">{copy.agree}</FormLabel>
+                    <FormMessage />
+                  </div>
+                </FormItem>
+              )}
+            />
 
-        <div className="flex flex-wrap gap-3">
-          <Button type="submit" size="lg" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting
-              ? copy.submitting
-              : isEdit
-                ? copy.resubmit
-                : copy.submit}
-          </Button>
-          {onCancel && (
-            <Button type="button" variant="outline" size="lg" onClick={onCancel}>
-              {t.wholesale.status.cancel}
-            </Button>
-          )}
+            <div className="flex flex-wrap gap-3">
+              <Button
+                type="submit"
+                size="lg"
+                disabled={form.formState.isSubmitting}
+              >
+                {form.formState.isSubmitting
+                  ? copy.submitting
+                  : isEdit
+                    ? copy.resubmit
+                    : copy.submit}
+              </Button>
+              {onCancel && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  onClick={onCancel}
+                >
+                  {t.wholesale.status.cancel}
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
       </form>
     </Form>
   )
 }
+
+/**
+ * One block of the application: its heading sits in a narrow left column and
+ * the fields in a wide right one, with a hairline rule between blocks.
+ *
+ * Boxing each block instead — a card per section — stacked eight borders down
+ * a form that is already long. The rule and the heading column do the same
+ * grouping work without the visual weight; the heading column also absorbs
+ * some of the page width, which the fields would otherwise all take.
+ */
+const SECTION_GRID =
+  'grid gap-x-10 gap-y-4 lg:grid-cols-[minmax(0,14rem)_minmax(0,1fr)] xl:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]'
 
 function Section({
   title,
@@ -308,10 +336,25 @@ function Section({
   children: React.ReactNode
 }) {
   return (
-    <section className="rounded-lg border border-border p-5">
-      <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-      {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
-      <div className="mt-4">{children}</div>
+    <section
+      className={cn(
+        SECTION_GRID,
+        'border-t border-border pt-8 first:border-t-0 first:pt-0',
+      )}
+    >
+      {/* Sticky so the heading stays beside its fields on a tall section;
+          `top-24` clears the sticky site header. */}
+      <div className="lg:sticky lg:top-24 lg:self-start">
+        <h2 className="text-base font-semibold tracking-tight text-foreground">
+          {title}
+        </h2>
+        {hint && (
+          <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+            {hint}
+          </p>
+        )}
+      </div>
+      <div>{children}</div>
     </section>
   )
 }
