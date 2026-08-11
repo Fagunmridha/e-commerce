@@ -105,13 +105,13 @@ export function CheckoutContent() {
   }
 
   if (!hydrated) {
-    return <PageHeader pageKey="checkout" />
+    return <PageHeader pageKey="checkout" compact />
   }
 
   if (lines.length === 0) {
     return (
       <>
-        <PageHeader pageKey="checkout" />
+        <PageHeader pageKey="checkout" compact />
         <section className="mx-auto flex max-w-md flex-col items-center gap-4 px-4 py-20 text-center">
           <ShoppingBag
             className="size-14 text-muted-foreground/40"
@@ -137,7 +137,7 @@ export function CheckoutContent() {
 
   return (
     <>
-      <PageHeader pageKey="checkout" />
+      <PageHeader pageKey="checkout" compact />
 
       {/* A tinted ground so the white cards read as raised panels rather than
           as sections of one flat page. Scoped to checkout rather than moved
@@ -148,7 +148,7 @@ export function CheckoutContent() {
               live in the summary card beside the total it is charging. */}
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="mx-auto grid max-w-page gap-8 px-4 py-10 sm:px-6 md:py-14 lg:grid-cols-[1.5fr_1fr] lg:px-4 xl:gap-12"
+            className="mx-auto grid max-w-page gap-8 px-4 py-6 sm:px-6 md:py-8 lg:grid-cols-[1.5fr_1fr] lg:px-4 xl:gap-12"
           >
             <div className="space-y-6">
               <Card className="gap-0 border-none p-6 shadow-sm md:p-8">

@@ -63,6 +63,7 @@ export function ImageUploader({
   onChange,
   folder,
   label = 'Image',
+  hint,
   className,
 }: {
   value: string
@@ -78,6 +79,8 @@ export function ImageUploader({
     | 'wholesale-products'
     | 'wholesale-documents'
   label?: string
+  /** Small muted note beside the label — e.g. marking the upload as optional. */
+  hint?: string
   className?: string
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
@@ -162,7 +165,14 @@ export function ImageUploader({
   return (
     <div className={cn('space-y-1.5', className)}>
       <div className="flex items-center justify-between">
-        <Label>{label}</Label>
+        <div className="flex items-baseline gap-1.5">
+          <Label>{label}</Label>
+          {hint && (
+            <span className="text-xs font-normal text-muted-foreground">
+              {hint}
+            </span>
+          )}
+        </div>
         <button
           type="button"
           onClick={() => setShowUrlField((open) => !open)}

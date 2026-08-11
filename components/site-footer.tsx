@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Facebook, Instagram, MapPin, Phone, Twitter } from 'lucide-react'
+import { Banknote, Facebook, Instagram, MapPin, Phone, Twitter } from 'lucide-react'
 import { Container } from '@/components/layout/container'
 import { BrandMark } from '@/components/header/brand-mark'
 import { useLanguage } from '@/components/language-provider'
@@ -37,17 +37,6 @@ const SOCIALS = [
   { Icon: Facebook, name: 'Facebook' },
   { Icon: Instagram, name: 'Instagram' },
   { Icon: Twitter, name: 'Twitter' },
-]
-
-/**
- * Card brands as coloured wordmarks rather than image files — keeps the footer
- * free of extra network requests and of logo assets we do not own.
- */
-const PAYMENTS = [
-  { name: 'VISA', className: 'bg-white text-[#1a1f71]' },
-  { name: 'Mastercard', className: 'bg-white text-[#eb001b]' },
-  { name: 'bKash', className: 'bg-white text-[#e2136e]' },
-  { name: 'Nagad', className: 'bg-white text-[#f6921e]' },
 ]
 
 export function SiteFooter() {
@@ -142,16 +131,20 @@ export function SiteFooter() {
             <h2 className="text-sm font-bold text-background">
               {t.footer.columns.payment}
             </h2>
-            <ul className="mt-5 grid max-w-[12rem] grid-cols-2 gap-2.5">
-              {PAYMENTS.map((brand) => (
-                <li
-                  key={brand.name}
-                  className={`grid h-9 place-items-center rounded-md text-[11px] font-extrabold tracking-tight ${brand.className}`}
-                >
-                  {brand.name}
-                </li>
-              ))}
-            </ul>
+            {/* One method, because one method is what the checkout offers.
+                The card brands that used to sit here advertised gateways the
+                store has never had — a promise the order form would break. */}
+            <div className="mt-5 flex max-w-[14rem] items-center gap-3 rounded-md bg-white px-3.5 py-3 text-foreground">
+              <Banknote className="size-6 shrink-0 text-primary" aria-hidden="true" />
+              <span className="min-w-0">
+                <span className="block text-[13px] font-extrabold tracking-tight">
+                  {t.checkout.methods.cod}
+                </span>
+                <span className="block text-[11px] leading-tight text-muted-foreground">
+                  {t.checkout.methods.codHint}
+                </span>
+              </span>
+            </div>
           </div>
         </div>
 

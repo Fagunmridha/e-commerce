@@ -224,12 +224,14 @@ export function WholesaleForm({
               onChange={(url) => setDocument({ taxTokenImage: url })}
               folder="wholesale-documents"
               label={copy.taxTokenImage}
+              hint={copy.optional}
             />
             <ImageUploader
               value={documents.tradeLicenseImage}
               onChange={(url) => setDocument({ tradeLicenseImage: url })}
               folder="wholesale-documents"
               label={copy.tradeLicenseImage}
+              hint={copy.optional}
             />
             <ImageUploader
               value={documents.shopPhoto}

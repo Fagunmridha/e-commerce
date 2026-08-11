@@ -202,7 +202,7 @@ const en = {
       {
         question: 'What payment methods can I use?',
         answer:
-          'Cash on delivery, bKash, Nagad and Rocket, or any Visa or Mastercard.',
+          'Cash on delivery only — you pay the rider in cash when your parcel reaches you. Nothing is charged online.',
       },
       {
         question: 'How do I pick the right size?',
@@ -1172,7 +1172,7 @@ const bn: Dictionary = {
       {
         question: 'কোন কোন উপায়ে পেমেন্ট করা যায়?',
         answer:
-          'ক্যাশ অন ডেলিভারি, বিকাশ, নগদ, রকেট — অথবা যেকোনো ভিসা বা মাস্টারকার্ড।',
+          'শুধু ক্যাশ অন ডেলিভারি — পণ্য হাতে পেয়ে ডেলিভারিম্যানকে নগদ টাকা দেবেন। অনলাইনে কোনো টাকা কাটা হয় না।',
       },
       {
         question: 'সঠিক সাইজ কীভাবে বাছব?',
