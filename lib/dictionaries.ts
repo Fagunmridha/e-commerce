@@ -599,6 +599,7 @@ const en = {
       shopLabel: 'Shop',
       edit: 'Edit and resubmit',
       cancel: 'Cancel',
+      openingDashboard: 'Opening your dashboard…',
     },
     form: {
       businessSection: 'Business details',
@@ -824,6 +825,7 @@ const en = {
     previous: 'Previous',
     next: 'Next',
     close: 'Close',
+    loading: 'Loading…',
   },
   /** Short labels — the bottom bar has room for one word per item. */
   mobileNav: {
@@ -1553,6 +1555,7 @@ const bn: Dictionary = {
       shopLabel: 'দোকান',
       edit: 'সম্পাদনা করে আবার জমা দিন',
       cancel: 'বাতিল',
+      openingDashboard: 'আপনার ড্যাশবোর্ড খোলা হচ্ছে…',
     },
     form: {
       businessSection: 'ব্যবসার তথ্য',
@@ -1775,6 +1778,7 @@ const bn: Dictionary = {
     previous: 'আগের',
     next: 'পরের',
     close: 'বন্ধ করুন',
+    loading: 'লোড হচ্ছে…',
   },
   mobileNav: {
     home: 'হোম',

@@ -1,11 +1,13 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { PageHeader } from '@/components/page-header'
+import { Redirecting } from '@/components/redirecting'
 import { WholesaleContent } from '@/components/wholesale/wholesale-content'
 import type { WholesaleApplicationView } from '@/components/wholesale/types'
 import { getCurrentUser } from '@/lib/auth'
 import { getApplicationForUser } from '@/lib/wholesalers'
 import { pageMetadata } from '@/lib/metadata'
+import { getDictionary } from '@/lib/dictionaries'
 import { getServerLocale } from '@/lib/server-locale'
 
 export const dynamic = 'force-dynamic'
@@ -27,7 +29,19 @@ export default async function WholesaleApplyPage() {
 
   // An approved shop has nothing left to apply for; their work is in the
   // dashboard. Details are changed by an admin, not by resubmitting.
-  if (row?.status === 'approved') redirect('/wholesale/dashboard')
+  //
+  // Not `redirect()`: by the time this row is back the shell has been streamed,
+  // so that would resolve the page to nothing and leave the header sitting on
+  // the footer until the dashboard request starts. `Redirecting` keeps a
+  // spinner on screen for that window instead — see its own note.
+  if (row?.status === 'approved') {
+    return (
+      <Redirecting
+        to="/wholesale/dashboard"
+        label={getDictionary(locale).wholesale.status.openingDashboard}
+      />
+    )
+  }
 
   const application: WholesaleApplicationView | null = row
     ? {

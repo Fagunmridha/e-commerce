@@ -1,5 +1,6 @@
-import { redirect } from 'next/navigation'
+import { Redirecting } from '@/components/redirecting'
 import { getViewerShop } from '@/lib/wholesalers'
+import { getServerDictionary } from '@/lib/server-locale'
 
 /**
  * The approval gate for everything trade-only: the marketplace and the seller
@@ -21,7 +22,13 @@ export default async function SellerLayout({
 }: {
   children: React.ReactNode
 }) {
-  if (!(await getViewerShop())) redirect('/wholesale/apply')
+  if (!(await getViewerShop())) {
+    // `Redirecting` rather than `redirect()` for the same reason the apply page
+    // uses it: this gate resolves after the shell has streamed, so a bare
+    // redirect shows an empty page until the apply route starts loading.
+    const t = await getServerDictionary()
+    return <Redirecting to="/wholesale/apply" label={t.common.loading} />
+  }
 
   return <>{children}</>
 }
