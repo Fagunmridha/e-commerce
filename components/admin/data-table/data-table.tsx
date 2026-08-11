@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   flexRender,
   getCoreRowModel,
@@ -81,7 +82,25 @@ export type DataTableProps<TData> = {
   /** Shown in place of the table body when there are no rows at all. */
   emptyState?: React.ReactNode
   pageSize?: number
+  /**
+   * Where a row goes when clicked anywhere outside its own controls. Return
+   * null for a row with no destination.
+   *
+   * This is a shortcut, not the only way in: every table that sets it also
+   * renders a real `<Link>` in its first cell, which is what keyboard and
+   * screen-reader users follow. That is why the row itself is not focusable —
+   * making each one a tab stop would put a second, identical destination in
+   * front of every row for no gain.
+   */
+  rowHref?: (row: TData) => string | null
 }
+
+/**
+ * Anything inside a row that owns its own click: the select checkbox, the
+ * actions menu, a status dropdown, the links in the cells. A click that starts
+ * on one of these must not also navigate.
+ */
+const ROW_CONTROLS = 'a, button, input, select, textarea, [role="checkbox"]'
 
 export function DataTable<TData>({
   columns,
@@ -93,7 +112,9 @@ export function DataTable<TData>({
   exportFileName,
   emptyState,
   pageSize = 10,
+  rowHref,
 }: DataTableProps<TData>) {
+  const router = useRouter()
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -290,19 +311,46 @@ export function DataTable<TData>({
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows.length > 0 ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
-                  className="transition-colors"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="py-2.5">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
+              table.getRowModel().rows.map((row) => {
+                const href = rowHref?.(row.original) ?? null
+
+                return (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && 'selected'}
+                    className={cn('transition-colors', href && 'cursor-pointer')}
+                    onClick={
+                      href
+                        ? (event) => {
+                            const target = event.target as HTMLElement
+                            if (target.closest(ROW_CONTROLS)) return
+                            // Dragging across a cell to copy an order number
+                            // ends in a click; navigating away from the
+                            // selection would undo the work.
+                            if (window.getSelection()?.toString()) return
+
+                            // Keep the open-in-a-new-tab habit working, which a
+                            // bare router.push() would swallow.
+                            if (event.metaKey || event.ctrlKey) {
+                              window.open(href, '_blank', 'noopener')
+                              return
+                            }
+                            router.push(href)
+                          }
+                        : undefined
+                    }
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className="py-2.5">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                )
+              })
             ) : (
               <TableRow className="hover:bg-transparent">
                 <TableCell colSpan={columns.length} className="h-64 p-0">

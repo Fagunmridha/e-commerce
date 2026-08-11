@@ -90,8 +90,10 @@ export function RecentOrdersTable({ orders }: { orders: RecentOrder[] }) {
           <DataTableColumnHeader column={column} title="Order" />
         ),
         cell: ({ row }) => (
+          // The order itself, matching what clicking the row does. The menu
+          // still carries "View in orders" for the filtered list.
           <Link
-            href={`/admin/orders?q=${row.original.orderNumber}`}
+            href={`/admin/orders/${row.original.id}`}
             className="font-mono text-xs font-semibold text-primary hover:underline"
           >
             {row.original.orderNumber}
@@ -225,6 +227,7 @@ export function RecentOrdersTable({ orders }: { orders: RecentOrder[] }) {
     <DataTable
       columns={columns}
       data={orders}
+      rowHref={(row) => `/admin/orders/${row.id}`}
       searchColumn="customer"
       searchPlaceholder="Search customer…"
       facets={[

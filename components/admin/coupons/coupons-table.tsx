@@ -276,6 +276,7 @@ export function CouponsTable({ coupons }: { coupons: CouponRowView[] }) {
     <DataTable
       columns={columns}
       data={coupons}
+      rowHref={(row) => `/admin/coupons/${row.id}`}
       searchColumn="code"
       searchPlaceholder="Search codes…"
       facets={[

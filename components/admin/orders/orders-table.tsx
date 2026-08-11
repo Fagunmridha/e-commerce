@@ -288,6 +288,7 @@ export function OrdersTable({ orders }: { orders: AdminOrderRow[] }) {
     <DataTable
       columns={columns}
       data={orders}
+      rowHref={(row) => `/admin/orders/${row.id}`}
       facets={[
         {
           column: 'paymentMethod',

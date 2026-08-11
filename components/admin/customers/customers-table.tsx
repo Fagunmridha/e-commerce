@@ -187,6 +187,7 @@ export function CustomersTable({
     <DataTable
       columns={columns}
       data={customers}
+      rowHref={(row) => `/admin/users/${row.id}`}
       searchColumn="email"
       searchPlaceholder="Search by email…"
       facets={[

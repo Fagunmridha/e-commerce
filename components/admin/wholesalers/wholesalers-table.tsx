@@ -266,6 +266,7 @@ export function WholesalersTable({
     <DataTable
       columns={columns}
       data={applications}
+      rowHref={(row) => `/admin/wholesalers/${row.id}`}
       searchColumn="shopName"
       searchPlaceholder="Search shops…"
       facets={[
