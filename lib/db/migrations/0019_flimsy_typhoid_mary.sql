@@ -1,0 +1,1 @@
+ALTER TABLE "wholesaler_applications" DROP COLUMN "tax_token_image";

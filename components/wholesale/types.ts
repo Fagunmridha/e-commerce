@@ -22,9 +22,9 @@ export type WholesaleApplicationView = {
   city: string
   district: string | null
   postcode: string | null
-  taxTokenImage: string | null
   tradeLicenseImage: string | null
   shopPhoto: string | null
+  ownerPhoto: string | null
   note: string | null
   reviewNote: string | null
   submittedOn: string

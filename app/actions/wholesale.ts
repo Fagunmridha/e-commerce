@@ -68,9 +68,9 @@ export async function submitWholesaleApplication(
     city: data.city,
     district: data.district,
     postcode: data.postcode,
-    taxTokenImage: data.taxTokenImage,
     tradeLicenseImage: data.tradeLicenseImage,
     shopPhoto: data.shopPhoto,
+    ownerPhoto: data.ownerPhoto,
     note: data.note,
     // A resubmission goes back into the queue and clears the old verdict, so a
     // stale rejection reason is never shown against fresh details.

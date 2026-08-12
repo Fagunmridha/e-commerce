@@ -64,6 +64,7 @@ export function ImageUploader({
   folder,
   label = 'Image',
   hint,
+  error,
   className,
 }: {
   value: string
@@ -81,6 +82,12 @@ export function ImageUploader({
   label?: string
   /** Small muted note beside the label — e.g. marking the upload as optional. */
   hint?: string
+  /**
+   * Validation message for a required upload. Shown under the field and used to
+   * mark the drop zone invalid — the uploader sits outside react-hook-form, so
+   * there is no `FormMessage` to fall back on.
+   */
+  error?: string
   className?: string
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
@@ -164,8 +171,12 @@ export function ImageUploader({
 
   return (
     <div className={cn('space-y-1.5', className)}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-baseline gap-1.5">
+      {/* The label and its hint wrap as one block; the URL toggle never does.
+          Three of these sit side by side in a narrow column on the wholesale
+          form, where a label long enough to wrap was breaking "Paste a URL
+          instead" across two lines as well. */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5">
           <Label>{label}</Label>
           {hint && (
             <span className="text-xs font-normal text-muted-foreground">
@@ -176,7 +187,7 @@ export function ImageUploader({
         <button
           type="button"
           onClick={() => setShowUrlField((open) => !open)}
-          className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+          className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-xs text-muted-foreground transition-colors hover:text-foreground"
         >
           <Link2 className="size-3" aria-hidden="true" />
           {showUrlField ? 'Hide URL field' : 'Paste a URL instead'}
@@ -225,6 +236,7 @@ export function ImageUploader({
         <button
           type="button"
           disabled={uploading}
+          aria-invalid={Boolean(error)}
           onClick={() => inputRef.current?.click()}
           onDragOver={(event) => {
             event.preventDefault()
@@ -242,6 +254,7 @@ export function ImageUploader({
             'hover:border-primary/50 hover:bg-secondary/50 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none',
             dragging && 'border-primary bg-secondary',
             uploading && 'cursor-not-allowed opacity-60',
+            error && 'border-destructive text-destructive',
           )}
         >
           {uploading ? (
@@ -257,6 +270,8 @@ export function ImageUploader({
       )}
 
       {uploading && <Progress value={progress ?? 0} className="h-1.5" />}
+
+      {error && <p className="text-xs text-destructive">{error}</p>}
 
       {showUrlField && (
         <div className="space-y-1.5">

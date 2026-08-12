@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -66,10 +66,21 @@ type WholesaleValues = z.infer<ReturnType<typeof buildSchema>>
 
 /** The three photos an admin looks at before approving a shop. */
 type Documents = {
-  taxTokenImage: string
-  tradeLicenseImage: string
+  ownerPhoto: string
   shopPhoto: string
+  tradeLicenseImage: string
 }
+
+/**
+ * The uploads a submission is refused without, in the order they appear — a
+ * blocked submit scrolls to the first of these that is empty.
+ *
+ * The trade licence stays optional: it is a document that can be chased up
+ * later, whereas a shop with no photo of itself or its owner is not something
+ * an admin can vet at all.
+ */
+const REQUIRED_DOCUMENTS = ['ownerPhoto', 'shopPhoto'] as const
+type RequiredDocument = (typeof REQUIRED_DOCUMENTS)[number]
 
 /** '' → null, and a number field that was left blank stays blank, not NaN. */
 function numberOrNull(value: string | undefined): number | null {
@@ -120,15 +131,41 @@ export function WholesaleForm({
   // The uploads sit outside react-hook-form — each one is an uploader with its
   // own progress and preview state, which RHF has nothing to add to.
   const [documents, setDocuments] = useState<Documents>({
-    taxTokenImage: application?.taxTokenImage ?? '',
-    tradeLicenseImage: application?.tradeLicenseImage ?? '',
+    ownerPhoto: application?.ownerPhoto ?? '',
     shopPhoto: application?.shopPhoto ?? '',
+    tradeLicenseImage: application?.tradeLicenseImage ?? '',
   })
 
-  const setDocument = (patch: Partial<Documents>) =>
+  // Which required uploads a submit attempt found empty, and where they sit —
+  // anchors so a blocked submit can scroll back to the field, since the button
+  // is a long way down from the Papers section.
+  const [missing, setMissing] = useState<RequiredDocument[]>([])
+  const anchors: Record<RequiredDocument, React.RefObject<HTMLDivElement | null>> = {
+    ownerPhoto: useRef<HTMLDivElement>(null),
+    shopPhoto: useRef<HTMLDivElement>(null),
+  }
+
+  const setDocument = (patch: Partial<Documents>) => {
+    // Filling one in clears its message without waiting for another submit.
+    const filled = REQUIRED_DOCUMENTS.filter((key) => patch[key])
+    if (filled.length) {
+      setMissing((current) => current.filter((key) => !filled.includes(key)))
+    }
     setDocuments((current) => ({ ...current, ...patch }))
+  }
 
   async function onSubmit(values: WholesaleValues) {
+    const gaps = REQUIRED_DOCUMENTS.filter((key) => !documents[key])
+    if (gaps.length > 0) {
+      setMissing(gaps)
+      anchors[gaps[0]].current?.scrollIntoView({
+        block: 'center',
+        behavior: 'smooth',
+      })
+      toast.error(t.wholesale.errors[gaps[0]])
+      return
+    }
+
     const result = await submitWholesaleApplication({
       shopName: values.shopName,
       businessType: values.businessType,
@@ -145,9 +182,9 @@ export function WholesaleForm({
       city: values.city,
       district: values.district,
       postcode: values.postcode,
-      taxTokenImage: documents.taxTokenImage || null,
+      ownerPhoto: documents.ownerPhoto,
+      shopPhoto: documents.shopPhoto,
       tradeLicenseImage: documents.tradeLicenseImage || null,
-      shopPhoto: documents.shopPhoto || null,
       note: values.note,
     })
 
@@ -225,25 +262,40 @@ export function WholesaleForm({
 
         <Section title={copy.documentsSection} hint={copy.documentsHint}>
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            <ImageUploader
-              value={documents.taxTokenImage}
-              onChange={(url) => setDocument({ taxTokenImage: url })}
-              folder="wholesale-documents"
-              label={copy.taxTokenImage}
-              hint={copy.optional}
-            />
+            <div ref={anchors.ownerPhoto} className="scroll-mt-28">
+              <ImageUploader
+                value={documents.ownerPhoto}
+                onChange={(url) => setDocument({ ownerPhoto: url })}
+                folder="wholesale-documents"
+                label={copy.ownerPhoto}
+                hint={copy.ownerPhotoHint}
+                error={
+                  missing.includes('ownerPhoto')
+                    ? t.wholesale.errors.ownerPhoto
+                    : undefined
+                }
+              />
+            </div>
+            <div ref={anchors.shopPhoto} className="scroll-mt-28">
+              <ImageUploader
+                value={documents.shopPhoto}
+                onChange={(url) => setDocument({ shopPhoto: url })}
+                folder="wholesale-documents"
+                label={copy.shopPhoto}
+                hint={copy.shopPhotoHint}
+                error={
+                  missing.includes('shopPhoto')
+                    ? t.wholesale.errors.shopPhoto
+                    : undefined
+                }
+              />
+            </div>
             <ImageUploader
               value={documents.tradeLicenseImage}
               onChange={(url) => setDocument({ tradeLicenseImage: url })}
               folder="wholesale-documents"
               label={copy.tradeLicenseImage}
               hint={copy.optional}
-            />
-            <ImageUploader
-              value={documents.shopPhoto}
-              onChange={(url) => setDocument({ shopPhoto: url })}
-              folder="wholesale-documents"
-              label={copy.shopPhoto}
             />
           </div>
         </Section>

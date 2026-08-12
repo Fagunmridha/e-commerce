@@ -386,12 +386,18 @@ export const wholesalerApplications = pgTable('wholesaler_applications', {
 
   /**
    * Proof the admin reviews before approving. These are *public* R2 URLs with
-   * an unguessable suffix — fine for a tax token, a trade licence or a shop
-   * front, which is why the form asks for nothing more sensitive (no NID).
+   * an unguessable suffix — fine for a trade licence, a shop front, or the
+   * owner standing in front of it, which is why the form asks for nothing more
+   * sensitive (no NID).
    */
-  taxTokenImage: text('tax_token_image'),
   tradeLicenseImage: text('trade_license_image'),
   shopPhoto: text('shop_photo'),
+  /**
+   * Passport-size photo of the owner — required by the form, since it is what
+   * ties a set of papers to a person. Nullable all the same: the column arrived
+   * after the first applications did.
+   */
+  ownerPhoto: text('owner_photo'),
 
   note: text('note'),
 

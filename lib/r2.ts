@@ -40,8 +40,8 @@ export type UploadFolder = (typeof UPLOAD_FOLDERS)[number]
 
 /**
  * The folders a signed-in non-admin may write to: product shots for their own
- * listings, and the tax token / trade licence / shop front photos that go with
- * an application. Documents are separate from listings because an applicant
+ * listings, and the owner / shop front / trade licence photos that go with an
+ * application. Documents are separate from listings because an applicant
  * uploads them *before* being approved, so the two cannot share a gate.
  */
 export const SELLER_FOLDERS: readonly UploadFolder[] = [

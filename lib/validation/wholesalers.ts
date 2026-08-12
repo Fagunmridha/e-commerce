@@ -29,6 +29,14 @@ const optionalText = (max = 200) =>
 const optionalImage = imageSchema.nullish().transform((value) => value || null)
 
 /**
+ * A required image with its own "you left this out" wording. `imageSchema` on
+ * its own reports a blank field as "An image is required", which is no help on
+ * a form carrying three of them.
+ */
+const requiredImage = (message: string) =>
+  z.string().trim().min(1, message).pipe(imageSchema)
+
+/**
  * Optional phone: '' and undefined both collapse to null, like `optionalText`.
  *
  * `phoneSchema.nullish()` is not enough — it admits null and undefined but not
@@ -77,9 +85,16 @@ export const wholesaleApplicationSchema = z.object({
   // Proof the admin looks at before approving. Optional in the schema so a shop
   // can save progress and a rejected applicant can resubmit without re-picking
   // every file; the admin decides whether what is attached is enough.
-  taxTokenImage: optionalImage,
   tradeLicenseImage: optionalImage,
-  shopPhoto: optionalImage,
+  /**
+   * The two uploads that are not optional. A trade licence can be chased up
+   * later, but a shop with no picture of itself and no picture of the person
+   * behind it is not something an admin can vet at all.
+   */
+  ownerPhoto: requiredImage(
+    'A passport-size photo of the shop owner is required',
+  ),
+  shopPhoto: requiredImage('A photo of your shop is required'),
 
   note: optionalText(2000),
 })

@@ -1,0 +1,1 @@
+ALTER TABLE "wholesaler_applications" ADD COLUMN "owner_photo" text;

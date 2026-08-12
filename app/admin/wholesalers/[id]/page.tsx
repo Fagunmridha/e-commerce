@@ -85,9 +85,9 @@ export default async function AdminWholesalerPage({
   ]
 
   const documents = [
-    { label: 'Tax token / TIN', url: application.taxTokenImage },
-    { label: 'Trade licence', url: application.tradeLicenseImage },
+    { label: 'Owner photo', url: application.ownerPhoto },
     { label: 'Shop photo', url: application.shopPhoto },
+    { label: 'Trade licence', url: application.tradeLicenseImage },
   ].flatMap((doc) => (doc.url ? [{ label: doc.label, url: doc.url }] : []))
 
   const view: ApplicationDetailView = {

@@ -61,9 +61,9 @@ export default async function WholesaleApplyPage() {
         city: row.city,
         district: row.district,
         postcode: row.postcode,
-        taxTokenImage: row.taxTokenImage,
         tradeLicenseImage: row.tradeLicenseImage,
         shopPhoto: row.shopPhoto,
+        ownerPhoto: row.ownerPhoto,
         note: row.note,
         reviewNote: row.reviewNote,
         submittedOn: row.createdAt.toLocaleDateString(
