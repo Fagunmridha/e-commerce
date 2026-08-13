@@ -1,6 +1,7 @@
 import {
   CalendarClock,
   LayoutDashboard,
+  Mail,
   MessageSquareQuote,
   Package,
   Percent,
@@ -105,6 +106,18 @@ export const ADMIN_NAV: AdminNavGroup[] = [
           { href: '/admin/coupons/new', label: 'Add coupon' },
         ],
       },
+      // Sales rather than Catalogue: a contact message is a person waiting on
+      // an answer, usually about an order — the same work as Orders and
+      // Customers, not the shelf-stacking work of Products and Reviews.
+      {
+        href: '/admin/contact',
+        label: 'Messages',
+        icon: Mail,
+        children: [
+          { href: '/admin/contact', label: 'All messages' },
+          { href: '/admin/contact?status=new', label: 'New' },
+        ],
+      },
     ],
   },
 ]
@@ -140,6 +153,7 @@ const STATIC_CHILDREN: Record<string, string> = { new: 'New' }
 const SECTION_LABELS: Record<string, string> = {
   users: 'Customers',
   preorders: 'Pre-orders',
+  contact: 'Messages',
 }
 
 export type AdminCrumb = { label: string; href?: string }
