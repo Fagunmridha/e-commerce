@@ -343,6 +343,59 @@ export const reviews = pgTable('reviews', {
 ])
 
 /**
+ * Messages sent from the public /contact form.
+ *
+ * Unlike `reviews`, nothing here is ever published — the row exists only so the
+ * admin console can be the inbox. That is why the customer's own words are kept
+ * verbatim and the workflow columns (`status`, `adminNote`) are internal.
+ *
+ * `userId` is nullable and set only when a signed-in shopper writes: the form
+ * is open to strangers, so the identity that matters is the `email` and `phone`
+ * typed into it, not an account. Both are stored as given rather than resolved
+ * against `users`, because a customer who writes "my order never arrived" from
+ * their work address must still be replyable at that address.
+ */
+export const contactMessages = pgTable('contact_messages', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  /** Set when the sender happened to be signed in. Null for a stranger. */
+  userId: integer('user_id').references(() => users.id, {
+    onDelete: 'set null',
+  }),
+  name: text('name').notNull(),
+  email: text('email').notNull(),
+  phone: text('phone').notNull(),
+  subject: text('subject').notNull(),
+  message: text('message').notNull(),
+  /**
+   * Where the message is in the admin's own workflow. `new` is the inbox,
+   * `replied` is done, `archived` is filed away (spam included) — no row is
+   * deleted by the flow itself, so a message archived by mistake comes back.
+   */
+  status: text('status', { enum: ['new', 'read', 'replied', 'archived'] })
+    .notNull()
+    .default('new'),
+  /** Internal shorthand — "refunded, see order #1042". Never shown publicly. */
+  adminNote: text('admin_note'),
+  handledByUserId: integer('handled_by_user_id').references(() => users.id, {
+    onDelete: 'set null',
+  }),
+  handledAt: timestamp('handled_at'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (table) => [
+  // The inbox is "newest first, optionally narrowed to one status" — both the
+  // default list and every status pill start from this index.
+  index('contact_messages_status_created_at_idx').on(
+    table.status,
+    table.createdAt,
+  ),
+  // Backs the per-email flood check in `submitContactMessage`.
+  index('contact_messages_email_created_at_idx').on(
+    table.email,
+    table.createdAt,
+  ),
+])
+
+/**
  * B2B applications. One row per user (`userId` is unique) — a rejected
  * applicant edits and resubmits the same row, which drops back to `pending`.
  *
@@ -425,5 +478,6 @@ export type OrderItemRow = typeof orderItems.$inferSelect
 export type ReviewRow = typeof reviews.$inferSelect
 export type CouponRow = typeof coupons.$inferSelect
 export type OrderEventRow = typeof orderEvents.$inferSelect
+export type ContactMessageRow = typeof contactMessages.$inferSelect
 export type WholesalerApplicationRow =
   typeof wholesalerApplications.$inferSelect

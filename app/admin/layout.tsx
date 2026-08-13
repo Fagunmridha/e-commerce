@@ -5,6 +5,7 @@ import { orders } from '@/lib/db/schema'
 import { isAdmin } from '@/lib/auth'
 import { getPendingApplicationCount } from '@/lib/wholesalers'
 import { getPendingReviewCount } from '@/lib/reviews'
+import { getNewContactCount } from '@/lib/contact'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AdminSidebar } from '@/components/admin/admin-sidebar'
@@ -20,13 +21,17 @@ export default async function AdminLayout({
   if (!(await isAdmin())) redirect('/')
 
   // The header's bell reflects real work waiting, not a decorative dot.
-  const [[pending], pendingWholesalers, pendingReviews] = await Promise.all([
-    db.select({ n: count() }).from(orders).where(eq(orders.status, 'pending')),
-    getPendingApplicationCount(),
-    // Without this the moderation queue is invisible until someone happens to
-    // open the page, which is how a review sits unpublished for a week.
-    getPendingReviewCount(),
-  ])
+  const [[pending], pendingWholesalers, pendingReviews, newMessages] =
+    await Promise.all([
+      db.select({ n: count() }).from(orders).where(eq(orders.status, 'pending')),
+      getPendingApplicationCount(),
+      // Without this the moderation queue is invisible until someone happens to
+      // open the page, which is how a review sits unpublished for a week.
+      getPendingReviewCount(),
+      // Same reasoning, and it matters more here: an unanswered message is a
+      // customer waiting for a reply.
+      getNewContactCount(),
+    ])
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -37,6 +42,7 @@ export default async function AdminLayout({
             pendingOrders={pending?.n ?? 0}
             pendingWholesalers={pendingWholesalers}
             pendingReviews={pendingReviews}
+            newMessages={newMessages}
           />
           {/* The console is centred rather than pinned to the sidebar: on a wide
               monitor a full-bleed page leaves the content stranded in one
