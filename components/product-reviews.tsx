@@ -109,7 +109,7 @@ export function ProductReviews({
         {viewerReview && (
           <div className="mt-6 rounded-lg border border-dashed border-border bg-muted/40 p-5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-amber-500/12 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700 dark:text-amber-400">
+              <span className="rounded-full bg-amber-500/12 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700">
                 {copy.pendingBadge}
               </span>
               <span className="text-xs text-muted-foreground">

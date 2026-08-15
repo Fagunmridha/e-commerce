@@ -15,9 +15,9 @@ export const CONTACT_STATUS_LABEL: Record<ContactStatus, string> = {
 }
 
 export const CONTACT_STATUS_CLASS: Record<ContactStatus, string> = {
-  new: 'bg-sky-500/12 text-sky-700 dark:text-sky-400',
-  read: 'bg-amber-500/12 text-amber-700 dark:text-amber-400',
-  replied: 'bg-emerald-500/12 text-emerald-700 dark:text-emerald-400',
+  new: 'bg-sky-500/12 text-sky-700',
+  read: 'bg-amber-500/12 text-amber-700',
+  replied: 'bg-emerald-500/12 text-emerald-700',
   archived: 'bg-muted text-muted-foreground',
 }
 

@@ -12,9 +12,9 @@ export const REVIEW_STATUS_LABEL: Record<ReviewStatus, string> = {
 }
 
 export const REVIEW_STATUS_CLASS: Record<ReviewStatus, string> = {
-  pending: 'bg-amber-500/12 text-amber-700 dark:text-amber-400',
-  approved: 'bg-emerald-500/12 text-emerald-700 dark:text-emerald-400',
-  rejected: 'bg-rose-500/12 text-rose-700 dark:text-rose-400',
+  pending: 'bg-amber-500/12 text-amber-700',
+  approved: 'bg-emerald-500/12 text-emerald-700',
+  rejected: 'bg-rose-500/12 text-rose-700',
 }
 
 export const REVIEW_STATUSES = ['pending', 'approved', 'rejected'] as const

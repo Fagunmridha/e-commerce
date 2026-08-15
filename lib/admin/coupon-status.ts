@@ -15,10 +15,10 @@ export const COUPON_STATUS_LABEL: Record<CouponStatus, string> = {
 
 export const COUPON_STATUS_CLASS: Record<CouponStatus, string> = {
   off: 'bg-muted text-muted-foreground',
-  scheduled: 'bg-sky-500/12 text-sky-700 dark:text-sky-400',
-  live: 'bg-emerald-500/12 text-emerald-700 dark:text-emerald-400',
-  expired: 'bg-rose-500/12 text-rose-700 dark:text-rose-400',
-  used_up: 'bg-amber-500/12 text-amber-700 dark:text-amber-400',
+  scheduled: 'bg-sky-500/12 text-sky-700',
+  live: 'bg-emerald-500/12 text-emerald-700',
+  expired: 'bg-rose-500/12 text-rose-700',
+  used_up: 'bg-amber-500/12 text-amber-700',
 }
 
 export function couponStatus(

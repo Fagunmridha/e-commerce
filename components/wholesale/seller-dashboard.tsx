@@ -57,9 +57,9 @@ function stockLevel(stock: number): StockLevel {
 
 /** Tint per stock level — the same three colours the stat tiles use. */
 const STOCK_TONE: Record<StockLevel, string> = {
-  in: 'border-transparent bg-emerald-500/12 text-emerald-700 dark:text-emerald-400',
-  low: 'border-transparent bg-amber-500/12 text-amber-700 dark:text-amber-400',
-  out: 'border-transparent bg-rose-500/12 text-rose-700 dark:text-rose-400',
+  in: 'border-transparent bg-emerald-500/12 text-emerald-700',
+  low: 'border-transparent bg-amber-500/12 text-amber-700',
+  out: 'border-transparent bg-rose-500/12 text-rose-700',
 }
 
 const STOCK_DOT: Record<StockLevel, string> = {
@@ -153,7 +153,7 @@ export function SellerDashboard({
             </h1>
             <Badge
               variant="secondary"
-              className="border-0 bg-emerald-500/12 text-emerald-700 dark:text-emerald-400"
+              className="border-0 bg-emerald-500/12 text-emerald-700"
             >
               <BadgeCheck className="size-3" aria-hidden="true" />
               {copy.approvedBadge}
@@ -510,10 +510,10 @@ function StockBadge({
 }
 
 const TILE_TONE = {
-  violet: 'bg-violet-500/12 text-violet-600 dark:text-violet-400',
-  sky: 'bg-sky-500/12 text-sky-600 dark:text-sky-400',
-  emerald: 'bg-emerald-500/12 text-emerald-600 dark:text-emerald-400',
-  rose: 'bg-rose-500/12 text-rose-600 dark:text-rose-400',
+  violet: 'bg-violet-500/12 text-violet-600',
+  sky: 'bg-sky-500/12 text-sky-600',
+  emerald: 'bg-emerald-500/12 text-emerald-600',
+  rose: 'bg-rose-500/12 text-rose-600',
 }
 
 function StatTile({

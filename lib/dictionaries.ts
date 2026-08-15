@@ -712,8 +712,6 @@ const en = {
       notBuilt: 'Not built yet',
       backToStore: 'Back to the store',
       language: 'Language',
-      lightTheme: 'Switch to light theme',
-      darkTheme: 'Switch to dark theme',
     },
     /** The approved seller's own area — listing their stock, not applying. */
     dashboard: {
@@ -1694,8 +1692,6 @@ const bn: Dictionary = {
       notBuilt: 'এখনো তৈরি হয়নি',
       backToStore: 'দোকানে ফিরে যান',
       language: 'ভাষা',
-      lightTheme: 'লাইট থিমে যান',
-      darkTheme: 'ডার্ক থিমে যান',
     },
     dashboard: {
       marketCta: 'বাজার দেখুন',

@@ -52,23 +52,23 @@ export type AdminOrderRow = {
 const STATUS_VARIANT: Record<OrderStatus, { label: string; className: string }> = {
   pending: {
     label: 'Pending',
-    className: 'bg-amber-500/12 text-amber-700 dark:text-amber-400',
+    className: 'bg-amber-500/12 text-amber-700',
   },
   processing: {
     label: 'Processing',
-    className: 'bg-sky-500/12 text-sky-700 dark:text-sky-400',
+    className: 'bg-sky-500/12 text-sky-700',
   },
   shipped: {
     label: 'Shipped',
-    className: 'bg-violet-500/12 text-violet-700 dark:text-violet-400',
+    className: 'bg-violet-500/12 text-violet-700',
   },
   delivered: {
     label: 'Delivered',
-    className: 'bg-emerald-500/12 text-emerald-700 dark:text-emerald-400',
+    className: 'bg-emerald-500/12 text-emerald-700',
   },
   cancelled: {
     label: 'Cancelled',
-    className: 'bg-rose-500/12 text-rose-700 dark:text-rose-400',
+    className: 'bg-rose-500/12 text-rose-700',
   },
 }
 
@@ -79,15 +79,15 @@ export const ADVANCE_VARIANT: Record<
 > = {
   advance_pending: {
     label: 'Advance pending',
-    className: 'bg-amber-500/12 text-amber-700 dark:text-amber-400',
+    className: 'bg-amber-500/12 text-amber-700',
   },
   advance_paid: {
     label: 'Advance verified',
-    className: 'bg-emerald-500/12 text-emerald-700 dark:text-emerald-400',
+    className: 'bg-emerald-500/12 text-emerald-700',
   },
   advance_failed: {
     label: 'Advance failed',
-    className: 'bg-rose-500/12 text-rose-700 dark:text-rose-400',
+    className: 'bg-rose-500/12 text-rose-700',
   },
 }
 

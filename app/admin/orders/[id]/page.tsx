@@ -19,11 +19,11 @@ import { formatPrice } from '@/lib/currency'
 export const dynamic = 'force-dynamic'
 
 const STATUS_CLASS: Record<string, string> = {
-  pending: 'bg-amber-500/12 text-amber-700 dark:text-amber-400',
-  processing: 'bg-sky-500/12 text-sky-700 dark:text-sky-400',
-  shipped: 'bg-violet-500/12 text-violet-700 dark:text-violet-400',
-  delivered: 'bg-emerald-500/12 text-emerald-700 dark:text-emerald-400',
-  cancelled: 'bg-rose-500/12 text-rose-700 dark:text-rose-400',
+  pending: 'bg-amber-500/12 text-amber-700',
+  processing: 'bg-sky-500/12 text-sky-700',
+  shipped: 'bg-violet-500/12 text-violet-700',
+  delivered: 'bg-emerald-500/12 text-emerald-700',
+  cancelled: 'bg-rose-500/12 text-rose-700',
 }
 
 const money = formatPrice

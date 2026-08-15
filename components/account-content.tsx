@@ -23,9 +23,9 @@ const STATUS_LABELS: Record<string, Localized> = {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  pending: 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300',
-  processing: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300',
-  shipped: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300',
+  pending: 'bg-amber-100 text-amber-800',
+  processing: 'bg-blue-100 text-blue-800',
+  shipped: 'bg-indigo-100 text-indigo-800',
   delivered: 'bg-badge-new/15 text-badge-new',
   cancelled: 'bg-destructive/10 text-destructive',
 }

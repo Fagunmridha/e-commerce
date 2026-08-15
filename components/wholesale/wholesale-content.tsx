@@ -87,19 +87,19 @@ function StatusCard({
   const config = {
     pending: {
       Icon: Clock,
-      tone: 'bg-amber-500/12 text-amber-700 dark:text-amber-400',
+      tone: 'bg-amber-500/12 text-amber-700',
       title: copy.pendingTitle,
       body: copy.pendingBody.replace('{phone}', application.phone),
     },
     approved: {
       Icon: BadgeCheck,
-      tone: 'bg-emerald-500/12 text-emerald-700 dark:text-emerald-400',
+      tone: 'bg-emerald-500/12 text-emerald-700',
       title: copy.approvedTitle,
       body: copy.approvedBody,
     },
     rejected: {
       Icon: XCircle,
-      tone: 'bg-rose-500/12 text-rose-700 dark:text-rose-400',
+      tone: 'bg-rose-500/12 text-rose-700',
       title: copy.rejectedTitle,
       body: copy.rejectedBody,
     },

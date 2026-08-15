@@ -118,7 +118,7 @@ export default async function AdminOrdersPage({
       </nav>
 
       {total > PAGE_SIZE && (
-        <p className="mb-3 rounded-md bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
+        <p className="mb-3 rounded-md bg-amber-500/10 px-3 py-2 text-xs text-amber-700">
           Showing the {PAGE_SIZE} most recent of {total} matching orders. Narrow
           it down with the search box or a status filter to see the rest.
         </p>

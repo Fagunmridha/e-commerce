@@ -3,18 +3,8 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { useTheme } from 'next-themes'
 import { UserButton } from '@clerk/nextjs'
-import {
-  Bell,
-  Check,
-  Globe,
-  Moon,
-  Plus,
-  Search,
-  Settings,
-  Sun,
-} from 'lucide-react'
+import { Bell, Check, Globe, Plus, Search, Settings } from 'lucide-react'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -60,27 +50,6 @@ const QUICK_CREATE = [
   { href: '/admin/coupons/new', label: 'New coupon' },
   { href: '/admin/orders', label: 'View orders' },
 ]
-
-function ThemeToggle() {
-  const { resolvedTheme, setTheme } = useTheme()
-  // `resolvedTheme` is undefined until mounted; rendering the icon before then
-  // would mismatch the server HTML.
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
-
-  const dark = resolvedTheme === 'dark'
-
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'}
-      onClick={() => setTheme(dark ? 'light' : 'dark')}
-    >
-      {mounted && dark ? <Moon className="size-4" /> : <Sun className="size-4" />}
-    </Button>
-  )
-}
 
 function LanguageMenu() {
   const { locale, setLocale } = useLanguage()
@@ -253,7 +222,6 @@ export function AdminHeader({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <ThemeToggle />
         <LanguageMenu />
 
         <Button variant="ghost" size="icon" asChild aria-label="Settings">
