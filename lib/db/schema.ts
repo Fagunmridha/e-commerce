@@ -9,6 +9,7 @@ import {
   serial,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core'
 import type { Localized } from '@/lib/i18n'
@@ -102,6 +103,21 @@ export const products = pgTable('products', {
   sellerId: uuid('seller_id').references(() => wholesalerApplications.id, {
     onDelete: 'cascade',
   }),
+  /**
+   * The store's cut of this listing's line value, as a percentage. Null falls
+   * back to `DEFAULT_COMMISSION_PCT`; 0 means the store takes nothing.
+   *
+   * A percentage rather than a flat amount, for the same reason
+   * `preorder_advance_pct` is one: it scales with quantity without anyone
+   * having to decide whether "৳50" is per piece or per order.
+   *
+   * Deducted, never added. `price` stays what the buyer pays and the seller's
+   * payout is that minus this — so raising the rate never moves a price the
+   * shop set. Meaningless on a house product (`seller_id IS NULL`), where the
+   * store already keeps the lot, so the admin form only offers it on a
+   * marketplace listing.
+   */
+  commissionPct: integer('commission_pct'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 }, (table) => [
   // Every catalogue read filters on `seller_id IS NULL` (house stock) or joins
@@ -266,10 +282,41 @@ export const orderItems = pgTable('order_items', {
    * told, and two pre-orders with different dates can share one order.
    */
   preorderShipsAt: date('preorder_ships_at', { mode: 'string' }),
+  /**
+   * Which shop's goods this line was. Null on house stock.
+   *
+   * Snapshotted at checkout rather than read live through `products.seller_id`,
+   * because deleting a listing nulls `product_id` — which used to take the line
+   * out of the shop's own order history, and would now take it out of any
+   * settlement built from it.
+   *
+   * Still a foreign key, in the same spirit as `orders.coupon_id` beside
+   * `coupon_code`: deleting a *product* does not touch it, and only deleting
+   * the shop row itself — which cascades the listings away anyway — sets it
+   * null. `settlements.shop_name_snapshot` is what survives that.
+   */
+  sellerId: uuid('seller_id').references(() => wholesalerApplications.id, {
+    onDelete: 'set null',
+  }),
+  /**
+   * The commission rate agreed when this line was sold. Snapshotted for exactly
+   * the reason `unit_price` and `preorder_ships_at` are: an admin raising the
+   * rate afterwards must not rewrite a settlement that has already been issued,
+   * and may already have been paid.
+   *
+   * Null on a house line, and on every row written before this column existed.
+   * Read it through `lineCommissionPct` in lib/commission.ts, never directly —
+   * null there means "no rate was ever agreed", which is not the same as the
+   * store default.
+   */
+  commissionPct: integer('commission_pct'),
 }, (table) => [
   index('order_items_order_id_idx').on(table.orderId),
   // The "256 sold" line on the detail page sums this column per product.
   index('order_items_product_id_idx').on(table.productId),
+  // Every seller-facing read — the shop's order book and its settlement lines
+  // — filters on this now that attribution no longer joins through products.
+  index('order_items_seller_id_idx').on(table.sellerId),
 ])
 
 /**
@@ -470,6 +517,89 @@ export const wholesalerApplications = pgTable('wholesaler_applications', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })
 
+/**
+ * What the store owes one shop for one order.
+ *
+ * One row per (order, seller): the marketplace half of an order can carry two
+ * shops' goods, and each is a separate debt with its own rate, its own document
+ * and its own payment. House lines produce no row — the store keeps the lot.
+ *
+ * Invariant on every row: `gross_amount = commission_amount + payout_amount`,
+ * the same shape as `orders.total = subtotal - discount + shipping`.
+ * `gross_amount` is the shop's own line value and nothing else: delivery and
+ * any coupon belong to the whole order and are the store's own, so neither
+ * moves what a shop is owed. See lib/commission.ts for why.
+ *
+ * The row is written at *checkout*, not at delivery. Building it later would
+ * mean reading the order's lines, grouping them, then writing — and Neon's HTTP
+ * driver has no interactive transaction to hold that read and write together,
+ * so two admins marking one order delivered could both insert. Written here it
+ * rides the batch `createOrder` already runs, and delivery collapses to a
+ * conditional UPDATE that is idempotent by construction.
+ */
+export const settlements = pgTable('settlements', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  /**
+   * `CP-ABC123-S1` — the order's number with the shop's position appended, so
+   * it is derivable, stable, and readable off a printed sheet.
+   */
+  settlementNumber: text('settlement_number').notNull().unique(),
+  orderId: uuid('order_id')
+    .notNull()
+    .references(() => orders.id, { onDelete: 'cascade' }),
+  /**
+   * Null only once the shop row itself is gone; `shop_name_snapshot` is then
+   * the whole trace, exactly as `orders.name` is for a deleted customer.
+   */
+  sellerId: uuid('seller_id').references(() => wholesalerApplications.id, {
+    onDelete: 'set null',
+  }),
+  shopNameSnapshot: text('shop_name_snapshot').notNull(),
+  /**
+   * `pending` — the order exists but has not been delivered.
+   * `due`     — delivered; the store owes this money.
+   * `paid`    — an admin has recorded the payment.
+   * `void`    — the order was cancelled, or moved back out of delivered, before
+   *             it was paid. Kept rather than deleted so the history reads.
+   */
+  status: text('status', { enum: ['pending', 'due', 'paid', 'void'] })
+    .notNull()
+    .default('pending'),
+  grossAmount: doublePrecision('gross_amount').notNull(),
+  commissionAmount: doublePrecision('commission_amount').notNull(),
+  payoutAmount: doublePrecision('payout_amount').notNull(),
+  /**
+   * The rate, when every line in this settlement shared one. Null means the
+   * shop's lines were sold at different rates and the document shows the
+   * effective blend instead — the per-line rates live on `order_items`.
+   */
+  commissionPct: integer('commission_pct'),
+  pieceCount: integer('piece_count').notNull(),
+  lineCount: integer('line_count').notNull(),
+  /**
+   * When the order was delivered — the date a range statement bins on. The
+   * first delivery wins: re-marking an order delivered does not move it.
+   */
+  settledAt: timestamp('settled_at'),
+  paidAt: timestamp('paid_at'),
+  paidByUserId: integer('paid_by_user_id').references(() => users.id, {
+    onDelete: 'set null',
+  }),
+  /** "bKash TrxID 9F2K…", "cash, 14 Mar". Free text; there is no gateway. */
+  paidNote: text('paid_note'),
+  voidedAt: timestamp('voided_at'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (table) => [
+  // The idempotency guarantee, not an optimisation: whatever races upstream,
+  // one order can owe one shop exactly once.
+  uniqueIndex('settlements_order_seller_idx').on(table.orderId, table.sellerId),
+  // The shop's own payouts page: "what am I owed", "what have I been paid".
+  index('settlements_seller_status_idx').on(table.sellerId, table.status),
+  // The date-range statement, and the admin's due queue.
+  index('settlements_seller_settled_at_idx').on(table.sellerId, table.settledAt),
+  index('settlements_status_settled_at_idx').on(table.status, table.settledAt),
+])
+
 export type UserRow = typeof users.$inferSelect
 export type CategoryRow = typeof categories.$inferSelect
 export type ProductRow = typeof products.$inferSelect
@@ -481,3 +611,4 @@ export type OrderEventRow = typeof orderEvents.$inferSelect
 export type ContactMessageRow = typeof contactMessages.$inferSelect
 export type WholesalerApplicationRow =
   typeof wholesalerApplications.$inferSelect
+export type SettlementRow = typeof settlements.$inferSelect

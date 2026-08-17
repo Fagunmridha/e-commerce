@@ -2,7 +2,14 @@
 
 import { useMemo, useState } from 'react'
 import Image from 'next/image'
-import { ClipboardList, Package, Search, Truck, Wallet } from 'lucide-react'
+import {
+  ClipboardList,
+  HandCoins,
+  Package,
+  Search,
+  Truck,
+  Wallet,
+} from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -66,16 +73,16 @@ export function SellerOrders({ orders }: { orders: SellerOrder[] }) {
   ).length
   const pieces = live.reduce((sum, order) => sum + order.pieces, 0)
   const value = live.reduce((sum, order) => sum + order.subtotal, 0)
+  const payout = live.reduce((sum, order) => sum + order.payout, 0)
 
+  // The order number is the only thing left to search on, and deliberately so —
+  // a seller never learns who bought their goods.
   const visible = useMemo(() => {
     const term = search.trim().toLowerCase()
     return orders.filter(
       (order) =>
         (!status || order.status === status) &&
-        (!term ||
-          order.orderNumber.toLowerCase().includes(term) ||
-          order.buyerName.toLowerCase().includes(term) ||
-          order.buyerPhone.includes(term)),
+        (!term || order.orderNumber.toLowerCase().includes(term)),
     )
   }, [orders, search, status])
 
@@ -93,7 +100,7 @@ export function SellerOrders({ orders }: { orders: SellerOrder[] }) {
       </div>
 
       {orders.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
           <StatTile
             label={copy.statOrders}
             value={String(orders.length)}
@@ -117,6 +124,13 @@ export function SellerOrders({ orders }: { orders: SellerOrder[] }) {
             value={price(value)}
             hint={copy.statValueHint}
             icon={Wallet}
+            tone="sky"
+          />
+          <StatTile
+            label={copy.statPayout}
+            value={price(payout)}
+            hint={copy.statPayoutHint}
+            icon={HandCoins}
             tone="emerald"
           />
         </div>
@@ -197,10 +211,12 @@ export function SellerOrders({ orders }: { orders: SellerOrder[] }) {
                 <thead className="bg-muted/50 text-left text-xs tracking-wide text-muted-foreground uppercase">
                   <tr>
                     <th className="px-5 py-3 font-medium">{copy.colOrder}</th>
-                    <th className="px-4 py-3 font-medium">{copy.colBuyer}</th>
                     <th className="px-4 py-3 font-medium">{copy.colItems}</th>
                     <th className="px-4 py-3 text-right font-medium">
                       {copy.colValue}
+                    </th>
+                    <th className="px-4 py-3 text-right font-medium">
+                      {copy.colPayout}
                     </th>
                     <th className="px-5 py-3 text-right font-medium">
                       {copy.colStatus}
@@ -219,14 +235,6 @@ export function SellerOrders({ orders }: { orders: SellerOrder[] }) {
                         </p>
                         <p className="mt-0.5 text-xs text-muted-foreground">
                           {day(order.placedAt)}
-                        </p>
-                      </td>
-                      <td className="px-4 py-3">
-                        <p className="font-medium text-foreground">
-                          {order.buyerName}
-                        </p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">
-                          {order.buyerCity} · {order.buyerPhone}
                         </p>
                       </td>
                       <td className="px-4 py-3">
@@ -258,8 +266,11 @@ export function SellerOrders({ orders }: { orders: SellerOrder[] }) {
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-right font-semibold tabular-nums text-foreground">
+                      <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
                         {price(order.subtotal)}
+                      </td>
+                      <td className="px-4 py-3 text-right font-semibold tabular-nums text-foreground">
+                        {price(order.payout)}
                       </td>
                       <td className="px-5 py-3 text-right">
                         <Badge
@@ -313,12 +324,13 @@ export function SellerOrders({ orders }: { orders: SellerOrder[] }) {
                       {pick(order.items[0]!.name)}
                     </p>
                     <p className="font-semibold tabular-nums text-foreground">
-                      {price(order.subtotal)}
+                      {price(order.payout)}
                     </p>
                   </div>
 
                   <p className="mt-2 text-xs text-muted-foreground">
-                    {order.buyerName} · {order.buyerCity} · {order.buyerPhone}
+                    {copy.pieces.replace('{n}', String(order.pieces))} ·{' '}
+                    {copy.colValue} {price(order.subtotal)}
                   </p>
                 </li>
               ))}

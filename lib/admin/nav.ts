@@ -5,6 +5,7 @@ import {
   MessageSquareQuote,
   Package,
   Percent,
+  ReceiptText,
   ShoppingCart,
   Store,
   Users,
@@ -97,6 +98,18 @@ export const ADMIN_NAV: AdminNavGroup[] = [
           { href: '/admin/wholesalers', label: 'All applications' },
         ],
       },
+      // Sales, next to Wholesalers: a settlement is what the store owes one of
+      // those shops. Approving a shop and paying it are the same person's job.
+      {
+        href: '/admin/settlements',
+        label: 'Settlements',
+        icon: ReceiptText,
+        children: [
+          { href: '/admin/settlements', label: 'All settlements' },
+          { href: '/admin/settlements?status=due', label: 'Due' },
+          { href: '/admin/settlements/statement', label: 'Statement' },
+        ],
+      },
       {
         href: '/admin/coupons',
         label: 'Coupons',
@@ -140,10 +153,21 @@ const DETAIL_SECTIONS: Record<string, string> = {
   wholesalers: 'Wholesaler',
   coupons: 'Coupon',
   products: 'Product',
+  settlements: 'Settlement',
 }
 
-/** Children of those sections that are pages in their own right, not an id. */
-const STATIC_CHILDREN: Record<string, string> = { new: 'New' }
+/**
+ * Children of those sections that are pages in their own right, not an id.
+ *
+ * `statement` is load-bearing: `/admin/settlements/statement` would otherwise
+ * be read as a settlement id and crumb as "Settlement". `print` needs no entry
+ * — its parent segment is a uuid, which is not a `DETAIL_SECTIONS` key, so it
+ * falls through to `humanize`.
+ */
+const STATIC_CHILDREN: Record<string, string> = {
+  new: 'New',
+  statement: 'Statement',
+}
 
 /**
  * Sections whose URL and sidebar label disagree. Not derived from `ADMIN_NAV`

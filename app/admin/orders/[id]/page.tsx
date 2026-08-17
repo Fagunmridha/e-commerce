@@ -12,7 +12,7 @@ import { SetBreadcrumbLabel } from '@/components/breadcrumb-label'
 import { PrintButton } from '@/components/admin/orders/print-button'
 import { AdvanceVerify } from '@/components/admin/orders/advance-verify'
 import { ADVANCE_VARIANT } from '@/components/admin/orders/orders-table'
-import { getOrderById, getOrderEvents } from '@/lib/orders'
+import { getAdminOrderById, getOrderEvents } from '@/lib/orders'
 import { ADVANCE_METHOD_LABEL, PAYMENT_LABEL } from '@/lib/order'
 import { formatPrice } from '@/lib/currency'
 
@@ -43,7 +43,7 @@ export default async function AdminOrderDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const order = await getOrderById(id)
+  const order = await getAdminOrderById(id)
   if (!order) notFound()
 
   const events = await getOrderEvents(order.id)

@@ -90,7 +90,9 @@ export function SellerSidebar({ shopName }: { shopName: string }) {
   const nav = t.wholesale.nav
 
   return (
-    <Sidebar collapsible="icon">
+    // `print:hidden` so a settlement sheet prints as a document, not as a
+    // screenshot of the console around it.
+    <Sidebar collapsible="icon" className="print:hidden">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>

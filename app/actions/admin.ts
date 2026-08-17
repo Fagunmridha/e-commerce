@@ -72,6 +72,16 @@ export type ProductInput = {
   preorderShipsAt?: string | null
   /** Advance share, 0–100. Null uses the store default. */
   preorderAdvancePct?: number | null
+  /**
+   * The store's commission on a marketplace listing, 0–100. Null uses the store
+   * default. Only meaningful when the row has a `seller_id`.
+   *
+   * The form must always send the listing's current value: `upsertProduct`
+   * rewrites the whole row, so omitting it on an unrelated edit would null the
+   * rate. Already-placed orders are unaffected either way — they carry their
+   * own snapshot on `order_items`.
+   */
+  commissionPct?: number | null
 }
 
 export async function upsertProduct(input: ProductInput): Promise<void> {
@@ -97,6 +107,7 @@ export async function upsertProduct(input: ProductInput): Promise<void> {
     // does not keep advertising a stale ship date if it is turned back on.
     preorderShipsAt: data.preorder ? data.preorderShipsAt : null,
     preorderAdvancePct: data.preorder ? data.preorderAdvancePct : null,
+    commissionPct: data.commissionPct,
   }
 
   await db

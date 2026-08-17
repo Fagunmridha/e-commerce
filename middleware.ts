@@ -12,6 +12,9 @@ const isProtectedRoute = createRouteMatcher([
   '/wholesale/apply(.*)',
   '/wholesale/market(.*)',
   '/wholesale/dashboard(.*)',
+  // Its layout gates on approved *or suspended* — a paused shop can still read
+  // what the store owes it. Authentication is still required to get that far.
+  '/wholesale/payouts(.*)',
 ])
 
 export default clerkMiddleware(async (auth, req) => {

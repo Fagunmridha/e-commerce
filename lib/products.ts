@@ -123,6 +123,9 @@ function toProduct(
     sold: sold || undefined,
     sellerId: row.sellerId ?? undefined,
     sellerName,
+    // Null means "use the store default", exactly as for the advance below. A
+    // stored 0 — a shop carried at cost — is a real choice and must survive.
+    commissionPct: row.commissionPct ?? undefined,
     // False is the overwhelming majority, so it is left undefined rather than
     // shipped on every row — consumers test it for truthiness either way.
     preorder: row.preorder || undefined,
@@ -163,11 +166,19 @@ export const getAllProducts = unstable_cache(fetchAllProducts, ['all-products-v2
   revalidate: 60,
 })
 
-/** Everything listed by approved wholesalers, newest first, with the shop name. */
+/**
+ * Everything listed by approved wholesalers, newest first.
+ *
+ * The join is the visibility gate, not decoration — drop it and a suspended
+ * shop's stock reappears in the market. The shop *name* is deliberately not
+ * selected: this feeds the client `CatalogueProvider`, so anything on these
+ * rows is serialised into the buyer's page, and the buyer must not learn which
+ * wholesaler supplied what.
+ */
 async function fetchWholesaleProducts(): Promise<Product[]> {
   const [rows, aggregates] = await Promise.all([
     db
-      .select({ product: products, shopName: wholesalerApplications.shopName })
+      .select({ product: products })
       .from(products)
       .innerJoin(
         wholesalerApplications,
@@ -179,13 +190,16 @@ async function fetchWholesaleProducts(): Promise<Product[]> {
   ])
 
   return rows.map((row) =>
-    toProduct(row.product, aggregates.get(row.product.id), row.shopName),
+    toProduct(row.product, aggregates.get(row.product.id)),
   )
 }
 
+// `-v3` retires entries written while this query still selected the shop name.
+// A cache hit never runs `fetchWholesaleProducts`, so without the bump the old
+// rows — `sellerName` and all — would be served straight through to buyers.
 export const getWholesaleProducts = unstable_cache(
   fetchWholesaleProducts,
-  ['wholesale-products-v2'],
+  ['wholesale-products-v3'],
   { tags: ['catalogue'], revalidate: 60 },
 )
 
@@ -361,17 +375,19 @@ async function loadProductDetail(
           count: Number(agg.count),
         }
       : undefined
-  const sellerName = row.sellerId ? await approvedShopName(row.sellerId) : undefined
-
   // A marketplace listing is only visible when its shop is still approved *and*
-  // the viewer is an approved wholesaler — see the note on the gate below.
-  if (row.sellerId && !sellerName) return EMPTY_DETAIL
+  // the viewer is an approved wholesaler — see the note on the gate below. The
+  // shop's *name* is deliberately not carried through: the buyer trades with
+  // the store, not with whoever supplied the goods.
+  if (row.sellerId && !(await sellerIsVisible(row.sellerId))) {
+    return EMPTY_DETAIL
+  }
 
   return {
     product: toProduct(
       row,
       aggregate,
-      sellerName,
+      undefined,
       Number(sold?.n ?? 0),
       Number(booked?.n ?? 0),
     ),
@@ -395,24 +411,25 @@ function toReview(row: ReviewRow): Review {
 }
 
 /**
- * The marketplace gate, unchanged in behaviour: a listing resolves only when
- * the shop is approved and the viewer has an approved shop of their own.
- * Without the second half `/product/w-something` would be a way around the
- * hidden market, and a suspended shop's stock would stay buyable through a
- * stale link. Returns the shop name so the caller can use it as the gate.
+ * The marketplace gate: a listing resolves only when the shop is approved and
+ * the viewer has an approved shop of their own. Without the second half
+ * `/product/w-something` would be a way around the hidden market, and a
+ * suspended shop's stock would stay buyable through a stale link.
+ *
+ * A boolean, not the shop name it used to return. Answering the gate and
+ * handing out the seller's identity were the same call, so every caller got
+ * the name whether it needed it or not — and one of them rendered it to the
+ * buyer. Two wholesalers either side of a trade must not learn each other
+ * exist; only the admin loaders resolve a shop name now.
  */
-async function approvedShopName(sellerId: string): Promise<string | undefined> {
+async function sellerIsVisible(sellerId: string): Promise<boolean> {
   const [shop] = await db
-    .select({
-      shopName: wholesalerApplications.shopName,
-      status: wholesalerApplications.status,
-    })
+    .select({ status: wholesalerApplications.status })
     .from(wholesalerApplications)
     .where(eq(wholesalerApplications.id, sellerId))
 
-  if (shop?.status !== 'approved') return undefined
-  if (!(await getViewerShop())) return undefined
-  return shop.shopName
+  if (shop?.status !== 'approved') return false
+  return Boolean(await getViewerShop())
 }
 
 /**

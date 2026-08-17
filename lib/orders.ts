@@ -9,6 +9,7 @@ import {
   ilike,
   inArray,
   lte,
+  ne,
   or,
   sql,
 } from 'drizzle-orm'
@@ -18,6 +19,7 @@ import {
   orderItems,
   orders,
   products,
+  settlements,
   wholesalerApplications,
   type OrderEventRow,
   type OrderRow,
@@ -25,6 +27,7 @@ import {
 import { computeTotals } from '@/lib/coupon-math'
 import type { DeliveryZone } from '@/lib/currency'
 import { checkCoupon, redeemCoupon } from '@/lib/coupons'
+import { commissionPct, summariseSettlement } from '@/lib/commission'
 import { advancePct, splitPayment } from '@/lib/preorder'
 import type { Localized } from '@/lib/i18n'
 import type { AdvanceInput, PaymentMethod } from '@/lib/order'
@@ -77,9 +80,11 @@ export type OrderLine = {
   /** `YYYY-MM-DD` on a pre-ordered line, null on shelf stock. */
   preorderShipsAt: string | null
   /**
-   * The shop that listed this product, or null for the store's own stock. Read
-   * live through `products.seller_id`, so it is null once the listing itself is
-   * deleted — the line survives on its snapshots, the attribution does not.
+   * The shop that supplied this line, or null for the store's own stock.
+   *
+   * Populated by `getAdminOrderById` and nothing else. The two wholesalers
+   * either side of a trade must not learn each other exist, so no customer- or
+   * seller-facing loader resolves it — see `attachItems`.
    */
   sellerName?: string | null
 }
@@ -107,11 +112,18 @@ export async function createOrder(
   const sellerIds = [
     ...new Set(rows.flatMap((row) => (row.sellerId ? [row.sellerId] : []))),
   ]
+  //
+  // The shop *name* comes back on the same query rather than a second one: it
+  // is snapshotted onto every settlement below, and the round trip is the cost
+  // here, not the extra column.
   const liveShops = sellerIds.length
-    ? new Set(
+    ? new Map(
         (
           await db
-            .select({ id: wholesalerApplications.id })
+            .select({
+              id: wholesalerApplications.id,
+              shopName: wholesalerApplications.shopName,
+            })
             .from(wholesalerApplications)
             .where(
               and(
@@ -119,9 +131,9 @@ export async function createOrder(
                 eq(wholesalerApplications.status, 'approved'),
               ),
             )
-        ).map((row) => row.id),
+        ).map((row) => [row.id, row.shopName] as const),
       )
-    : new Set<string>()
+    : new Map<string, string>()
 
   let subtotal = 0
   const lines = input.items.flatMap((item) => {
@@ -150,6 +162,13 @@ export async function createOrder(
         size: item.size ?? null,
         colorEn: item.colorEn ?? null,
         unitPrice: product.price,
+        // Snapshotted, so deleting the listing later does not take this line
+        // out of the shop's own history — or out of a settlement built on it.
+        sellerId: product.sellerId,
+        // The rate agreed *now*. Null on a house line: the store keeps the lot,
+        // and there is no shop to owe. Raising the rate afterwards must never
+        // rewrite a settlement that has already been issued.
+        commissionPct: product.sellerId ? commissionPct(product) : null,
         preorder: product.preorder,
         // Snapshotted, so moving the product's date later never rewrites what
         // this customer was promised.
@@ -295,6 +314,11 @@ export async function createOrder(
     })
     .returning()
 
+  // One debt per shop with goods in this order, built here where the priced
+  // lines are already in memory. See the settlements table for why it is
+  // written at checkout rather than at delivery.
+  const settlementRows = buildSettlements(order.id, orderNumber, lines, liveShops)
+
   // Line items and the stock decrements go together in one transaction over
   // Neon's HTTP protocol. `db.transaction()` is unavailable on this driver,
   // but `batch` maps to a real transaction — without it a failure partway
@@ -311,11 +335,19 @@ export async function createOrder(
         colorEn: line.colorEn,
         unitPrice: line.unitPrice,
         preorderShipsAt: line.preorderShipsAt,
+        sellerId: line.sellerId,
+        commissionPct: line.commissionPct,
       })),
     ),
     // Opens the timeline, so every order has a first event rather than the
     // history starting only once an admin touches it.
     db.insert(orderEvents).values({ orderId: order.id, status: 'pending' }),
+    // `onConflictDoNothing` is belt and braces against a retried request — the
+    // unique index on (order_id, seller_id) is the real guarantee. This is what
+    // stops a retry surfacing as a 500 to the shopper instead.
+    ...(settlementRows.length
+      ? [db.insert(settlements).values(settlementRows).onConflictDoNothing()]
+      : []),
     // Decrement stock, never below zero. Pre-order lines are skipped: their
     // allocation was already claimed by the conditional UPDATE above, and
     // decrementing twice would take the run down at double rate.
@@ -332,6 +364,67 @@ export async function createOrder(
   ])
 
   return { orderNumber }
+}
+
+/** One priced line, as much of it as `buildSettlements` needs. */
+type SettlementSourceLine = {
+  sellerId: string | null
+  commissionPct: number | null
+  unitPrice: number
+  quantity: number
+}
+
+/**
+ * Groups an order's marketplace lines by shop and prices each group into a
+ * settlement row.
+ *
+ * House lines produce nothing — the store keeps the lot, and a row saying it
+ * owes itself money would show up in every payout queue for ever.
+ *
+ * The base is the shop's own goods value and nothing else. The order's coupon
+ * and delivery charge are the store's own: a discount the store chose to give
+ * cannot reach back into what a shop is owed, and a courier bill is not the
+ * seller's to pay. This is the same definition `getSellerOrders` has always
+ * used, and `t.wholesale.benefits` is the promise it keeps.
+ *
+ * Insertion order fixes the `-S1`, `-S2` suffixes, so a settlement number is
+ * stable and derivable from the order it came out of.
+ */
+function buildSettlements(
+  orderId: string,
+  orderNumber: string,
+  lines: readonly SettlementSourceLine[],
+  shopNames: ReadonlyMap<string, string>,
+) {
+  const bySeller = new Map<string, SettlementSourceLine[]>()
+
+  for (const line of lines) {
+    if (!line.sellerId) continue
+    const existing = bySeller.get(line.sellerId)
+    if (existing) existing.push(line)
+    else bySeller.set(line.sellerId, [line])
+  }
+
+  return [...bySeller.entries()].map(([sellerId, sellerLines], index) => {
+    const summary = summariseSettlement(sellerLines)
+
+    return {
+      settlementNumber: `${orderNumber}-S${index + 1}`,
+      orderId,
+      sellerId,
+      // The shop was verified approved a few lines above, so the name is there.
+      // The fallback is for the type, not for a case that can happen.
+      shopNameSnapshot: shopNames.get(sellerId) ?? 'Unknown shop',
+      grossAmount: summary.gross,
+      commissionAmount: summary.commission,
+      payoutAmount: summary.payout,
+      // Null when the shop's lines were sold at different rates — the document
+      // then shows the blend, and `order_items` keeps the per-line truth.
+      commissionPct: summary.uniformPct,
+      pieceCount: summary.pieces,
+      lineCount: summary.lineCount,
+    }
+  })
 }
 
 /**
@@ -378,9 +471,42 @@ async function releasePreorderStock(
   )
 }
 
+/**
+ * An order's lines, without any hint of who supplied them.
+ *
+ * This is what a *customer* sees. The seller join that used to live here put a
+ * shop name on every line of every order — including the one the buyer's
+ * confirmation page renders — and the buyer of a marketplace listing must not
+ * learn which wholesaler it came from. `attachAdminItems` below is the one that
+ * still resolves it.
+ */
 async function attachItems(row: OrderRow): Promise<OrderWithItems> {
-  // Left joins, both of them: a deleted product leaves `product_id` null, and
-  // a house product has no seller. Either way the line still has to come back.
+  const items = await db
+    .select({
+      name: orderItems.nameSnapshot,
+      image: orderItems.imageSnapshot,
+      quantity: orderItems.quantity,
+      size: orderItems.size,
+      colorEn: orderItems.colorEn,
+      unitPrice: orderItems.unitPrice,
+      preorderShipsAt: orderItems.preorderShipsAt,
+    })
+    .from(orderItems)
+    .where(eq(orderItems.orderId, row.id))
+
+  return { ...row, items }
+}
+
+/**
+ * The same lines with the supplying shop attached — admin surfaces only. The
+ * store stands between the two wholesalers and is the one party entitled to see
+ * both ends of the trade.
+ *
+ * A left join, because a house line has no seller. It resolves through
+ * `order_items.seller_id`, the snapshot written at checkout, so deleting a
+ * listing no longer takes the attribution with it.
+ */
+async function attachAdminItems(row: OrderRow): Promise<OrderWithItems> {
   const items = await db
     .select({
       name: orderItems.nameSnapshot,
@@ -393,10 +519,9 @@ async function attachItems(row: OrderRow): Promise<OrderWithItems> {
       sellerName: wholesalerApplications.shopName,
     })
     .from(orderItems)
-    .leftJoin(products, eq(products.id, orderItems.productId))
     .leftJoin(
       wholesalerApplications,
-      eq(wholesalerApplications.id, products.sellerId),
+      eq(wholesalerApplications.id, orderItems.sellerId),
     )
     .where(eq(orderItems.orderId, row.id))
 
@@ -550,9 +675,16 @@ export async function getOrderStatusCounts(): Promise<
   return counts
 }
 
-export async function getOrderById(id: string): Promise<OrderWithItems | null> {
+/**
+ * One order for the admin console, with each line's supplying shop resolved.
+ * Named for its audience: the customer-facing loader is `getOrderByNumber`, and
+ * the difference between them is who is allowed to see the seller.
+ */
+export async function getAdminOrderById(
+  id: string,
+): Promise<OrderWithItems | null> {
   const [row] = await db.select().from(orders).where(eq(orders.id, id))
-  return row ? attachItems(row) : null
+  return row ? attachAdminItems(row) : null
 }
 
 export async function getOrderEvents(
@@ -566,8 +698,9 @@ export async function getOrderEvents(
 }
 
 /**
- * Moves an order and records why. The update and the event go in one `batch`
- * so the history can never disagree with `orders.status`.
+ * Moves an order and records why. The update, the event and the settlement
+ * transition go in one `batch`, so the history and the money can never disagree
+ * with `orders.status`.
  */
 export async function updateOrderStatus(
   orderId: string,
@@ -575,6 +708,7 @@ export async function updateOrderStatus(
   actorUserId?: number | null,
   note?: string | null,
 ): Promise<void> {
+  const now = new Date()
   await db.batch([
     db.update(orders).set({ status }).where(eq(orders.id, orderId)),
     db.insert(orderEvents).values({
@@ -583,7 +717,61 @@ export async function updateOrderStatus(
       note: note ?? null,
       actorUserId: actorUserId ?? null,
     }),
+    settlementTransition(orderId, status, now),
   ])
+}
+
+/**
+ * What a status change does to what the store owes its sellers.
+ *
+ * Every branch is a conditional UPDATE with the current state in the WHERE
+ * clause, and that is what makes this idempotent. There is no state machine on
+ * `orders.status` — any status can follow any other — so `delivered` can be set
+ * twice, reverted, and set again, and none of those may double a debt or move a
+ * date that has already been recorded.
+ *
+ * A `paid` settlement is never touched by any branch. Money that has left the
+ * building is a fact; if the order is cancelled afterwards, an admin reconciles
+ * it by hand from the "needs reconciling" view. The alternative is the app
+ * quietly rewriting a payment that really happened.
+ *
+ * Note this is a transaction but not a serialisable one: two admins racing
+ * `delivered` and `cancelled` can still interleave into an order that is
+ * cancelled while its settlement reached `due`. The reconcile view is what
+ * catches that — the same class of race the app already accepts elsewhere.
+ */
+function settlementTransition(orderId: string, status: OrderStatus, now: Date) {
+  if (status === 'delivered') {
+    // `void` is included so re-delivering an order cancelled by mistake revives
+    // the debt. `settled_at` is only stamped on rows that were not already due,
+    // so the *first* delivery is the date a range statement bins on.
+    return db
+      .update(settlements)
+      .set({ status: 'due', settledAt: now, voidedAt: null })
+      .where(
+        and(
+          eq(settlements.orderId, orderId),
+          inArray(settlements.status, ['pending', 'void']),
+        ),
+      )
+  }
+
+  if (status === 'cancelled') {
+    return db
+      .update(settlements)
+      .set({ status: 'void', voidedAt: now, settledAt: null })
+      .where(
+        and(eq(settlements.orderId, orderId), ne(settlements.status, 'paid')),
+      )
+  }
+
+  // Moved back out of delivered — a correction. The debt goes back to waiting.
+  return db
+    .update(settlements)
+    .set({ status: 'pending', settledAt: null })
+    .where(
+      and(eq(settlements.orderId, orderId), eq(settlements.status, 'due')),
+    )
 }
 
 export type AdvanceVerdict = 'advance_paid' | 'advance_failed'

@@ -12,6 +12,7 @@ import { ImageUploader } from '@/components/admin/image-uploader'
 import { LoadingOverlay } from '@/components/loading-overlay'
 import { upsertProduct, type ProductInput } from '@/app/actions/admin'
 import { DEFAULT_ADVANCE_PCT } from '@/lib/preorder'
+import { DEFAULT_COMMISSION_PCT, splitCommission } from '@/lib/commission'
 import { formatPrice } from '@/lib/currency'
 import type { CategorySlug, Product, ProductColor } from '@/lib/types'
 import type { Localized } from '@/lib/i18n'
@@ -113,7 +114,15 @@ export function ProductForm({
     // Blank means "use the store default", which is a different thing from 0
     // ("no advance"), so it cannot be defaulted to a number here.
     preorderAdvancePct: product?.preorderAdvancePct?.toString() ?? '',
+    // Same blank-vs-0 distinction as the advance: blank is "use the store
+    // default", 0 is "this shop is carried at cost".
+    commissionPct: product?.commissionPct?.toString() ?? '',
   })
+
+  // Only a marketplace listing has a shop to owe. On a house product the store
+  // already keeps everything, so the field is not rendered at all rather than
+  // rendered as a number that means nothing.
+  const isMarketplace = Boolean(product?.sellerId)
 
   // Generic over the key so `preorder` can be a boolean while the rest stay
   // strings, instead of every field being stringly typed for the sake of one.
@@ -136,6 +145,27 @@ export function ProductForm({
         : '0% takes the booking on cash on delivery.'
     }
     return `${pct}% of ${formatPrice(price)} = ${formatPrice(Math.round((price * pct) / 100))} paid up front per piece, the rest on delivery. Set BKASH_NUMBER / NAGAD_NUMBER first.`
+  })()
+
+  // The same treatment for the commission: spelled out in taka against the
+  // price being typed, so an admin sees both halves of the split rather than a
+  // percentage they have to do arithmetic on.
+  const commissionHint = (() => {
+    const price = Number(form.price) || 0
+    const pct =
+      form.commissionPct === ''
+        ? DEFAULT_COMMISSION_PCT
+        : Number(form.commissionPct) || 0
+    const split = splitCommission(price, pct)
+    const blank =
+      form.commissionPct === ''
+        ? ` Blank uses the store default of ${DEFAULT_COMMISSION_PCT}%.`
+        : ''
+
+    if (pct === 0) {
+      return `0% — the shop keeps the whole ${formatPrice(price)}.${blank}`
+    }
+    return `${pct}% of ${formatPrice(price)}: you keep ${formatPrice(split.commission)} per piece, the shop is paid ${formatPrice(split.payout)}.${blank} Changes apply to future orders only — orders already placed keep the rate they were sold at.`
   })()
 
   async function onSubmit(event: React.FormEvent) {
@@ -182,6 +212,13 @@ export function ProductForm({
       preorderAdvancePct:
         form.preorder && form.preorderAdvancePct !== ''
           ? Number(form.preorderAdvancePct)
+          : null,
+      // Always sent for a marketplace listing, even when the field was not
+      // touched: `upsertProduct` rewrites the whole row, so omitting it on an
+      // unrelated edit would null the rate the store agreed with the shop.
+      commissionPct:
+        isMarketplace && form.commissionPct !== ''
+          ? Number(form.commissionPct)
           : null,
     }
 
@@ -353,6 +390,31 @@ export function ProductForm({
           1 means no minimum. Enforced in the cart and again at checkout.
         </p>
       </Field>
+
+      {isMarketplace && (
+        <div className="space-y-3 rounded-lg border border-border p-4">
+          <p className="text-sm font-medium">
+            Marketplace listing — {product?.sellerName ?? 'a wholesaler'}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            The shop set the price above and the buyer pays it unchanged. Your
+            commission is deducted from what you owe the shop, so raising it
+            never moves the price on the storefront.
+          </p>
+
+          <Field label="Store commission (%)">
+            <Input
+              type="number"
+              min={0}
+              max={100}
+              placeholder={String(DEFAULT_COMMISSION_PCT)}
+              value={form.commissionPct}
+              onChange={(e) => set('commissionPct', e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">{commissionHint}</p>
+          </Field>
+        </div>
+      )}
 
       <div className="space-y-3 rounded-lg border border-border p-4">
         <label className="flex items-center gap-2.5 text-sm font-medium">

@@ -29,9 +29,9 @@ export function WholesaleMarket() {
     return wholesaleProducts.filter(
       (product) =>
         (!category || product.category === category) &&
-        (!term ||
-          pick(product.name).toLowerCase().includes(term) ||
-          (product.sellerName ?? '').toLowerCase().includes(term)),
+        // Product names only. The shop behind a listing is never shown to a
+        // buyer, so searching by it would leak the very thing that is hidden.
+        (!term || pick(product.name).toLowerCase().includes(term)),
     )
   }, [wholesaleProducts, search, category, pick])
 
@@ -110,11 +110,13 @@ export function WholesaleMarket() {
               {visible.map((product) => (
                 <div key={product.id} className="flex flex-col">
                   <ProductCard product={product} />
-                  {product.sellerName && (
-                    <p className="mt-1.5 truncate px-1 text-xs text-muted-foreground">
-                      {copy.soldBy.replace('{shop}', product.sellerName)}
-                    </p>
-                  )}
+                  {/* Deliberately neutral. The buyer is trading with the
+                      store, and which shop supplied the goods is not theirs
+                      to know — see lib/wholesale/orders.ts for the other half
+                      of the same rule. */}
+                  <p className="mt-1.5 truncate px-1 text-xs text-muted-foreground">
+                    {copy.soldByStore}
+                  </p>
                 </div>
               ))}
             </div>

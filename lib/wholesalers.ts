@@ -1,6 +1,6 @@
 import 'server-only'
 import { cache } from 'react'
-import { and, count, desc, eq } from 'drizzle-orm'
+import { and, count, desc, eq, inArray } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
 import {
@@ -74,6 +74,39 @@ export const getViewerShop = cache(async function getViewerShop(): Promise<Whole
 
   return shop ?? null
 })
+
+/**
+ * The viewer's shop for the purpose of *being paid* — approved or suspended.
+ *
+ * Wider than `getViewerShop` on purpose, and deliberately a separate function
+ * rather than a flag on that one. Suspending a shop takes it off the market and
+ * out of the seller console, but it does not cancel money the store already
+ * owes it for goods it delivered: a paused seller who cannot see their own
+ * settlement sheets has no way to check what they are owed, which turns a
+ * temporary pause into a dispute.
+ *
+ * Nothing writeable hangs off this. Every seller mutation still goes through
+ * `requireApprovedWholesaler`, and the market gate is still `getViewerShop`, so
+ * widening the payout view cannot widen anything else.
+ */
+export const getViewerPayoutShop = cache(
+  async function getViewerPayoutShop(): Promise<WholesalerApplicationRow | null> {
+    const user = await getCurrentUser()
+    if (!user) return null
+
+    const [shop] = await db
+      .select()
+      .from(wholesalerApplications)
+      .where(
+        and(
+          eq(wholesalerApplications.userId, user.id),
+          inArray(wholesalerApplications.status, ['approved', 'suspended']),
+        ),
+      )
+
+    return shop ?? null
+  },
+)
 
 /**
  * Guards the seller server actions — the mirror of `requireAdmin()`. Throws

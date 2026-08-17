@@ -115,7 +115,9 @@ export function AdminSidebar() {
   const currentUrl = query ? `${pathname}?${query}` : pathname
 
   return (
-    <Sidebar collapsible="icon">
+    // `print:hidden` so an invoice or a settlement sheet prints as a document
+    // rather than as a screenshot of the console around it.
+    <Sidebar collapsible="icon" className="print:hidden">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>

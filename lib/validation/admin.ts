@@ -128,6 +128,19 @@ export const productSchema = z.object({
     .max(100, 'Cannot be more than 100%')
     .nullish()
     .transform((value) => value ?? null),
+  /**
+   * The store's cut of a marketplace listing. Null means the store default;
+   * a stored 0 is a real choice — a shop carried at cost — so nothing demands
+   * a value here either. Meaningless on a house product, and the form only
+   * offers it on a listing that has a seller.
+   */
+  commissionPct: z
+    .number()
+    .int()
+    .min(0, 'Cannot be negative')
+    .max(100, 'Cannot be more than 100%')
+    .nullish()
+    .transform((value) => value ?? null),
 })
   // A pre-order with no date promises nothing, and the storefront card has a
   // "Delivery from" line with nowhere to get a value. Caught here rather than

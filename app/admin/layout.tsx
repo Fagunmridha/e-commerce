@@ -47,8 +47,8 @@ export default async function AdminLayout({
           {/* The console is centred rather than pinned to the sidebar: on a wide
               monitor a full-bleed page leaves the content stranded in one
               corner with a river of empty space beside it. */}
-          <div className="flex flex-1 flex-col p-4 md:p-6">
-            <div className="mx-auto flex w-full max-w-[1400px] flex-1 flex-col gap-6">
+          <div className="flex flex-1 flex-col p-4 md:p-6 print:p-0">
+            <div className="mx-auto flex w-full max-w-[1400px] flex-1 flex-col gap-6 print:max-w-none print:gap-0">
               {children}
             </div>
           </div>

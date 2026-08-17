@@ -56,8 +56,26 @@ export type Product = {
    * product.
    */
   sellerId?: string
-  /** The seller's shop name, for the "sold by" line. */
+  /**
+   * The seller's shop name.
+   *
+   * Populated by the *admin* loaders only, never by a storefront or market
+   * query: the two wholesalers either side of a trade must not learn each
+   * other's identity, so a buyer's page has no business carrying this. See
+   * `sellerIsVisible` in lib/products.ts, which gates the same relationship
+   * without handing the name out.
+   */
   sellerName?: string
+  /**
+   * The store's cut of this listing, as a percentage. Undefined means the store
+   * default (`DEFAULT_COMMISSION_PCT`); 0 means the store takes nothing. Read
+   * it through `commissionPct()` rather than directly, so the fallback lives in
+   * one place.
+   *
+   * Admin-only, like `sellerName` — it is set on the admin product form and
+   * shown nowhere a buyer or a seller can reach.
+   */
+  commissionPct?: number
   /**
    * Upcoming stock, taken on pre-order. These are kept out of /shop, the
    * category pages and search — they surface only in the Coming Soon rail —

@@ -3,6 +3,7 @@ import {
   Plus,
   ShoppingCart,
   Store,
+  Wallet,
   type LucideIcon,
 } from 'lucide-react'
 import type { Dictionary } from '@/lib/dictionaries'
@@ -54,6 +55,14 @@ export const SELLER_NAV: SellerNavGroup[] = [
         labelKey: 'orders',
         icon: ShoppingCart,
       },
+      // Outside the dashboard's route group on purpose — a suspended shop can
+      // still read what it is owed, and that gate lives on /wholesale/payouts.
+      // From the sidebar it is just an href, so nothing here has to know.
+      {
+        href: '/wholesale/payouts',
+        labelKey: 'payouts',
+        icon: Wallet,
+      },
     ],
   },
   {
@@ -89,6 +98,14 @@ export function sellerCrumb(
     // The listing's own name once the page registers it; until then the form's
     // title, which is at least true.
     return entityLabel || copy.dashboard.editTitle
+
+  // Same shape for the payout routes: `/wholesale/payouts` itself matches the
+  // nav lookup below, but `/wholesale/payouts/<uuid>` and `/statement` would
+  // otherwise fall through to "My listings".
+  if (pathname === '/wholesale/payouts/statement')
+    return copy.payouts.statementTitle
+  if (pathname.startsWith('/wholesale/payouts/'))
+    return entityLabel || copy.nav.payouts
 
   const match = SELLER_NAV.flatMap((group) => group.items).find(
     (item) => item.href === pathname,

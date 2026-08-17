@@ -74,6 +74,10 @@ export async function upsertSellerProduct(
     badge: null,
     colors: null,
   }
+  // `commission_pct` is load-bearing by its *absence* from `values` above:
+  // Drizzle only writes the columns listed, so a seller editing their own
+  // listing cannot touch the rate the store agreed with them. Do not "tidy"
+  // this into a spread of the whole row.
 
   if (data.id) {
     const [updated] = await db

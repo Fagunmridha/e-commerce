@@ -341,3 +341,30 @@
     }
   }
 }
+
+/*
+ * Printing. Invoices and settlement sheets are printed straight from the page
+ * — the browser's own "save as PDF" is the download, which is why the app
+ * carries no PDF library and why Bangla comes out right.
+ *
+ * Outside any @layer so it is not subject to Tailwind's layer ordering: this
+ * has to win over whatever the page set.
+ */
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+
+  html,
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  /* A row split across a page break is unreadable on a money document. */
+  tr,
+  article {
+    break-inside: avoid;
+  }
+}

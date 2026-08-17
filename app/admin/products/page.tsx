@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { getAdminProducts } from '@/lib/products'
 import { DeleteProductButton } from '@/components/admin/delete-product-button'
 import { formatPrice } from '@/lib/currency'
+import { DEFAULT_COMMISSION_PCT } from '@/lib/commission'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,6 +31,7 @@ export default async function AdminProductsPage() {
               <th className="px-4 py-3 font-semibold">Product</th>
               <th className="px-4 py-3 font-semibold">Category</th>
               <th className="px-4 py-3 font-semibold">Seller</th>
+              <th className="px-4 py-3 font-semibold">Commission</th>
               <th className="px-4 py-3 font-semibold">Price</th>
               <th className="px-4 py-3 font-semibold">Stock</th>
               <th className="px-4 py-3 font-semibold">Actions</th>
@@ -55,6 +57,21 @@ export default async function AdminProductsPage() {
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">
                   {product.sellerName ?? 'In-house'}
+                </td>
+                {/* Blank on a house product — the store keeps the lot, so
+                    there is no rate to state. On a listing, an explicit
+                    "(default)" so a rate nobody has set is visibly not a
+                    decision anyone made. */}
+                <td className="px-4 py-3 text-muted-foreground tabular-nums">
+                  {!product.sellerId ? (
+                    '—'
+                  ) : product.commissionPct === undefined ? (
+                    <span className="text-xs">
+                      {DEFAULT_COMMISSION_PCT}% (default)
+                    </span>
+                  ) : (
+                    `${product.commissionPct}%`
+                  )}
                 </td>
                 <td className="px-4 py-3 text-foreground">
                   {formatPrice(product.price)}
