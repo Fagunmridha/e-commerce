@@ -136,6 +136,9 @@ export async function createOrder(
       )
     : new Map<string, string>()
 
+  const [settings] = await db.select().from(storeSettings).where(eq(storeSettings.id, 1))
+  const defaultCommissionPct = settings?.defaultCommissionPct ?? 10
+
   let subtotal = 0
   const lines = input.items.flatMap((item) => {
     const product = byId.get(item.productId)
@@ -144,9 +147,6 @@ export async function createOrder(
     if (product.sellerId && !liveShops.has(product.sellerId)) {
       throw new Error(`${product.id} is no longer for sale`)
     }
-
-    const [settings] = await db.select().from(storeSettings).where(eq(storeSettings.id, 1))
-    const defaultCommissionPct = settings?.defaultCommissionPct ?? 10
 
     // The cart clamps this too, but that is a courtesy and this is the rule —
     // the client's quantities are no more trusted than its prices.
