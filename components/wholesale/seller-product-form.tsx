@@ -12,6 +12,8 @@ import { LoadingOverlay } from '@/components/loading-overlay'
 import { useLanguage } from '@/components/language-provider'
 import { useCatalogue } from '@/components/catalogue-provider'
 import { upsertSellerProduct } from '@/app/actions/seller-products'
+import { splitCommission } from '@/lib/commission'
+import { formatPrice } from '@/lib/currency'
 import type { Product } from '@/lib/types'
 
 /**
@@ -24,7 +26,13 @@ import type { Product } from '@/lib/types'
  * Narrower than the admin form on purpose — no old price, badge, colours or a
  * separate Bangla name. A seller sets what they sell and what it costs.
  */
-export function SellerProductForm({ product }: { product?: Product }) {
+export function SellerProductForm({
+  product,
+  defaultCommissionPct,
+}: {
+  product?: Product
+  defaultCommissionPct: number
+}) {
   const router = useRouter()
   const { t, pick } = useLanguage()
   const { categories } = useCatalogue()
@@ -111,13 +119,35 @@ export function SellerProductForm({ product }: { product?: Product }) {
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Field label={copy.price} hint={copy.priceHint}>
-          <Input
-            type="number"
-            step="1"
-            min={0}
-            value={form.price}
-            onChange={(event) => set('price', event.target.value)}
-          />
+          <div className="space-y-2">
+            <Input
+              type="number"
+              step="1"
+              min={0}
+              value={form.price}
+              onChange={(event) => set('price', event.target.value)}
+            />
+            {(() => {
+              const p = Number(form.price) || 0
+              if (p > 0) {
+                const pct = product?.commissionPct ?? defaultCommissionPct
+                const { payout, commission } = splitCommission(p, pct)
+                return (
+                  <div className="rounded border border-border/50 bg-muted/50 p-2.5 text-xs text-muted-foreground shadow-sm">
+                    <div className="flex justify-between font-medium text-foreground">
+                      <span>You receive:</span>
+                      <span className="text-primary">{formatPrice(payout)}</span>
+                    </div>
+                    <div className="mt-1 flex justify-between text-muted-foreground/80">
+                      <span>Platform commission ({pct}%):</span>
+                      <span>{formatPrice(commission)}</span>
+                    </div>
+                  </div>
+                )
+              }
+              return null
+            })()}
+          </div>
         </Field>
         <Field label={copy.stock} hint={copy.stockHint}>
           <Input

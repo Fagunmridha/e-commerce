@@ -7,6 +7,7 @@ import { SetBreadcrumbLabel } from '@/components/breadcrumb-label'
 import { getViewerShop } from '@/lib/wholesalers'
 import { getSellerProductById } from '@/lib/products'
 import { getServerDictionary } from '@/lib/server-locale'
+import { getStoreSettings } from '@/app/actions/settings'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,9 +22,10 @@ export default async function EditSellerProductPage({
 
   // Scoped by shop, so another seller's id is a 404 rather than a form that
   // silently refuses to save.
-  const [product, t] = await Promise.all([
+  const [product, t, settings] = await Promise.all([
     getSellerProductById(shop.id, id),
     getServerDictionary(),
+    getStoreSettings(),
   ])
   if (!product) notFound()
 
@@ -50,7 +52,7 @@ export default async function EditSellerProductPage({
           </p>
         </div>
       </div>
-      <SellerProductForm product={product} />
+      <SellerProductForm product={product} defaultCommissionPct={settings.defaultCommissionPct} />
     </div>
   )
 }

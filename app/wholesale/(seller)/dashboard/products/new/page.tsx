@@ -3,11 +3,15 @@ import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SellerProductForm } from '@/components/wholesale/seller-product-form'
 import { getServerDictionary } from '@/lib/server-locale'
+import { getStoreSettings } from '@/app/actions/settings'
 
 export const dynamic = 'force-dynamic'
 
 export default async function NewSellerProductPage() {
-  const t = await getServerDictionary()
+  const [t, settings] = await Promise.all([
+    getServerDictionary(),
+    getStoreSettings()
+  ])
 
   return (
     <div className="mx-auto w-full max-w-3xl">
@@ -24,7 +28,7 @@ export default async function NewSellerProductPage() {
           {t.wholesale.dashboard.newTitle}
         </h1>
       </div>
-      <SellerProductForm />
+      <SellerProductForm defaultCommissionPct={settings.defaultCommissionPct} />
     </div>
   )
 }

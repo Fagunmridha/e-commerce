@@ -20,6 +20,7 @@ import {
   orders,
   products,
   settlements,
+  storeSettings,
   wholesalerApplications,
   type OrderEventRow,
   type OrderRow,
@@ -144,6 +145,9 @@ export async function createOrder(
       throw new Error(`${product.id} is no longer for sale`)
     }
 
+    const [settings] = await db.select().from(storeSettings).where(eq(storeSettings.id, 1))
+    const defaultCommissionPct = settings?.defaultCommissionPct ?? 10
+
     // The cart clamps this too, but that is a courtesy and this is the rule —
     // the client's quantities are no more trusted than its prices.
     if (item.quantity < product.moq) {
@@ -168,7 +172,7 @@ export async function createOrder(
         // The rate agreed *now*. Null on a house line: the store keeps the lot,
         // and there is no shop to owe. Raising the rate afterwards must never
         // rewrite a settlement that has already been issued.
-        commissionPct: product.sellerId ? commissionPct(product) : null,
+        commissionPct: product.sellerId ? (product.commissionPct ?? defaultCommissionPct) : null,
         preorder: product.preorder,
         // Snapshotted, so moving the product's date later never rewrites what
         // this customer was promised.
