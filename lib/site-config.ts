@@ -4,6 +4,22 @@
  */
 
 /**
+ * The one place the store’s own contact details are written down.
+ *
+ * The footer, the contact page and every policy page read from here, so a
+ * changed number or address is a one-line edit rather than a hunt through the
+ * dictionary in two languages. Labels around these values are translated; the
+ * values themselves are not.
+ */
+export const STORE_CONTACT = {
+  phone: '+880 1872327575',
+  /** Digits only, for `tel:` — a link with spaces in it does not dial. */
+  phoneDial: '+8801872327575',
+  email: 'support@cauyapauya.com',
+  address: '#92, Kakoli, Banani, Dhaka-1213',
+} as const
+
+/**
  * WhatsApp number for the floating contact button, in wa.me format:
  * digits only, with country code, no `+` or spaces.
  * `01872327575` → `8801872327575`.

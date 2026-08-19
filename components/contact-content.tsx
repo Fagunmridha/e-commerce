@@ -1,11 +1,9 @@
 'use client'
 
-import { Clock, Mail, MapPin, Phone } from 'lucide-react'
 import { PageHeader } from '@/components/page-header'
 import { ContactForm } from '@/components/contact-form'
+import { storeContactRows } from '@/components/store-contact'
 import { useLanguage } from '@/components/language-provider'
-
-const DETAIL_ICONS = [Mail, Phone, MapPin, Clock]
 
 export function ContactContent() {
   const { t } = useLanguage()
@@ -26,30 +24,38 @@ export function ContactContent() {
         </div>
 
         <div className="space-y-4">
-          {t.contact.details.map((detail, index) => {
-            const Icon = DETAIL_ICONS[index]
-
-            return (
-              <div
-                key={detail.title}
-                className="flex gap-3 rounded-lg border border-border bg-card p-4"
-              >
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
-                  <Icon className="size-4.5" />
-                </span>
-                <div>
-                  <h3 className="text-sm font-semibold text-foreground">
-                    {detail.title}
-                  </h3>
-                  {detail.lines.map((line) => (
-                    <p key={line} className="text-sm text-muted-foreground">
-                      {line}
-                    </p>
-                  ))}
-                </div>
+          {storeContactRows(t).map(({ Icon, label, lines, href }) => (
+            <div
+              key={label}
+              className="flex gap-3 rounded-lg border border-border bg-card p-4"
+            >
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
+                <Icon className="size-4.5" aria-hidden="true" />
+              </span>
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold text-foreground">
+                  {label}
+                </h3>
+                {lines.map((line, index) => (
+                  <p
+                    key={line}
+                    className="text-sm break-words text-muted-foreground"
+                  >
+                    {href && index === 0 ? (
+                      <a
+                        href={href}
+                        className="transition-colors hover:text-primary"
+                      >
+                        {line}
+                      </a>
+                    ) : (
+                      line
+                    )}
+                  </p>
+                ))}
               </div>
-            )
-          })}
+            </div>
+          ))}
         </div>
       </section>
     </>

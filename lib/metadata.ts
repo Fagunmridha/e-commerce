@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { getCategory } from '@/lib/products'
 import type { CategorySlug } from '@/lib/types'
 import { getCategoryDescription, type Dictionary } from '@/lib/dictionaries'
+import { getPolicy, type PolicySlug } from '@/lib/policies'
 import { getServerDictionary, getServerLocale } from '@/lib/server-locale'
 
 /** Metadata for a page whose copy already lives under `pages` in the dictionary. */
@@ -14,6 +15,18 @@ export async function pageMetadata(
   return {
     title: `${page.title} ${t.meta.suffix}`,
     description: page.description,
+  }
+}
+
+/** Metadata for a legal page — its copy lives in `lib/policies.ts`. */
+export async function policyMetadata(slug: PolicySlug): Promise<Metadata> {
+  const locale = await getServerLocale()
+  const t = await getServerDictionary()
+  const doc = getPolicy(locale, slug)
+
+  return {
+    title: `${doc.title} ${t.meta.suffix}`,
+    description: doc.description,
   }
 }
 

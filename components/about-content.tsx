@@ -1,13 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { Heart, Leaf, Package, Users } from 'lucide-react'
+import { ShieldCheck, ShoppingBag, Sparkles, Tag } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PageHeader } from '@/components/page-header'
 import { Reveal } from '@/components/reveal'
 import { useLanguage } from '@/components/language-provider'
 
-const VALUE_ICONS = [Package, Leaf, Heart, Users]
+const VALUE_ICONS = [ShieldCheck, Sparkles, Tag, ShoppingBag]
 
 export function AboutContent() {
   const { t } = useLanguage()
@@ -70,17 +70,38 @@ export function AboutContent() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-page px-4 py-14 sm:px-6 lg:px-4">
-        <div className="grid grid-cols-2 gap-6 lg:grid-cols-4">
-          {t.about.stats.map((stat, index) => (
-            <Reveal key={stat.label} delay={index * 80} className="text-center">
-              <p className="text-3xl font-bold text-primary sm:text-4xl">
-                {stat.value}
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">{stat.label}</p>
-            </Reveal>
-          ))}
+      {/* Mission and vision, where the invented "120K customers / 35 countries"
+          counters used to sit. Numbers nobody can stand behind do not belong on
+          a live storefront. */}
+      <section className="mx-auto max-w-page px-4 py-14 sm:px-6 lg:px-4 lg:py-20">
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Reveal className="rounded-xl border border-border bg-card p-6 sm:p-8">
+            <h2 className="text-display-sm text-foreground">
+              {t.about.missionTitle}
+            </h2>
+            <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+              {t.about.mission}
+            </p>
+          </Reveal>
+
+          <Reveal
+            delay={120}
+            className="rounded-xl border border-border bg-card p-6 sm:p-8"
+          >
+            <h2 className="text-display-sm text-foreground">
+              {t.about.visionTitle}
+            </h2>
+            <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+              {t.about.vision}
+            </p>
+          </Reveal>
         </div>
+
+        <Reveal delay={200}>
+          <p className="mt-12 text-center text-xl font-bold text-foreground sm:text-2xl">
+            {t.about.closing}
+          </p>
+        </Reveal>
       </section>
     </>
   )
