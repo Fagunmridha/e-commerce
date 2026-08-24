@@ -6,6 +6,7 @@ import {
   Package,
   Percent,
   ReceiptText,
+  Settings,
   ShoppingCart,
   Store,
   Users,
@@ -35,7 +36,10 @@ export type AdminNavGroup = {
 export const ADMIN_NAV: AdminNavGroup[] = [
   {
     label: 'Overview',
-    items: [{ href: '/admin', label: 'Dashboard', icon: LayoutDashboard }],
+    items: [
+      { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+      { href: '/admin/settings', label: 'Settings', icon: Settings },
+    ],
   },
   {
     label: 'Catalogue',

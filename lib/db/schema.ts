@@ -612,3 +612,15 @@ export type ContactMessageRow = typeof contactMessages.$inferSelect
 export type WholesalerApplicationRow =
   typeof wholesalerApplications.$inferSelect
 export type SettlementRow = typeof settlements.$inferSelect
+
+/**
+ * Global settings for the store.
+ * There should only ever be one row in this table (id = 1).
+ */
+export const storeSettings = pgTable('store_settings', {
+  id: integer('id').primaryKey().default(1),
+  defaultCommissionPct: integer('default_commission_pct').notNull().default(10),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+})
+
+export type StoreSettingsRow = typeof storeSettings.$inferSelect

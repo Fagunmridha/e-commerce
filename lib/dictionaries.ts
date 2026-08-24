@@ -48,7 +48,9 @@ const en = {
   },
   features: [
     { title: 'Fast Delivery', description: '৳60 inside Dhaka, ৳120 outside' },
-    { title: 'Easy Returns', description: '30 days return policy' },
+    // 3 days, because that is what the return policy says. A storefront badge
+    // promising thirty is a promise support has to walk back.
+    { title: 'Easy Returns', description: '3-day return policy' },
     { title: 'Secure Payment', description: '100% secure payment' },
     { title: '100% Original', description: 'Authentic products only' },
   ],
@@ -197,7 +199,7 @@ const en = {
       {
         question: 'Can I return or exchange it?',
         answer:
-          'Yes, within 30 days, as long as the item is unworn and the tags are still on. Return delivery is on us if the item was wrong or damaged.',
+          'Yes — contact us within 3 days of delivery, as long as the item is unworn and the tags are still on. Return delivery is on us if the item was wrong or damaged.',
       },
       {
         question: 'What payment methods can I use?',
@@ -272,7 +274,7 @@ const en = {
     about: {
       title: 'About CP Market',
       description:
-        'We make everyday clothing that fits well, lasts long and costs what it should.',
+        'A modern online fashion destination bringing stylish, quality clothing closer to you.',
       breadcrumb: 'About Us',
     },
     contact: {
@@ -509,85 +511,47 @@ const en = {
       'Leather, metal and canvas — the finishing pieces that pull an outfit together.',
   },
   about: {
-    storyTitle: 'Our Story',
+    storyTitle: 'Welcome to CP Market',
     storyParagraphs: [
-      'CP Market started in 2019 with a simple frustration: good basics were either badly made or absurdly expensive. There was very little in between.',
-      'So we started small — one shirt, one mill, one run of 200 pieces. We sold out in a week, reinvested everything, and kept going. Today we make over 200 styles across men’s, women’s and kids’ wear, and we still work with that first mill.',
-      'We don’t chase trends or run twelve drops a year. We design a piece, make it properly, and keep it in stock — so when you find something you love, it’s still there next season.',
+      'At CP Market, we believe fashion should be simple, accessible, and inspiring. CP Market is a modern online fashion destination created to bring stylish, quality, and thoughtfully selected clothing closer to you.',
+      'From everyday essentials to pieces that make a statement, we aim to make finding the right style an enjoyable and effortless experience.',
+      'We carefully focus on product quality, modern trends, fair pricing, and a smooth shopping experience — so you can shop with confidence from the comfort of your home.',
     ],
+    storyEyebrow: 'Who we are',
     storyCta: 'Browse the Collection',
-    storySecondaryCta: 'Talk to Us',
-    storyEyebrow: 'Independent since 2019',
-    storyImageAlt: 'The interior of a CP Market store',
-    storyImageAltDetail:
-      'Shirts on wooden hangers from the current collection',
-    storyBadgeValue: '200+',
-    storyBadgeLabel: 'styles kept in stock',
-    valuesEyebrow: 'What drives us',
-    valuesTitle: 'What We Stand For',
-    valuesSubtitle:
-      'Four rules we wrote in the first year and have not bent since.',
+    storyImageAlt: 'A rack of clothing from the CP Market collection',
+    storyImageAltDetail: 'The interior of a modern clothing store',
+    storyImageAltRail: 'A rail of t-shirts in mixed colours',
+    valuesTitle: 'What We Focus On',
     values: [
       {
-        title: 'Made to Last',
+        title: 'Product Quality',
         description:
-          'We pick fabrics for how they hold up after fifty washes, not how they photograph on day one.',
+          'Every piece is selected for fabric, finish and how it holds up after real wear — not just how it photographs.',
       },
       {
-        title: 'Responsible Sourcing',
+        title: 'Modern Trends',
         description:
-          'Organic cotton, recycled wool and linen from mills we visit and can name.',
+          'A thoughtfully selected range that keeps up with what people are actually wearing this season.',
       },
       {
         title: 'Fair Pricing',
         description:
-          'We sell direct, so you pay for the garment — not for four layers of markup.',
+          'Honest prices on every piece, so quality clothing stays within reach.',
       },
       {
-        title: 'People First',
+        title: 'A Smooth Experience',
         description:
-          'Every partner factory pays a living wage and is audited twice a year.',
+          'Simple browsing, clear delivery charges and cash on delivery — shop with confidence from home.',
       },
     ],
-    stats: [
-      { value: '120K+', label: 'Happy customers' },
-      { value: '35', label: 'Countries shipped to' },
-      { value: '12', label: 'Partner mills' },
-      { value: '4.8/5', label: 'Average rating' },
-    ],
-    timelineEyebrow: 'The road so far',
-    timelineTitle: 'How We Got Here',
-    timeline: [
-      {
-        year: '2019',
-        title: 'One shirt, one mill',
-        description:
-          'A first run of 200 pieces sold out in a week. Every taka went straight into the next one.',
-      },
-      {
-        year: '2021',
-        title: 'Women\u2019s and kids\u2019 wear',
-        description:
-          'Two more mills joined us, and the collection grew past basics for the first time.',
-      },
-      {
-        year: '2023',
-        title: 'Shipping worldwide',
-        description:
-          'Orders started leaving Bangladesh for 35 countries, on the same delivery promise.',
-      },
-      {
-        year: 'Today',
-        title: '200+ styles, always in stock',
-        description:
-          'No twelve drops a year \u2014 just pieces we keep making for as long as you keep wearing them.',
-      },
-    ],
-    ctaTitle: 'Made properly. Priced honestly.',
-    ctaBody:
-      'Have a look at what we are making right now, or send us a question \u2014 we usually reply within 24 hours.',
-    ctaPrimary: 'Shop the Collection',
-    ctaSecondary: 'Contact Us',
+    missionTitle: 'Our Mission',
+    mission:
+      'Our mission is simple: to make quality fashion accessible to everyone while creating a shopping experience people can trust.',
+    visionTitle: 'Our Vision',
+    vision:
+      'We aspire to build CP Market into a trusted fashion brand where style, quality, and customer satisfaction always come first.',
+    closing: 'Your style. Your choice. Your CP Market.',
   },
   contact: {
     formTitle: 'Send us a message',
@@ -618,12 +582,6 @@ const en = {
       subject: 'Please add a subject.',
       message: 'Please write at least 10 characters.',
     },
-    details: [
-      { title: 'Email', lines: ['support@cpmarket.com', 'orders@cpmarket.com'] },
-      { title: 'Phone', lines: ['+880 1872-327575', 'Mon–Sat'] },
-      { title: 'Store', lines: ['House 12, Road 5', 'Dhanmondi, Dhaka 1205'] },
-      { title: 'Hours', lines: ['Mon–Sat: 10am – 8pm', 'Sunday: closed'] },
-    ],
   },
   wholesale: {
     badge: 'For businesses',
@@ -953,6 +911,29 @@ const en = {
     or: 'or',
     contactUs: 'contact us',
   },
+  /**
+   * Chrome around the legal pages. The documents themselves are in
+   * `lib/policies.ts` — only the furniture is translated here.
+   */
+  policies: {
+    onThisPage: 'On this page',
+    helpTitle: 'Still need help?',
+    helpText:
+      'For anything about an order, a delivery, a return or your information, our support team is here.',
+    contactCta: 'Contact us',
+    alsoRead: 'Related pages',
+  },
+  /**
+   * Labels for the store’s own contact details. The values themselves — number,
+   * email, address — are not translated and live in `lib/site-config.ts`.
+   */
+  storeContact: {
+    phone: 'Phone',
+    email: 'Email',
+    address: 'Address',
+    hoursLabel: 'Support hours',
+    hours: 'Saturday – Thursday, 10:00 AM – 8:00 PM',
+  },
   footer: {
     tagline:
       'High quality fashion for men, women and kids. Shop the latest trends at best prices.',
@@ -961,11 +942,6 @@ const en = {
       customerService: 'Customer Service',
       contact: 'Contact Us',
       payment: 'We Accept',
-    },
-    contact: {
-      address: '92, Banani, Kalurhat, Dhaka, Bangladesh',
-      phone: '+880 1872-327575',
-      email: 'hello@cpmarket.com',
     },
     links: {
       aboutUs: 'About Us',
@@ -998,7 +974,7 @@ const en = {
   ticker: [
     'Nationwide delivery from ৳60',
     'New arrivals every week',
-    '30-day easy returns',
+    'Easy 3-day returns',
     'Cash on delivery available',
     'Nationwide shipping',
   ],
@@ -1060,7 +1036,7 @@ const en = {
       items: [
         { label: 'High Quality Products', note: '' },
         { label: 'Fast Nationwide Delivery', note: 'From ৳60' },
-        { label: 'Easy Returns', note: '30 Days Policy' },
+        { label: 'Easy Returns', note: '3-Day Policy' },
         { label: '24/7 Customer Support', note: '' },
       ],
     },
@@ -1193,7 +1169,7 @@ const bn: Dictionary = {
   },
   features: [
     { title: 'দ্রুত ডেলিভারি', description: 'ঢাকার ভেতরে ৳60, বাইরে ৳120' },
-    { title: 'সহজ রিটার্ন', description: '৩০ দিনের রিটার্ন সুবিধা' },
+    { title: 'সহজ রিটার্ন', description: '৩ দিনের রিটার্ন সুবিধা' },
     { title: 'নিরাপদ পেমেন্ট', description: '১০০% নিরাপদ পেমেন্ট' },
     { title: '১০০% অরিজিনাল', description: 'শুধুমাত্র আসল পণ্য' },
   ],
@@ -1328,7 +1304,7 @@ const bn: Dictionary = {
       {
         question: 'রিটার্ন বা এক্সচেঞ্জ করা যাবে?',
         answer:
-          'হ্যাঁ, ৩০ দিনের মধ্যে — পণ্যটি না পরা থাকতে হবে আর ট্যাগ লাগানো থাকতে হবে। পণ্য ভুল বা নষ্ট এলে ফেরত পাঠানোর খরচ আমাদের।',
+          'হ্যাঁ — পণ্য হাতে পাওয়ার ৩ দিনের মধ্যে যোগাযোগ করুন, পণ্যটি না পরা থাকতে হবে আর ট্যাগ লাগানো থাকতে হবে। পণ্য ভুল বা নষ্ট এলে ফেরত পাঠানোর খরচ আমাদের।',
       },
       {
         question: 'কোন কোন উপায়ে পেমেন্ট করা যায়?',
@@ -1402,7 +1378,7 @@ const bn: Dictionary = {
     about: {
       title: 'CP Market সম্পর্কে',
       description:
-        'আমরা এমন পোশাক বানাই যা ভালো ফিট হয়, দীর্ঘদিন টেকে, আর দাম থাকে যুক্তিসঙ্গত।',
+        'আধুনিক অনলাইন ফ্যাশন ঠিকানা — স্টাইলিশ ও মানসম্পন্ন পোশাক আপনার কাছাকাছি।',
       breadcrumb: 'আমাদের সম্পর্কে',
     },
     contact: {
@@ -1623,84 +1599,47 @@ const bn: Dictionary = {
       'চামড়া, ধাতু ও ক্যানভাস — যে জিনিসগুলো পুরো সাজটাকে সম্পূর্ণ করে।',
   },
   about: {
-    storyTitle: 'আমাদের গল্প',
+    storyTitle: 'CP Market–এ স্বাগতম',
     storyParagraphs: [
-      'CP Market-এর শুরু ২০১৯ সালে, একটা সাধারণ অভিযোগ থেকে: ভালো বেসিক পোশাক হয় খারাপভাবে বানানো, নয়তো অস্বাভাবিক দামি। মাঝামাঝি কিছু প্রায় ছিলই না।',
-      'তাই আমরা ছোট করে শুরু করি — একটা শার্ট, একটা মিল, ২০০ পিসের একটা রান। এক সপ্তাহেই সব বিক্রি হয়ে যায়, পুরো টাকাটা আবার লাগিয়ে দিই। আজ আমরা পুরুষ, নারী ও শিশুদের ২০০-এর বেশি স্টাইল বানাই — আর সেই প্রথম মিলটার সাথেই এখনো কাজ করি।',
-      'আমরা ট্রেন্ডের পেছনে ছুটি না, বছরে বারোটা ড্রপও করি না। একটা পোশাক ডিজাইন করি, ঠিকভাবে বানাই, আর স্টকে রাখি — যাতে যেটা আপনার পছন্দ হয়েছে, পরের সিজনেও সেটা পান।',
+      'CP Market–এ আমরা বিশ্বাস করি, ফ্যাশন হওয়া উচিত সহজ, সবার নাগালের মধ্যে এবং অনুপ্রেরণাদায়ক। স্টাইলিশ, মানসম্পন্ন ও যত্ন করে বাছাই করা পোশাক আপনার কাছে পৌঁছে দিতেই CP Market–এর যাত্রা।',
+      'প্রতিদিনের সাধারণ পোশাক থেকে শুরু করে আলাদা করে চোখে পড়ার মতো পোশাক — নিজের স্টাইল খুঁজে নেওয়াকে আমরা সহজ ও উপভোগ্য করতে চাই।',
+      'পণ্যের মান, আধুনিক ট্রেন্ড, ন্যায্য দাম এবং স্বচ্ছন্দ শপিং অভিজ্ঞতার দিকে আমরা বিশেষ নজর দিই — যাতে আপনি ঘরে বসেই নিশ্চিন্তে কেনাকাটা করতে পারেন।',
     ],
+    storyEyebrow: 'আমরা কারা',
     storyCta: 'কালেকশন দেখুন',
-    storySecondaryCta: 'আমাদের সাথে কথা বলুন',
-    storyEyebrow: '২০১৯ সাল থেকে স্বাধীনভাবে',
-    storyImageAlt: 'CP Market স্টোরের ভেতরের ছবি',
-    storyImageAltDetail: 'কাঠের হ্যাঙ্গারে ঝোলানো কালেকশনের শার্ট',
-    storyBadgeValue: '২০০+',
-    storyBadgeLabel: 'স্টাইল সবসময় স্টকে',
-    valuesEyebrow: 'যা আমাদের চালায়',
-    valuesTitle: 'আমরা যা বিশ্বাস করি',
-    valuesSubtitle:
-      'প্রথম বছরেই লেখা চারটি নিয়ম — আজও একটুও বদলাইনি।',
+    storyImageAlt: 'CP Market কালেকশনের পোশাকের র‍্যাক',
+    storyImageAltDetail: 'একটি আধুনিক পোশাকের দোকানের ভেতরের ছবি',
+    storyImageAltRail: 'বিভিন্ন রঙের টি-শার্টের র‍্যাক',
+    valuesTitle: 'আমরা যেদিকে নজর দিই',
     values: [
       {
-        title: 'টেকসই পোশাক',
+        title: 'পণ্যের মান',
         description:
-          'আমরা কাপড় বাছি পঞ্চাশবার ধোয়ার পর কেমন থাকে তা দেখে — প্রথম দিনের ছবিতে কেমন লাগে তা দেখে নয়।',
+          'প্রতিটি পোশাক বাছাই হয় কাপড়, ফিনিশিং এবং ব্যবহারের পর কেমন থাকে তা দেখে — শুধু ছবিতে কেমন লাগে তা দেখে নয়।',
       },
       {
-        title: 'দায়িত্বশীল সোর্সিং',
+        title: 'আধুনিক ট্রেন্ড',
         description:
-          'অর্গানিক কটন, রিসাইকেল করা উল ও লিনেন — এমন মিল থেকে, যেগুলোতে আমরা নিজে যাই।',
+          'যত্ন করে বাছাই করা কালেকশন, যা এই সময়ের পছন্দের সঙ্গে তাল মিলিয়ে চলে।',
       },
       {
         title: 'ন্যায্য দাম',
         description:
-          'আমরা সরাসরি বিক্রি করি, তাই আপনি পোশাকের দাম দেন — চার স্তরের মার্কআপের নয়।',
+          'প্রতিটি পণ্যের সৎ দাম, যাতে মানসম্পন্ন পোশাক সবার নাগালে থাকে।',
       },
       {
-        title: 'মানুষ আগে',
+        title: 'স্বচ্ছন্দ অভিজ্ঞতা',
         description:
-          'প্রতিটি পার্টনার কারখানা ন্যায্য মজুরি দেয় এবং বছরে দুইবার অডিট হয়।',
+          'সহজ ব্রাউজিং, পরিষ্কার ডেলিভারি চার্জ আর ক্যাশ অন ডেলিভারি — ঘরে বসেই নিশ্চিন্ত কেনাকাটা।',
       },
     ],
-    stats: [
-      { value: '120K+', label: 'সন্তুষ্ট ক্রেতা' },
-      { value: '35', label: 'দেশে ডেলিভারি' },
-      { value: '12', label: 'পার্টনার মিল' },
-      { value: '4.8/5', label: 'গড় রেটিং' },
-    ],
-    timelineEyebrow: 'এতদূর আসার পথ',
-    timelineTitle: 'আমরা যেভাবে এলাম',
-    timeline: [
-      {
-        year: '২০১৯',
-        title: 'একটা শার্ট, একটা মিল',
-        description:
-          '২০০ পিসের প্রথম রান এক সপ্তাহেই শেষ। পুরো টাকাটা পরের রানে লাগিয়ে দিই।',
-      },
-      {
-        year: '২০২১',
-        title: 'নারী ও শিশুদের পোশাক',
-        description:
-          'আরও দুটি মিল যুক্ত হলো, কালেকশন প্রথমবার বেসিকের বাইরে গেল।',
-      },
-      {
-        year: '২০২৩',
-        title: 'বিশ্বজুড়ে ডেলিভারি',
-        description:
-          'বাংলাদেশ থেকে ৩৫টি দেশে অর্ডার যেতে শুরু করল — একই ডেলিভারি প্রতিশ্রুতিতে।',
-      },
-      {
-        year: 'আজ',
-        title: '২০০+ স্টাইল, সবসময় স্টকে',
-        description:
-          'বছরে বারোটা ড্রপ নয় — যতদিন আপনি পরবেন, ততদিন আমরা বানাব।',
-      },
-    ],
-    ctaTitle: 'ঠিকভাবে বানানো, সৎ দামে।',
-    ctaBody:
-      'এখন আমরা কী বানাচ্ছি দেখে নিন, বা প্রশ্ন পাঠান — সাধারণত ২৪ ঘণ্টার মধ্যে উত্তর দিই।',
-    ctaPrimary: 'কালেকশন দেখুন',
-    ctaSecondary: 'যোগাযোগ করুন',
+    missionTitle: 'আমাদের লক্ষ্য',
+    mission:
+      'আমাদের লক্ষ্য সহজ: মানসম্পন্ন ফ্যাশন সবার নাগালে পৌঁছে দেওয়া এবং এমন একটি শপিং অভিজ্ঞতা তৈরি করা যাকে মানুষ বিশ্বাস করতে পারে।',
+    visionTitle: 'আমাদের স্বপ্ন',
+    vision:
+      'আমরা CP Market–কে এমন একটি বিশ্বস্ত ফ্যাশন ব্র্যান্ড হিসেবে গড়ে তুলতে চাই, যেখানে স্টাইল, মান ও গ্রাহকের সন্তুষ্টি সবসময় সবার আগে।',
+    closing: 'আপনার স্টাইল। আপনার পছন্দ। আপনার CP Market।',
   },
   contact: {
     formTitle: 'আমাদের বার্তা পাঠান',
@@ -1732,12 +1671,6 @@ const bn: Dictionary = {
       subject: 'একটি বিষয় লিখুন।',
       message: 'অন্তত ১০ অক্ষর লিখুন।',
     },
-    details: [
-      { title: 'ইমেইল', lines: ['support@cpmarket.com', 'orders@cpmarket.com'] },
-      { title: 'ফোন', lines: ['+880 1872-327575', 'শনি–শুক্র'] },
-      { title: 'স্টোর', lines: ['বাড়ি ১২, রোড ৫', 'ধানমন্ডি, ঢাকা ১২০৫'] },
-      { title: 'সময়', lines: ['শনি–শুক্র: সকাল ১০টা – রাত ৮টা', 'রবিবার: বন্ধ'] },
-    ],
   },
   wholesale: {
     badge: 'ব্যবসার জন্য',
@@ -2051,21 +1984,29 @@ const bn: Dictionary = {
     or: 'অথবা',
     contactUs: 'আমাদের সাথে যোগাযোগ করুন',
   },
+  policies: {
+    onThisPage: 'এই পেজে যা আছে',
+    helpTitle: 'আরও সাহায্য দরকার?',
+    helpText:
+      'অর্ডার, ডেলিভারি, রিটার্ন বা আপনার তথ্য সংক্রান্ত যেকোনো বিষয়ে আমাদের সাপোর্ট টিম আপনার পাশে আছে।',
+    contactCta: 'যোগাযোগ করুন',
+    alsoRead: 'সম্পর্কিত পেজ',
+  },
+  storeContact: {
+    phone: 'ফোন',
+    email: 'ইমেইল',
+    address: 'ঠিকানা',
+    hoursLabel: 'সাপোর্ট সময়',
+    hours: 'শনিবার – বৃহস্পতিবার, সকাল ১০টা – রাত ৮টা',
+  },
   footer: {
     tagline:
-      'পুরুষ, নারী ও শিশুদের জন্য উন্নত মানের ফ্যাশন — সারা বিশ্বে ডেলিভারি।',
+      'পুরুষ, নারী ও শিশুদের জন্য উন্নত মানের ফ্যাশন — সারা দেশে ডেলিভারি।',
     columns: {
       quickLinks: 'দ্রুত লিংক',
       customerService: 'কাস্টমার সার্ভিস',
       contact: 'যোগাযোগ করুন',
       payment: 'আমরা গ্রহণ করি',
-    },
-    contact: {
-      address: '৯২, বনানী, কালুরঘাট, ঢাকা, বাংলাদেশ',
-      // Latin digits on purpose: the footer builds `tel:` by stripping
-      // non-`\d` characters, and Bangla numerals would strip to nothing.
-      phone: '+880 1872-327575',
-      email: 'hello@cpmarket.com',
     },
     links: {
       aboutUs: 'আমাদের সম্পর্কে',
@@ -2097,7 +2038,7 @@ const bn: Dictionary = {
   ticker: [
     'সারাদেশে ডেলিভারি ৳60 থেকে',
     'প্রতি সপ্তাহে নতুন পোশাক',
-    '৩০ দিনের সহজ রিটার্ন',
+    '৩ দিনের সহজ রিটার্ন',
     'ক্যাশ অন ডেলিভারি সুবিধা',
     'সারা দেশে ডেলিভারি',
   ],
@@ -2157,7 +2098,7 @@ const bn: Dictionary = {
       items: [
         { label: 'উন্নত মানের পণ্য', note: '' },
         { label: 'দ্রুত সারাদেশে ডেলিভারি', note: '৳60 থেকে' },
-        { label: 'সহজ রিটার্ন', note: '৩০ দিনের সুবিধা' },
+        { label: 'সহজ রিটার্ন', note: '৩ দিনের সুবিধা' },
         { label: '২৪/৭ কাস্টমার সাপোর্ট', note: '' },
       ],
     },

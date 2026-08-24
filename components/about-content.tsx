@@ -10,7 +10,7 @@ import { Reveal } from '@/components/reveal'
 import { useLanguage } from '@/components/language-provider'
 import { cn } from '@/lib/utils'
 
-const VALUE_ICONS = [Package, Leaf, Heart, Users]
+const VALUE_ICONS = [ShieldCheck, Sparkles, Tag, ShoppingBag]
 
 /** Matches the PageHeader's gutter, so every band lines up down the page. */
 const SECTION = 'mx-auto max-w-page px-4 sm:px-6 lg:px-4'
@@ -171,82 +171,37 @@ export function AboutContent() {
         </div>
       </section>
 
-      {/* Milestones — a vertical thread on phones, a horizontal one across
-          four columns from `lg`. */}
-      <section className={cn(SECTION, 'py-14 lg:py-20')}>
-        <SectionHeading
-          eyebrow={copy.timelineEyebrow}
-          title={copy.timelineTitle}
-        />
+      {/* Mission and vision, where the invented "120K customers / 35 countries"
+          counters used to sit. Numbers nobody can stand behind do not belong on
+          a live storefront. */}
+      <section className="mx-auto max-w-page px-4 py-14 sm:px-6 lg:px-4 lg:py-20">
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Reveal className="rounded-xl border border-border bg-card p-6 sm:p-8">
+            <h2 className="text-display-sm text-foreground">
+              {t.about.missionTitle}
+            </h2>
+            <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+              {t.about.mission}
+            </p>
+          </Reveal>
 
-        <ol className="relative grid gap-8 lg:grid-cols-4 lg:gap-8">
-          <span
-            aria-hidden="true"
-            className="absolute top-1 bottom-1 left-[7px] w-px bg-border lg:top-[7px] lg:right-0 lg:bottom-auto lg:left-0 lg:h-px lg:w-full"
-          />
-          {copy.timeline.map((item, index) => (
-            <Reveal
-              key={item.year}
-              as="li"
-              delay={index * 100}
-              className="relative pl-8 lg:pt-10 lg:pl-0"
-            >
-              <span
-                aria-hidden="true"
-                className="absolute top-1 left-0 size-3.5 rounded-full bg-button ring-4 ring-background lg:top-0"
-              />
-              <p className="text-sm font-bold tracking-wide text-primary">
-                {item.year}
-              </p>
-              <h3 className="mt-1.5 text-base font-bold text-foreground">
-                {item.title}
-              </h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                {item.description}
-              </p>
-            </Reveal>
-          ))}
-        </ol>
-      </section>
+          <Reveal
+            delay={120}
+            className="rounded-xl border border-border bg-card p-6 sm:p-8"
+          >
+            <h2 className="text-display-sm text-foreground">
+              {t.about.visionTitle}
+            </h2>
+            <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+              {t.about.vision}
+            </p>
+          </Reveal>
+        </div>
 
-      {/* Closing panel — the page used to end on a bare row of numbers with
-          nowhere to go next. */}
-      <section className={cn(SECTION, 'pb-16 lg:pb-24')}>
-        <Reveal>
-          <div className="relative overflow-hidden rounded-2xl bg-foreground px-6 py-12 text-center text-background sm:px-12 lg:py-16">
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute -top-16 -left-10 size-56 rounded-full bg-primary/25 blur-3xl"
-            />
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute -right-12 -bottom-20 size-64 rounded-full bg-primary/15 blur-3xl"
-            />
-
-            <div className="relative">
-              <h2 className="text-display-sm text-balance text-background">
-                {copy.ctaTitle}
-              </h2>
-              <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-background/65 sm:text-base">
-                {copy.ctaBody}
-              </p>
-              <div className="mt-8 flex flex-wrap justify-center gap-3">
-                <Link
-                  href="/shop"
-                  className="group inline-flex h-12 items-center gap-2 rounded-lg bg-button px-8 text-sm font-semibold text-button-foreground shadow-lg shadow-button/25 transition-all hover:-translate-y-0.5 hover:bg-button/90 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
-                >
-                  {copy.ctaPrimary}
-                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
-                </Link>
-                <Link
-                  href="/contact"
-                  className="inline-flex h-12 items-center rounded-lg border border-white/25 px-8 text-sm font-semibold text-background transition-colors hover:bg-white/10 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
-                >
-                  {copy.ctaSecondary}
-                </Link>
-              </div>
-            </div>
-          </div>
+        <Reveal delay={200}>
+          <p className="mt-12 text-center text-xl font-bold text-foreground sm:text-2xl">
+            {t.about.closing}
+          </p>
         </Reveal>
       </section>
     </>

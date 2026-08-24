@@ -20,6 +20,7 @@ import {
   orders,
   products,
   settlements,
+  storeSettings,
   wholesalerApplications,
   type OrderEventRow,
   type OrderRow,
@@ -135,6 +136,9 @@ export async function createOrder(
       )
     : new Map<string, string>()
 
+  const [settings] = await db.select().from(storeSettings).where(eq(storeSettings.id, 1))
+  const defaultCommissionPct = settings?.defaultCommissionPct ?? 10
+
   let subtotal = 0
   const lines = input.items.flatMap((item) => {
     const product = byId.get(item.productId)
@@ -168,7 +172,7 @@ export async function createOrder(
         // The rate agreed *now*. Null on a house line: the store keeps the lot,
         // and there is no shop to owe. Raising the rate afterwards must never
         // rewrite a settlement that has already been issued.
-        commissionPct: product.sellerId ? commissionPct(product) : null,
+        commissionPct: product.sellerId ? (product.commissionPct ?? defaultCommissionPct) : null,
         preorder: product.preorder,
         // Snapshotted, so moving the product's date later never rewrites what
         // this customer was promised.

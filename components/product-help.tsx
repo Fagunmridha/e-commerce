@@ -3,31 +3,26 @@
 import { Mail, MessageCircle, Phone } from 'lucide-react'
 import { Container } from '@/components/layout/container'
 import { useLanguage } from '@/components/language-provider'
-import { WHATSAPP_NUMBER } from '@/lib/site-config'
+import { STORE_CONTACT, WHATSAPP_NUMBER } from '@/lib/site-config'
 
 /**
  * The "still stuck?" band under the FAQ.
  *
  * Three channels, not the four in the mockup: there is no live-chat integration
  * in this app, and a button that opens nothing is worse than no button. Phone
- * and email come from `t.contact.details` so the contact page and this band can
- * never disagree.
+ * and email come from `STORE_CONTACT` so the contact page, the policy pages and
+ * this band can never disagree.
  */
 export function ProductHelp() {
   const { t } = useLanguage()
   const copy = t.product
 
-  const [email, phone] = t.contact.details
-  const emailAddress = email?.lines[0] ?? ''
-  const phoneNumber = phone?.lines[0] ?? ''
-
   const channels = [
     {
       Icon: Phone,
       label: copy.helpCall,
-      value: phoneNumber,
-      // Strip spaces and dashes — a tel: href has to be dialable.
-      href: `tel:${phoneNumber.replace(/[^\d+]/g, '')}`,
+      value: STORE_CONTACT.phone,
+      href: `tel:${STORE_CONTACT.phoneDial}`,
       external: false,
     },
     {
@@ -40,8 +35,8 @@ export function ProductHelp() {
     {
       Icon: Mail,
       label: copy.helpEmail,
-      value: emailAddress,
-      href: `mailto:${emailAddress}`,
+      value: STORE_CONTACT.email,
+      href: `mailto:${STORE_CONTACT.email}`,
       external: false,
     },
   ]

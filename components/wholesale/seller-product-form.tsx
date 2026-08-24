@@ -7,11 +7,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { ImageUploader } from '@/components/admin/image-uploader'
 import { LoadingOverlay } from '@/components/loading-overlay'
 import { useLanguage } from '@/components/language-provider'
 import { useCatalogue } from '@/components/catalogue-provider'
 import { upsertSellerProduct } from '@/app/actions/seller-products'
+import { splitCommission } from '@/lib/commission'
+import { formatPrice } from '@/lib/currency'
 import type { Product } from '@/lib/types'
 
 /**
@@ -24,7 +27,13 @@ import type { Product } from '@/lib/types'
  * Narrower than the admin form on purpose — no old price, badge, colours or a
  * separate Bangla name. A seller sets what they sell and what it costs.
  */
-export function SellerProductForm({ product }: { product?: Product }) {
+export function SellerProductForm({
+  product,
+  defaultCommissionPct,
+}: {
+  product?: Product
+  defaultCommissionPct: number
+}) {
   const router = useRouter()
   const { t, pick } = useLanguage()
   const { categories } = useCatalogue()
@@ -84,92 +93,154 @@ export function SellerProductForm({ product }: { product?: Product }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="max-w-2xl space-y-5">
+    <form onSubmit={onSubmit} className="max-w-3xl space-y-6">
       <LoadingOverlay show={pending} label={copy.saving} />
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field label={copy.name}>
-          <Input
-            value={form.name}
-            onChange={(event) => set('name', event.target.value)}
-            placeholder={copy.namePlaceholder}
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Basic Details</CardTitle>
+          <CardDescription>
+            Provide the name and category for your wholesale listing.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-6 sm:grid-cols-2">
+          <Field label={copy.name}>
+            <Input
+              value={form.name}
+              onChange={(event) => set('name', event.target.value)}
+              placeholder={copy.namePlaceholder}
+            />
+          </Field>
+          <Field label={copy.category}>
+            <select
+              value={form.category}
+              onChange={(event) => set('category', event.target.value)}
+              className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+            >
+              {categories.map((category) => (
+                <option key={category.slug} value={category.slug}>
+                  {pick(category.name)}
+                </option>
+              ))}
+            </select>
+          </Field>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Pricing & Inventory</CardTitle>
+          <CardDescription>
+            Set your wholesale price, available stock, and minimum order quantity.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-6 sm:grid-cols-3">
+          <Field label={copy.price} hint={copy.priceHint}>
+            <div className="space-y-3">
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">৳</span>
+                <Input
+                  type="number"
+                  step="1"
+                  min={0}
+                  className="pl-8 font-semibold"
+                  value={form.price}
+                  onChange={(event) => set('price', event.target.value)}
+                />
+              </div>
+              {(() => {
+                const p = Number(form.price) || 0
+                if (p > 0) {
+                  const pct = product?.commissionPct ?? defaultCommissionPct
+                  const { payout, commission } = splitCommission(p, pct)
+                  return (
+                    <div className="rounded-lg border border-border/50 bg-muted/30 p-3 text-sm shadow-sm space-y-1.5">
+                      <div className="flex justify-between items-center text-muted-foreground">
+                        <span>Platform fee ({pct}%)</span>
+                        <span>{formatPrice(commission)}</span>
+                      </div>
+                      <div className="h-px bg-border/50 w-full" />
+                      <div className="flex justify-between items-center font-semibold text-foreground">
+                        <span>You receive</span>
+                        <span className="text-emerald-600 dark:text-emerald-500">{formatPrice(payout)}</span>
+                      </div>
+                    </div>
+                  )
+                }
+                return null
+              })()}
+            </div>
+          </Field>
+          <Field label={copy.stock} hint={copy.stockHint}>
+            <Input
+              type="number"
+              min={0}
+              value={form.stock}
+              onChange={(event) => set('stock', event.target.value)}
+            />
+          </Field>
+          <Field label={copy.moq} hint={copy.moqHint}>
+            <Input
+              type="number"
+              min={1}
+              value={form.moq}
+              onChange={(event) => set('moq', event.target.value)}
+            />
+          </Field>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Product Media</CardTitle>
+          <CardDescription>Upload a clear, high-quality image of the product.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ImageUploader
+            value={form.image}
+            onChange={(url) => set('image', url)}
+            folder="wholesale-products"
+            label={copy.image}
           />
-        </Field>
-        <Field label={copy.category}>
-          <select
-            value={form.category}
-            onChange={(event) => set('category', event.target.value)}
-            className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
-          >
-            {categories.map((category) => (
-              <option key={category.slug} value={category.slug}>
-                {pick(category.name)}
-              </option>
-            ))}
-          </select>
-        </Field>
-      </div>
+        </CardContent>
+      </Card>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Field label={copy.price} hint={copy.priceHint}>
-          <Input
-            type="number"
-            step="1"
-            min={0}
-            value={form.price}
-            onChange={(event) => set('price', event.target.value)}
-          />
-        </Field>
-        <Field label={copy.stock} hint={copy.stockHint}>
-          <Input
-            type="number"
-            min={0}
-            value={form.stock}
-            onChange={(event) => set('stock', event.target.value)}
-          />
-        </Field>
-        <Field label={copy.moq} hint={copy.moqHint}>
-          <Input
-            type="number"
-            min={1}
-            value={form.moq}
-            onChange={(event) => set('moq', event.target.value)}
-          />
-        </Field>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Additional Information</CardTitle>
+          <CardDescription>Provide sizes and a detailed description.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <Field label={copy.sizes} hint={copy.sizesHint}>
+            <Input
+              value={form.sizes}
+              onChange={(event) => set('sizes', event.target.value)}
+              placeholder="S, M, L, XL"
+            />
+          </Field>
 
-      <ImageUploader
-        value={form.image}
-        onChange={(url) => set('image', url)}
-        folder="wholesale-products"
-        label={copy.image}
-      />
+          <Field label={copy.description} hint={copy.descriptionHint}>
+            <Textarea
+              rows={4}
+              value={form.description}
+              onChange={(event) => set('description', event.target.value)}
+              className="resize-none"
+            />
+          </Field>
+        </CardContent>
+      </Card>
 
-      <Field label={copy.sizes} hint={copy.sizesHint}>
-        <Input
-          value={form.sizes}
-          onChange={(event) => set('sizes', event.target.value)}
-          placeholder="S, M, L, XL"
-        />
-      </Field>
-
-      <Field label={copy.description} hint={copy.descriptionHint}>
-        <Textarea
-          rows={3}
-          value={form.description}
-          onChange={(event) => set('description', event.target.value)}
-        />
-      </Field>
-
-      <div className="flex flex-wrap gap-3">
-        <Button type="submit" disabled={pending}>
-          {pending ? copy.saving : copy.save}
-        </Button>
+      <div className="flex flex-wrap items-center justify-end gap-3 pt-4">
         <Button
           type="button"
           variant="outline"
+          className="min-w-[100px]"
           onClick={() => router.push('/wholesale/dashboard')}
         >
           {copy.cancel}
+        </Button>
+        <Button type="submit" disabled={pending} className="min-w-[140px]">
+          {pending ? copy.saving : copy.save}
         </Button>
       </div>
     </form>

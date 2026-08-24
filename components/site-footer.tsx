@@ -1,10 +1,20 @@
 'use client'
 
 import Link from 'next/link'
-import { Banknote, Facebook, Instagram, MapPin, Phone, Twitter } from 'lucide-react'
+import {
+  Banknote,
+  Facebook,
+  Instagram,
+  Mail,
+  MapPin,
+  Phone,
+  Twitter,
+} from 'lucide-react'
 import { Container } from '@/components/layout/container'
 import { BrandMark } from '@/components/header/brand-mark'
 import { useLanguage } from '@/components/language-provider'
+import { POLICY_PATHS } from '@/lib/policies'
+import { STORE_CONTACT } from '@/lib/site-config'
 import type { Dictionary } from '@/lib/dictionaries'
 
 type NavKey = keyof Dictionary['nav']
@@ -27,10 +37,10 @@ const QUICK_LINKS: { nav?: NavKey; link?: LinkKey; href: string }[][] = [
 
 const SERVICE_LINKS: { key: LinkKey; href: string }[] = [
   { key: 'wholesale', href: '/wholesale' },
-  { key: 'shippingPolicy', href: '/contact' },
-  { key: 'returnPolicy', href: '/contact' },
-  { key: 'privacyPolicy', href: '/contact' },
-  { key: 'termsConditions', href: '/contact' },
+  { key: 'shippingPolicy', href: POLICY_PATHS.shipping },
+  { key: 'returnPolicy', href: POLICY_PATHS.returns },
+  { key: 'privacyPolicy', href: POLICY_PATHS.privacy },
+  { key: 'termsConditions', href: POLICY_PATHS.terms },
 ]
 
 const SOCIALS = [
@@ -114,15 +124,24 @@ export function SiteFooter() {
               <li className="flex gap-2.5">
                 <Phone className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
                 <a
-                  href={`tel:${t.footer.contact.phone.replace(/[^\d+]/g, '')}`}
+                  href={`tel:${STORE_CONTACT.phoneDial}`}
                   className="transition-colors hover:text-background"
                 >
-                  {t.footer.contact.phone}
+                  {STORE_CONTACT.phone}
+                </a>
+              </li>
+              <li className="flex gap-2.5">
+                <Mail className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                <a
+                  href={`mailto:${STORE_CONTACT.email}`}
+                  className="break-all transition-colors hover:text-background"
+                >
+                  {STORE_CONTACT.email}
                 </a>
               </li>
               <li className="flex gap-2.5">
                 <MapPin className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-                {t.footer.contact.address}
+                {STORE_CONTACT.address}
               </li>
             </ul>
           </div>
