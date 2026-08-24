@@ -516,8 +516,17 @@ const en = {
       'We don’t chase trends or run twelve drops a year. We design a piece, make it properly, and keep it in stock — so when you find something you love, it’s still there next season.',
     ],
     storyCta: 'Browse the Collection',
+    storySecondaryCta: 'Talk to Us',
+    storyEyebrow: 'Independent since 2019',
     storyImageAlt: 'The interior of a CP Market store',
+    storyImageAltDetail:
+      'Shirts on wooden hangers from the current collection',
+    storyBadgeValue: '200+',
+    storyBadgeLabel: 'styles kept in stock',
+    valuesEyebrow: 'What drives us',
     valuesTitle: 'What We Stand For',
+    valuesSubtitle:
+      'Four rules we wrote in the first year and have not bent since.',
     values: [
       {
         title: 'Made to Last',
@@ -546,6 +555,39 @@ const en = {
       { value: '12', label: 'Partner mills' },
       { value: '4.8/5', label: 'Average rating' },
     ],
+    timelineEyebrow: 'The road so far',
+    timelineTitle: 'How We Got Here',
+    timeline: [
+      {
+        year: '2019',
+        title: 'One shirt, one mill',
+        description:
+          'A first run of 200 pieces sold out in a week. Every taka went straight into the next one.',
+      },
+      {
+        year: '2021',
+        title: 'Women\u2019s and kids\u2019 wear',
+        description:
+          'Two more mills joined us, and the collection grew past basics for the first time.',
+      },
+      {
+        year: '2023',
+        title: 'Shipping worldwide',
+        description:
+          'Orders started leaving Bangladesh for 35 countries, on the same delivery promise.',
+      },
+      {
+        year: 'Today',
+        title: '200+ styles, always in stock',
+        description:
+          'No twelve drops a year \u2014 just pieces we keep making for as long as you keep wearing them.',
+      },
+    ],
+    ctaTitle: 'Made properly. Priced honestly.',
+    ctaBody:
+      'Have a look at what we are making right now, or send us a question \u2014 we usually reply within 24 hours.',
+    ctaPrimary: 'Shop the Collection',
+    ctaSecondary: 'Contact Us',
   },
   contact: {
     formTitle: 'Send us a message',
@@ -1588,8 +1630,16 @@ const bn: Dictionary = {
       'আমরা ট্রেন্ডের পেছনে ছুটি না, বছরে বারোটা ড্রপও করি না। একটা পোশাক ডিজাইন করি, ঠিকভাবে বানাই, আর স্টকে রাখি — যাতে যেটা আপনার পছন্দ হয়েছে, পরের সিজনেও সেটা পান।',
     ],
     storyCta: 'কালেকশন দেখুন',
+    storySecondaryCta: 'আমাদের সাথে কথা বলুন',
+    storyEyebrow: '২০১৯ সাল থেকে স্বাধীনভাবে',
     storyImageAlt: 'CP Market স্টোরের ভেতরের ছবি',
+    storyImageAltDetail: 'কাঠের হ্যাঙ্গারে ঝোলানো কালেকশনের শার্ট',
+    storyBadgeValue: '২০০+',
+    storyBadgeLabel: 'স্টাইল সবসময় স্টকে',
+    valuesEyebrow: 'যা আমাদের চালায়',
     valuesTitle: 'আমরা যা বিশ্বাস করি',
+    valuesSubtitle:
+      'প্রথম বছরেই লেখা চারটি নিয়ম — আজও একটুও বদলাইনি।',
     values: [
       {
         title: 'টেকসই পোশাক',
@@ -1618,6 +1668,39 @@ const bn: Dictionary = {
       { value: '12', label: 'পার্টনার মিল' },
       { value: '4.8/5', label: 'গড় রেটিং' },
     ],
+    timelineEyebrow: 'এতদূর আসার পথ',
+    timelineTitle: 'আমরা যেভাবে এলাম',
+    timeline: [
+      {
+        year: '২০১৯',
+        title: 'একটা শার্ট, একটা মিল',
+        description:
+          '২০০ পিসের প্রথম রান এক সপ্তাহেই শেষ। পুরো টাকাটা পরের রানে লাগিয়ে দিই।',
+      },
+      {
+        year: '২০২১',
+        title: 'নারী ও শিশুদের পোশাক',
+        description:
+          'আরও দুটি মিল যুক্ত হলো, কালেকশন প্রথমবার বেসিকের বাইরে গেল।',
+      },
+      {
+        year: '২০২৩',
+        title: 'বিশ্বজুড়ে ডেলিভারি',
+        description:
+          'বাংলাদেশ থেকে ৩৫টি দেশে অর্ডার যেতে শুরু করল — একই ডেলিভারি প্রতিশ্রুতিতে।',
+      },
+      {
+        year: 'আজ',
+        title: '২০০+ স্টাইল, সবসময় স্টকে',
+        description:
+          'বছরে বারোটা ড্রপ নয় — যতদিন আপনি পরবেন, ততদিন আমরা বানাব।',
+      },
+    ],
+    ctaTitle: 'ঠিকভাবে বানানো, সৎ দামে।',
+    ctaBody:
+      'এখন আমরা কী বানাচ্ছি দেখে নিন, বা প্রশ্ন পাঠান — সাধারণত ২৪ ঘণ্টার মধ্যে উত্তর দিই।',
+    ctaPrimary: 'কালেকশন দেখুন',
+    ctaSecondary: 'যোগাযোগ করুন',
   },
   contact: {
     formTitle: 'আমাদের বার্তা পাঠান',
