@@ -49,110 +49,106 @@ export function SiteHeader() {
     'relative grid size-11 place-items-center rounded-full text-foreground transition-colors hover:bg-secondary focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none'
 
   return (
-    <header
-      className={cn(
-        'sticky top-0 z-50 bg-background/95 backdrop-blur transition-shadow duration-300 supports-[backdrop-filter]:bg-background/85',
-        scrolled ? 'shadow-card-hover' : 'border-b border-border',
-      )}
-    >
-      {/* The strip folds away on scroll so the sticky header stays compact. */}
-      <div
+    <>
+      {/* The strip scrolls away with the page instead of folding inside the
+          sticky header. Collapsing it used to change the header's height, which
+          shifted the whole document; Chrome's scroll anchoring then corrected
+          the scroll position, which re-triggered the collapse — the header
+          shook until you scrolled clear of the threshold. Letting it scroll off
+          naturally keeps the layout height constant, so the loop can't start. */}
+      <AnnouncementBar />
+
+      <header
         className={cn(
-          'overflow-hidden transition-all duration-300',
-          scrolled ? 'max-h-0 opacity-0' : 'max-h-10 opacity-100',
+          'sticky top-0 z-50 bg-background/95 backdrop-blur transition-shadow duration-300 supports-[backdrop-filter]:bg-background/85',
+          scrolled ? 'shadow-card-hover' : 'border-b border-border',
         )}
-        // Keep the collapsed strip out of the tab order and the a11y tree.
-        inert={scrolled}
       >
-        <AnnouncementBar />
-      </div>
+        <Container>
+          {/* Fixed height on purpose — see the note in `useScrolled`. */}
+          <div className="flex h-16 items-center justify-between gap-3 lg:h-20">
+            <div className="flex items-center gap-1">
+              <MobileMenu links={NAV_LINKS} isActive={isActive} />
+              <BrandMark />
+            </div>
 
-      <Container>
-        <div
-          className={cn(
-            'flex items-center justify-between gap-3 transition-all duration-300',
-            scrolled ? 'h-16' : 'h-16 lg:h-20',
-          )}
-        >
-          <div className="flex items-center gap-1">
-            <MobileMenu links={NAV_LINKS} isActive={isActive} />
-            <BrandMark />
-          </div>
-
-          <nav aria-label={t.nav.home} className="hidden lg:block">
-            <ul className="flex items-center gap-0.5">
-              <li>
-                <Link
-                  href="/"
-                  className={cn(
-                    NAV_LINK_CLASS,
-                    isActive('/') ? NAV_LINK_ACTIVE : 'text-foreground',
-                  )}
-                >
-                  {t.nav.home}
-                </Link>
-              </li>
-              <li>
-                <MegaMenu active={isActive('/shop')} />
-              </li>
-              {FLAT_LINKS.filter((link) => link.href !== '/').map((link) => (
-                <li key={link.href}>
+            <nav aria-label={t.nav.home} className="hidden lg:block">
+              <ul className="flex items-center gap-0.5">
+                <li>
                   <Link
-                    href={link.href}
+                    href="/"
                     className={cn(
                       NAV_LINK_CLASS,
-                      isActive(link.href) ? NAV_LINK_ACTIVE : 'text-foreground',
+                      isActive('/') ? NAV_LINK_ACTIVE : 'text-foreground',
                     )}
                   >
-                    {t.nav[link.key]}
+                    {t.nav.home}
                   </Link>
                 </li>
-              ))}
-            </ul>
-          </nav>
+                <li>
+                  <MegaMenu active={isActive('/shop')} />
+                </li>
+                {FLAT_LINKS.filter((link) => link.href !== '/').map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      className={cn(
+                        NAV_LINK_CLASS,
+                        isActive(link.href)
+                          ? NAV_LINK_ACTIVE
+                          : 'text-foreground',
+                      )}
+                    >
+                      {t.nav[link.key]}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
 
-          <div className="flex items-center gap-0.5">
-            <button
-              type="button"
-              onClick={() => setSearchOpen((open) => !open)}
-              aria-label={t.header.searchLabel}
-              aria-expanded={searchOpen}
-              className={iconButton}
-            >
-              <Search className="size-5" />
-            </button>
+            <div className="flex items-center gap-0.5">
+              <button
+                type="button"
+                onClick={() => setSearchOpen((open) => !open)}
+                aria-label={t.header.searchLabel}
+                aria-expanded={searchOpen}
+                className={iconButton}
+              >
+                <Search className="size-5" />
+              </button>
 
-            <WishlistButton />
+              <WishlistButton />
 
-            {isSignedIn ? (
-              <>
+              {isSignedIn ? (
+                <>
+                  <Link
+                    href="/account"
+                    className={cn(iconButton, 'hidden sm:grid')}
+                    aria-label={t.header.account}
+                  >
+                    <User className="size-5" />
+                  </Link>
+                  <div className="ml-1 hidden items-center sm:flex">
+                    <UserButton />
+                  </div>
+                </>
+              ) : (
                 <Link
-                  href="/account"
+                  href="/sign-in"
                   className={cn(iconButton, 'hidden sm:grid')}
                   aria-label={t.header.account}
                 >
                   <User className="size-5" />
                 </Link>
-                <div className="ml-1 hidden items-center sm:flex">
-                  <UserButton />
-                </div>
-              </>
-            ) : (
-              <Link
-                href="/sign-in"
-                className={cn(iconButton, 'hidden sm:grid')}
-                aria-label={t.header.account}
-              >
-                <User className="size-5" />
-              </Link>
-            )}
+              )}
 
-            <CartDrawer />
+              <CartDrawer />
+            </div>
           </div>
-        </div>
-      </Container>
+        </Container>
 
-      <SearchPanel open={searchOpen} onClose={() => setSearchOpen(false)} />
-    </header>
+        <SearchPanel open={searchOpen} onClose={() => setSearchOpen(false)} />
+      </header>
+    </>
   )
 }
