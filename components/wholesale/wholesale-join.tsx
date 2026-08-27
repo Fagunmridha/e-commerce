@@ -3,8 +3,16 @@
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, Lock, ShieldCheck, ShoppingBag, Store } from 'lucide-react'
+import { ArrowRight, Lock, ShieldCheck, ShoppingBag, Store, X } from 'lucide-react'
 import { toast } from 'sonner'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   Empty,
   EmptyDescription,
@@ -20,7 +28,7 @@ import type { WholesaleRole } from '@/lib/db/schema'
 
 /**
  * The front door of the wholesale programme: the listings, visible but inert,
- * under a slim two-choice hero.
+ * under a two-choice dialog that opens over them.
  *
  * Showing the stock before anyone has joined is the point — the old pitch page
  * listed nothing, and asked people to fill in a trade application on the
@@ -28,15 +36,20 @@ import type { WholesaleRole } from '@/lib/db/schema'
  * figures are blurred until a side is chosen, so a competitor cannot read the
  * price list off a public page. Everything else about a listing is fair game.
  *
- * The two options are slim full-width bars, stacked. They are not two ways of
- * doing one thing — they are two different memberships, one of them
- * irreversible — so each bar still says what it gets you, on the same line as
- * its label. Anything taller than that pushes the grid under the fold to
- * repeat what the line above the bars already said.
+ * The chooser is a centred dialog rather than a banner above the grid, so the
+ * listings it unlocks sit right behind it instead of being pushed under the
+ * fold by it. It is dismissable: the two memberships are worth a modal on
+ * arrival, but not at the cost of a visitor who wants to scroll the stock
+ * first, so ✕/Esc/backdrop all let the grid through and every locked card
+ * brings the dialog straight back.
+ *
+ * The two options are stacked bars. They are not two ways of doing one thing —
+ * they are two different memberships, one of them irreversible — so each bar
+ * says what it gets you under its own label.
  *
  * Nothing in the grid is a link. A locked card is a `<button>` whose only job
- * is to say "pick a side first", which keeps the whole grid reachable by
- * keyboard and stops a middle-click from smuggling anyone onto a product page.
+ * is to reopen the chooser, which keeps the whole grid reachable by keyboard
+ * and stops a middle-click from smuggling anyone onto a product page.
  */
 export function WholesaleJoin({
   products,
@@ -60,6 +73,10 @@ export function WholesaleJoin({
   const [choosing, setChoosing] = useState<WholesaleRole | null>(null)
   const [category, setCategory] = useState('')
   const [catalogue, setCatalogue] = useState('')
+  // Open on arrival, except on the way back from sign-in: `resumeJoin` fires
+  // the join itself on mount and navigates away, so opening the chooser there
+  // would only flash it at someone who has already chosen.
+  const [open, setOpen] = useState(!resumeJoin)
 
   const join = useCallback(
     (role: WholesaleRole) => {
@@ -113,47 +130,99 @@ export function WholesaleJoin({
 
   return (
     <>
-      {/* The chooser. On the tinted surface rather than the page ground, so it
-          reads as one panel above the grid instead of drifting in white.
-          Deliberately shallow, and with no heading of its own: `PageHeader`
-          directly above already says "Wholesale", and repeating it here would
-          push the listings — the reason anyone stays on this page — under the
-          fold to say nothing new. */}
-      <section className="border-b border-border bg-surface">
-        {/* Same container and gutters as the grid below, so the bars run the
-            exact width of the listings they unlock rather than sitting in a
-            column of their own. At this width the hint never hits the bar's
-            `truncate` on desktop. */}
-        <div className="mx-auto max-w-page px-4 py-5 sm:px-6 sm:py-6 lg:px-4">
-          <p className="flex items-start justify-center gap-2 text-center text-sm leading-relaxed text-muted-foreground">
-            <ShieldCheck
-              className="mt-0.5 size-4 shrink-0 text-primary"
-              aria-hidden="true"
-            />
-            <span className="max-w-3xl">{copy.subtitle}</span>
-          </p>
+      {/* The chooser, centred over the grid it unlocks. `DialogContent` is
+          already `fixed` and translated to the middle of the viewport, so the
+          listings stay exactly where they were and the panel floats on top of
+          them — no layout of our own to fight with the grid's. */}
+      <Dialog
+        open={open}
+        // Closing mid-join would suggest the server action stopped with it.
+        // It has not, and the redirect that follows would then arrive out of
+        // nowhere.
+        onOpenChange={(next) => {
+          if (!pending) setOpen(next)
+        }}
+      >
+        <DialogContent
+          showCloseButton={false}
+          // A light scrim rather than the default `bg-black/50`: the panel is
+          // translucent, and half-black behind it turns the glass grey. The
+          // faint blur here is what separates the panel's own heavy blur from
+          // the sharp grid at the edges of the screen.
+          overlayClassName="bg-foreground/20 backdrop-blur-[2px]"
+          className={cn(
+            'gap-0 overflow-hidden rounded-3xl border-white/70 p-0 sm:max-w-md',
+            // The glass itself. `saturate` is the half that keeps it from
+            // reading as frosted plastic — the product photos behind it stay
+            // colourful through the blur instead of washing out.
+            'bg-card/70 backdrop-blur-2xl backdrop-saturate-150',
+            'shadow-float',
+          )}
+        >
+          {/* The lit top edge and the bloom behind it — the two things that
+              make a translucent panel read as glass rather than as a card
+              someone forgot to give an opacity of 1. Both clipped by the
+              `overflow-hidden` above, so the bloom fades into the corners. */}
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white to-transparent"
+          />
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute -top-20 left-1/2 size-52 -translate-x-1/2 rounded-full bg-primary/25 blur-3xl"
+          />
 
-          <div className="mt-4 flex flex-col gap-2.5">
-            <ChoiceBar
-              Icon={ShoppingBag}
-              label={copy.buyerCta}
-              hint={copy.buyerHint}
-              featured
-              loading={pending && choosing === 'buyer'}
+          <div className="relative px-6 pt-8 pb-6">
+            {/* Ours rather than the built-in one: that close button's only
+                label is a hardcoded English `sr-only` string, and everything
+                else on this page comes out of the dictionary. */}
+            <DialogClose
+              className={cn(
+                'absolute top-4 right-4 rounded-full border border-white/70 bg-card/60 p-1.5 text-muted-foreground backdrop-blur-md transition-colors',
+                'hover:bg-card hover:text-foreground',
+                'focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none',
+                'disabled:pointer-events-none disabled:opacity-50',
+              )}
               disabled={pending}
-              onSelect={() => join('buyer')}
-            />
-            <ChoiceBar
-              Icon={Store}
-              label={copy.sellerCta}
-              hint={copy.sellerHint}
-              loading={pending && choosing === 'seller'}
-              disabled={pending}
-              onSelect={() => join('seller')}
-            />
+            >
+              <X className="size-4" aria-hidden="true" />
+              <span className="sr-only">{copy.close}</span>
+            </DialogClose>
+
+            <DialogHeader className="text-center sm:text-center">
+              <span className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-button text-primary-foreground shadow-lg shadow-primary/25 ring-1 ring-white/40">
+                <ShieldCheck className="size-6" aria-hidden="true" />
+              </span>
+              <DialogTitle className="mt-1 text-xl font-bold tracking-tight">
+                {copy.title}
+              </DialogTitle>
+              <DialogDescription className="leading-relaxed text-balance">
+                {copy.subtitle}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="mt-6 flex flex-col gap-3">
+              <ChoiceBar
+                Icon={ShoppingBag}
+                label={copy.buyerCta}
+                hint={copy.buyerHint}
+                featured
+                loading={pending && choosing === 'buyer'}
+                disabled={pending}
+                onSelect={() => join('buyer')}
+              />
+              <ChoiceBar
+                Icon={Store}
+                label={copy.sellerCta}
+                hint={copy.sellerHint}
+                loading={pending && choosing === 'seller'}
+                disabled={pending}
+                onSelect={() => join('seller')}
+              />
+            </div>
           </div>
-        </div>
-      </section>
+        </DialogContent>
+      </Dialog>
 
       {products.length === 0 ? (
         <div className="mx-auto max-w-page px-4 py-14 sm:px-6 lg:px-4">
@@ -171,9 +240,22 @@ export function WholesaleJoin({
               pages use, which is where a shopper has just come from. */}
           <div className="border-b border-border bg-background">
             <div className="mx-auto flex max-w-page flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-4">
-              <p className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
-                {visible.length} {t.category.itemsFound}
-              </p>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <p className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
+                  {visible.length} {t.category.itemsFound}
+                </p>
+                {/* The way back once the dialog has been dismissed. Kept to a
+                    text button on purpose — the bars belong in the dialog now,
+                    and a second full-width pair here would be the banner this
+                    change removed. */}
+                <button
+                  type="button"
+                  onClick={() => setOpen(true)}
+                  className="rounded-sm text-xs font-semibold text-primary underline-offset-4 hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+                >
+                  {copy.reopenCta}
+                </button>
+              </div>
               {/* Filtering is not gated — narrowing a locked grid tells nobody
                   anything they could not learn by scrolling it. */}
               <CatalogueFilter
@@ -204,7 +286,7 @@ export function WholesaleJoin({
                     lockedLabel={copy.lockedBadge}
                     // Only the first row is above the fold; the rest stay lazy.
                     priority={index < 4}
-                    onClick={() => toast.info(copy.lockedNotice)}
+                    onClick={() => setOpen(true)}
                   />
                 ))}
               </div>
@@ -247,39 +329,42 @@ function ChoiceBar({
       disabled={disabled}
       aria-busy={loading}
       className={cn(
-        'group relative flex w-full items-center justify-center gap-3 rounded-lg border bg-card px-12 py-3 text-center shadow-card transition-colors',
-        'hover:border-primary/40 hover:bg-accent/40',
+        'group relative flex w-full items-center gap-3 rounded-2xl border py-3.5 pr-11 pl-3.5 text-left shadow-card backdrop-blur-md transition-all duration-300',
+        'hover:-translate-y-0.5 hover:shadow-card-hover',
         'focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none',
-        'disabled:pointer-events-none disabled:opacity-60',
-        featured ? 'border-primary/35' : 'border-border',
+        'disabled:pointer-events-none disabled:opacity-60 disabled:hover:translate-y-0',
+        // The featured bar is tinted rather than merely outlined: on a glass
+        // panel a border alone is the one thing the blur behind it eats.
+        featured
+          ? 'border-primary/40 bg-gradient-to-r from-primary/12 via-card/85 to-card/85'
+          : 'border-white/70 bg-card/70 hover:border-primary/30',
       )}
     >
       <span
         className={cn(
-          'flex size-8 shrink-0 items-center justify-center rounded-md transition-colors',
+          'flex size-9 shrink-0 items-center justify-center rounded-xl transition-colors',
           featured
-            ? 'bg-button text-button-foreground'
-            : 'bg-secondary text-foreground group-hover:bg-accent group-hover:text-accent-foreground',
+            ? 'bg-gradient-to-br from-primary to-button text-button-foreground shadow-md shadow-primary/25 ring-1 ring-white/30'
+            : 'bg-secondary/80 text-foreground group-hover:bg-accent group-hover:text-accent-foreground',
         )}
       >
         <Icon className="size-4" aria-hidden="true" />
       </span>
 
-      {/* Label and hint on one line. `truncate` is what keeps the bar slim:
-          a long Bengali label would otherwise wrap and undo the whole shape.
-          The hint is the half that goes first — below `sm` there is no room
-          for it, and the line above the bars covers the same ground. */}
-      <span className="min-w-0 truncate text-sm leading-snug font-semibold text-foreground sm:text-base">
-        {label}
-        <span className="hidden font-normal text-muted-foreground sm:inline">
-          {' · '}
-          {hint}
+      {/* Label over hint rather than on one line. The bar is now inside a
+          `max-w-md` dialog, where the Bengali labels alone fill the width —
+          the old single line with a `truncate` would eat the hint on every
+          viewport, not just the narrow ones. */}
+      <span className="flex min-w-0 flex-col gap-0.5">
+        <span className="text-sm leading-snug font-semibold text-foreground">
+          {label}
         </span>
+        <span className="text-xs leading-snug text-muted-foreground">{hint}</span>
       </span>
 
-      {/* Out of the flow and pinned right, so the icon and label stay centred
-          on the bar rather than being pushed off-centre by the arrow's width.
-          The matching `px-12` on both sides is what leaves it room. */}
+      {/* Out of the flow and pinned right, so a long hint wraps under the
+          label rather than around the arrow. The bar's `pr-11` is what leaves
+          it room. */}
       <ArrowRight
         className={cn(
           'absolute right-4 size-4 shrink-0 transition-transform duration-300 group-hover:translate-x-1',

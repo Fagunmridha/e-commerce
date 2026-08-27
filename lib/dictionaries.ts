@@ -522,10 +522,12 @@ const en = {
   },
   about: {
     storyTitle: 'Welcome to CP Market',
+    storyTagline: 'Where Every Choice Meets Every Want',
     storyParagraphs: [
-      'At CP Market, we believe fashion should be simple, accessible, and inspiring. CP Market is a modern online fashion destination created to bring stylish, quality, and thoughtfully selected clothing closer to you.',
-      'From everyday essentials to pieces that make a statement, we aim to make finding the right style an enjoyable and effortless experience.',
-      'We carefully focus on product quality, modern trends, fair pricing, and a smooth shopping experience — so you can shop with confidence from the comfort of your home.',
+      'CP Market is a modern online fashion destination created with a simple idea — to bring your “Chawa” closer to your “Pawa”.',
+      'The name CP comes from “Chawa-Pawa” — a concept that represents the journey from what you want to what you finally find.',
+      'We believe shopping is more than simply buying a product. It is about finding something that feels right — the right style, the right quality, and the right value.',
+      'At CP Market, we carefully select and bring together fashion products that reflect modern trends, everyday needs, and different personal styles. Our goal is to make your online shopping experience simple, convenient, and enjoyable.',
     ],
     storyEyebrow: 'Who we are',
     storyCta: 'Browse the Collection',
@@ -555,13 +557,31 @@ const en = {
           'Simple browsing, clear delivery charges and cash on delivery — shop with confidence from home.',
       },
     ],
+    /** The name's two halves, and what each one stands for. */
+    whyTitle: 'Why CP?',
+    why: [
+      {
+        letter: 'C',
+        title: 'Chawa',
+        description:
+          'What you want, what you need, and the style you are looking for.',
+      },
+      {
+        letter: 'P',
+        title: 'Pawa',
+        description:
+          'Finding it easily, confidently, and at a value that feels right.',
+      },
+    ],
+    whyClosing:
+      'CP Market brings these two ideas together — from Chawa to Pawa.',
     missionTitle: 'Our Mission',
     mission:
-      'Our mission is simple: to make quality fashion accessible to everyone while creating a shopping experience people can trust.',
+      'Our mission is to create a trusted and enjoyable fashion shopping experience where quality, style, value, and customer satisfaction come first.',
     visionTitle: 'Our Vision',
     vision:
-      'We aspire to build CP Market into a trusted fashion brand where style, quality, and customer satisfaction always come first.',
-    closing: 'Your style. Your choice. Your CP Market.',
+      'We aim to build CP Market into a trusted and recognized fashion brand that people naturally think of when they think about finding what they want.',
+    closing: 'From Chawa to Pawa. This is CP Market.',
   },
   contact: {
     formTitle: 'Send us a message',
@@ -600,20 +620,23 @@ const en = {
       'Apply once with your shop’s papers. Once we approve you, you get your own dashboard to list your stock and take trade orders.',
     applyCta: 'Apply now',
     /**
-     * The chooser on /wholesale — the slim hero above the locked listings.
-     * Everything a signed-out visitor sees of the programme, in two buttons.
+     * The chooser on /wholesale — the dialog that opens over the locked
+     * listings. Everything a signed-out visitor sees of the programme, in two
+     * buttons.
      */
     join: {
       badge: 'Wholesale',
       title: 'Wholesale market',
       subtitle:
-        'Pick a side below to unlock these listings. You can only join one — buyers order trade stock, wholesalers list it.',
+        'Pick a side to unlock these listings. You can only join one — buyers order trade stock, wholesalers list it.',
       buyerCta: 'Join as a wholesale buyer',
       buyerHint: 'No forms, no waiting — order from the market straight away.',
       sellerCta: 'Join as a wholesaler',
       sellerHint: 'Send your shop’s papers. List your stock once we approve you.',
-      /** Fires on any click into the locked grid. */
-      lockedNotice: 'Choose one of the options above first.',
+      /** Screen-reader label on the dialog's close button. */
+      close: 'Close',
+      /** Puts the chooser back once it has been dismissed. */
+      reopenCta: 'Join to see prices',
       lockedBadge: 'Locked',
       signInFirst: 'Sign in first to join the wholesale programme.',
       joining: 'Joining…',
@@ -1644,10 +1667,12 @@ const bn: Dictionary = {
   },
   about: {
     storyTitle: 'CP Market–এ স্বাগতম',
+    storyTagline: 'যেখানে প্রতিটি চাওয়া মেলে প্রতিটি পাওয়ার সাথে',
     storyParagraphs: [
-      'CP Market–এ আমরা বিশ্বাস করি, ফ্যাশন হওয়া উচিত সহজ, সবার নাগালের মধ্যে এবং অনুপ্রেরণাদায়ক। স্টাইলিশ, মানসম্পন্ন ও যত্ন করে বাছাই করা পোশাক আপনার কাছে পৌঁছে দিতেই CP Market–এর যাত্রা।',
-      'প্রতিদিনের সাধারণ পোশাক থেকে শুরু করে আলাদা করে চোখে পড়ার মতো পোশাক — নিজের স্টাইল খুঁজে নেওয়াকে আমরা সহজ ও উপভোগ্য করতে চাই।',
-      'পণ্যের মান, আধুনিক ট্রেন্ড, ন্যায্য দাম এবং স্বচ্ছন্দ শপিং অভিজ্ঞতার দিকে আমরা বিশেষ নজর দিই — যাতে আপনি ঘরে বসেই নিশ্চিন্তে কেনাকাটা করতে পারেন।',
+      'CP Market একটি আধুনিক অনলাইন ফ্যাশন ঠিকানা, যার শুরু একটিমাত্র সহজ ভাবনা থেকে — আপনার “চাওয়া”-কে আপনার “পাওয়া”-র আরও কাছে নিয়ে আসা।',
+      'CP নামটি এসেছে “চাওয়া-পাওয়া” থেকে — যা বোঝায় আপনি যা চান, সেখান থেকে যা শেষ পর্যন্ত খুঁজে পান, তার পুরো পথটাকে।',
+      'আমরা মনে করি, কেনাকাটা মানে শুধু একটি পণ্য কেনা নয়। এটি এমন কিছু খুঁজে পাওয়া যা মনের সাথে মেলে — ঠিক স্টাইল, ঠিক মান আর ঠিক দাম।',
+      'CP Market–এ আমরা যত্ন করে এমন ফ্যাশন পণ্য বাছাই করে একসাথে নিয়ে আসি, যেখানে থাকে আধুনিক ট্রেন্ড, প্রতিদিনের প্রয়োজন আর একেকজনের আলাদা রুচি। আমাদের লক্ষ্য, আপনার অনলাইন কেনাকাটাকে সহজ, স্বাচ্ছন্দ্যময় ও উপভোগ্য করা।',
     ],
     storyEyebrow: 'আমরা কারা',
     storyCta: 'কালেকশন দেখুন',
@@ -1677,13 +1702,27 @@ const bn: Dictionary = {
           'সহজ ব্রাউজিং, পরিষ্কার ডেলিভারি চার্জ আর ক্যাশ অন ডেলিভারি — ঘরে বসেই নিশ্চিন্ত কেনাকাটা।',
       },
     ],
+    whyTitle: 'CP কেন?',
+    why: [
+      {
+        letter: 'C',
+        title: 'চাওয়া',
+        description: 'আপনি যা চান, যা প্রয়োজন, আর যে স্টাইলটি খুঁজছেন।',
+      },
+      {
+        letter: 'P',
+        title: 'পাওয়া',
+        description: 'সহজে, নিশ্চিন্তে আর মনের মতো দামে সেটি খুঁজে পাওয়া।',
+      },
+    ],
+    whyClosing: 'CP Market এই দুটি ভাবনাকে এক করে — চাওয়া থেকে পাওয়া পর্যন্ত।',
     missionTitle: 'আমাদের লক্ষ্য',
     mission:
-      'আমাদের লক্ষ্য সহজ: মানসম্পন্ন ফ্যাশন সবার নাগালে পৌঁছে দেওয়া এবং এমন একটি শপিং অভিজ্ঞতা তৈরি করা যাকে মানুষ বিশ্বাস করতে পারে।',
+      'আমাদের লক্ষ্য এমন একটি বিশ্বস্ত ও উপভোগ্য ফ্যাশন শপিং অভিজ্ঞতা তৈরি করা, যেখানে মান, স্টাইল, ন্যায্য দাম আর গ্রাহকের সন্তুষ্টি সবার আগে।',
     visionTitle: 'আমাদের স্বপ্ন',
     vision:
-      'আমরা CP Market–কে এমন একটি বিশ্বস্ত ফ্যাশন ব্র্যান্ড হিসেবে গড়ে তুলতে চাই, যেখানে স্টাইল, মান ও গ্রাহকের সন্তুষ্টি সবসময় সবার আগে।',
-    closing: 'আপনার স্টাইল। আপনার পছন্দ। আপনার CP Market।',
+      'আমরা CP Market–কে এমন একটি বিশ্বস্ত ও পরিচিত ফ্যাশন ব্র্যান্ড হিসেবে গড়ে তুলতে চাই, নিজের চাওয়া জিনিসটি খুঁজতে গিয়ে মানুষ যার কথা সবার আগে ভাববে।',
+    closing: 'চাওয়া থেকে পাওয়া। এটাই CP Market।',
   },
   contact: {
     formTitle: 'আমাদের বার্তা পাঠান',
@@ -1726,13 +1765,14 @@ const bn: Dictionary = {
       badge: 'পাইকারি',
       title: 'পাইকারি বাজার',
       subtitle:
-        'পণ্যগুলো দেখতে ও কিনতে নিচের যেকোনো একটি অপশন বেছে নিন। যেকোনো একটিই নেওয়া যাবে — ক্রেতা পণ্য অর্ডার করেন, বিক্রেতা পণ্য তোলেন।',
+        'পণ্যগুলো দেখতে ও কিনতে যেকোনো একটি অপশন বেছে নিন। যেকোনো একটিই নেওয়া যাবে — ক্রেতা পণ্য অর্ডার করেন, বিক্রেতা পণ্য তোলেন।',
       buyerCta: 'পাইকারি ক্রেতা হিসেবে যোগ দিন',
       buyerHint: 'কোনো ফরম নেই, অপেক্ষাও নেই — সাথে সাথেই বাজার থেকে অর্ডার করুন।',
       sellerCta: 'পাইকারি বিক্রেতা হিসেবে যোগদান করুন',
       sellerHint:
         'দোকানের কাগজপত্র জমা দিন। অনুমোদন পেলেই নিজের পণ্য তুলতে পারবেন।',
-      lockedNotice: 'আগে উপরের যেকোনো একটি অপশন বেছে নিন।',
+      close: 'বন্ধ করুন',
+      reopenCta: 'দাম দেখতে যোগ দিন',
       lockedBadge: 'লক করা',
       signInFirst: 'পাইকারিতে যোগ দিতে আগে সাইন ইন করুন।',
       joining: 'যোগ দেওয়া হচ্ছে…',

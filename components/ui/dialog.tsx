@@ -50,13 +50,20 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  overlayClassName,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
+  /**
+   * Restyles the scrim. A glass panel needs a lighter one than the default
+   * `bg-black/50` — that much black flattens anything translucent sitting on
+   * top of it. Left undefined everywhere else, which is the old behaviour.
+   */
+  overlayClassName?: string
 }) {
   return (
     <DialogPortal data-slot="dialog-portal">
-      <DialogOverlay />
+      <DialogOverlay className={overlayClassName} />
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(

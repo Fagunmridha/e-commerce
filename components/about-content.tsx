@@ -53,6 +53,11 @@ export function AboutContent() {
           <h2 className="mt-4 text-display-sm text-balance text-foreground">
             {copy.storyTitle}
           </h2>
+          {/* The brand line, sitting between the title and the story it sets
+              up — heavier than body copy but not a second heading. */}
+          <p className="mt-3 text-base font-semibold text-balance text-primary sm:text-lg">
+            {copy.storyTagline}
+          </p>
           <div className="mt-5 space-y-4 text-sm leading-relaxed text-muted-foreground sm:text-base">
             {copy.storyParagraphs.map((paragraph) => (
               <p key={paragraph}>{paragraph}</p>
@@ -114,6 +119,42 @@ export function AboutContent() {
             </div>
           </div>
         </Reveal>
+      </section>
+
+      {/* Why CP — the name, unpacked. Two halves side by side because that is
+          what the name is: the letter is the visual anchor, so it is set large
+          and decorative while the word beside it carries the meaning. */}
+      <section className="border-t border-border bg-surface">
+        <div className={cn(SECTION, 'py-14 lg:py-20')}>
+          <SectionHeading title={copy.whyTitle} align="center" />
+
+          <div className="mx-auto grid max-w-4xl gap-4 sm:grid-cols-2">
+            {copy.why.map((item, index) => (
+              <Reveal key={item.letter} delay={index * 90} className="h-full">
+                <article className="flex h-full items-start gap-5 rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:border-transparent hover:shadow-card-hover">
+                  <span
+                    aria-hidden="true"
+                    className="text-5xl leading-none font-extrabold text-primary/25"
+                  >
+                    {item.letter}
+                  </span>
+                  <div>
+                    <h3 className="text-base font-bold text-foreground">
+                      {item.title}
+                    </h3>
+                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                      {item.description}
+                    </p>
+                  </div>
+                </article>
+              </Reveal>
+            ))}
+          </div>
+
+          <p className="mx-auto mt-8 max-w-2xl text-center text-sm leading-relaxed text-balance text-muted-foreground sm:text-base">
+            {copy.whyClosing}
+          </p>
+        </div>
       </section>
 
       {/* What we focus on */}
