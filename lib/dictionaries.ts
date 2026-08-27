@@ -527,8 +527,11 @@ const en = {
       'From everyday essentials to pieces that make a statement, we aim to make finding the right style an enjoyable and effortless experience.',
       'We carefully focus on product quality, modern trends, fair pricing, and a smooth shopping experience — so you can shop with confidence from the comfort of your home.',
     ],
+    storyEyebrow: 'Who we are',
     storyCta: 'Browse the Collection',
     storyImageAlt: 'A rack of clothing from the CP Market collection',
+    storyImageAltDetail: 'The interior of a modern clothing store',
+    storyImageAltRail: 'A rail of t-shirts in mixed colours',
     valuesTitle: 'What We Focus On',
     values: [
       {
@@ -1646,8 +1649,11 @@ const bn: Dictionary = {
       'প্রতিদিনের সাধারণ পোশাক থেকে শুরু করে আলাদা করে চোখে পড়ার মতো পোশাক — নিজের স্টাইল খুঁজে নেওয়াকে আমরা সহজ ও উপভোগ্য করতে চাই।',
       'পণ্যের মান, আধুনিক ট্রেন্ড, ন্যায্য দাম এবং স্বচ্ছন্দ শপিং অভিজ্ঞতার দিকে আমরা বিশেষ নজর দিই — যাতে আপনি ঘরে বসেই নিশ্চিন্তে কেনাকাটা করতে পারেন।',
     ],
+    storyEyebrow: 'আমরা কারা',
     storyCta: 'কালেকশন দেখুন',
     storyImageAlt: 'CP Market কালেকশনের পোশাকের র‍্যাক',
+    storyImageAltDetail: 'একটি আধুনিক পোশাকের দোকানের ভেতরের ছবি',
+    storyImageAltRail: 'বিভিন্ন রঙের টি-শার্টের র‍্যাক',
     valuesTitle: 'আমরা যেদিকে নজর দিই',
     values: [
       {
