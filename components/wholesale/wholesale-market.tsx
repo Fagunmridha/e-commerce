@@ -1,9 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import Link from 'next/link'
-import { Search, Store } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -13,53 +11,52 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty'
 import { ProductCard } from '@/components/product-card'
+import { CatalogueFilter } from '@/components/catalogue-filter'
 import { useLanguage } from '@/components/language-provider'
 import { useCatalogue } from '@/components/catalogue-provider'
 
+/**
+ * The market as a joined buyer sees it — the one place trade stock is
+ * orderable.
+ *
+ * There is no "sell your own stock" call to action here any more. A seller
+ * cannot reach this page at all (the gate in the route's layout turns them
+ * away), so the only person reading it is someone who chose the buying side
+ * and cannot list anything.
+ */
 export function WholesaleMarket() {
   const { t, pick } = useLanguage()
-  const { wholesaleProducts, categories } = useCatalogue()
+  const { wholesaleProducts, categories, catalogues } = useCatalogue()
   const copy = t.wholesale.market
 
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('')
+  const [catalogue, setCatalogue] = useState('')
 
   const visible = useMemo(() => {
     const term = search.trim().toLowerCase()
     return wholesaleProducts.filter(
       (product) =>
         (!category || product.category === category) &&
+        (!catalogue || product.catalogue === catalogue) &&
         // Product names only. The shop behind a listing is never shown to a
         // buyer, so searching by it would leak the very thing that is hidden.
         (!term || pick(product.name).toLowerCase().includes(term)),
     )
-  }, [wholesaleProducts, search, category, pick])
-
-  // Only offer categories that actually have listings behind them.
-  const usable = categories.filter((item) =>
-    wholesaleProducts.some((product) => product.category === item.slug),
-  )
+  }, [wholesaleProducts, search, category, catalogue, pick])
 
   return (
     <div className="mx-auto max-w-page px-4 py-10 sm:px-6 sm:py-12 lg:px-4">
-      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <Badge variant="secondary" className="border-0">
-            {copy.badge}
-          </Badge>
-          <h2 className="mt-3 text-2xl font-bold text-foreground sm:text-3xl">
-            {copy.title}
-          </h2>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            {copy.subtitle}
-          </p>
-        </div>
-        <Button asChild size="sm">
-          <Link href="/wholesale/dashboard">
-            <Store className="size-4" aria-hidden="true" />
-            {copy.sellCta}
-          </Link>
-        </Button>
+      <div className="mb-8">
+        <Badge variant="secondary" className="border-0">
+          {copy.badge}
+        </Badge>
+        <h2 className="mt-3 text-2xl font-bold text-foreground sm:text-3xl">
+          {copy.title}
+        </h2>
+        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+          {copy.subtitle}
+        </p>
       </div>
 
       {wholesaleProducts.length === 0 ? (
@@ -68,9 +65,6 @@ export function WholesaleMarket() {
             <EmptyTitle>{copy.emptyTitle}</EmptyTitle>
             <EmptyDescription>{copy.emptyBody}</EmptyDescription>
           </EmptyHeader>
-          <Button asChild size="sm" className="mt-2">
-            <Link href="/wholesale/dashboard">{copy.sellCta}</Link>
-          </Button>
         </Empty>
       ) : (
         <>
@@ -87,18 +81,17 @@ export function WholesaleMarket() {
                 className="pl-9"
               />
             </div>
-            <select
-              value={category}
-              onChange={(event) => setCategory(event.target.value)}
-              className="h-9 rounded-md border border-border bg-background px-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
-            >
-              <option value="">{copy.allCategories}</option>
-              {usable.map((item) => (
-                <option key={item.slug} value={item.slug}>
-                  {pick(item.name)}
-                </option>
-              ))}
-            </select>
+            <CatalogueFilter
+              categories={categories}
+              catalogues={catalogues}
+              category={category}
+              catalogue={catalogue}
+              onCategoryChange={setCategory}
+              onCatalogueChange={setCatalogue}
+              // Unfiltered on purpose: the options describe what the market
+              // holds, not what the current filter has left of it.
+              available={wholesaleProducts}
+            />
           </div>
 
           {visible.length === 0 ? (

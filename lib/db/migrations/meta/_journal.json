@@ -162,6 +162,13 @@
       "when": 1787034914214,
       "tag": "0022_oval_hitman",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1787644934785,
+      "tag": "0023_dashing_thena",
+      "breakpoints": true
     }
   ]
 }

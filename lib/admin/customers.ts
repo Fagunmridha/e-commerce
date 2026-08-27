@@ -25,6 +25,7 @@ export async function getCustomers(): Promise<CustomerRow[]> {
       email: users.email,
       name: users.name,
       role: users.role,
+      wholesaleRole: users.wholesaleRole,
       createdAt: users.createdAt,
       orderCount: sql<string>`count(${orders.id})`,
       lifetimeValue: sql<string>`coalesce(sum(${orders.total}) filter (where ${orders.status} <> 'cancelled'), 0)`,

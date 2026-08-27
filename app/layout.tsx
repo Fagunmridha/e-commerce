@@ -14,14 +14,15 @@ import { FloatingWhatsApp } from '@/components/floating-whatsapp'
 import { SkipLink } from '@/components/skip-link'
 import { Toaster } from '@/components/ui/sonner'
 import { getDictionary } from '@/lib/dictionaries'
-import { getServerLocale } from '@/lib/server-locale'
+import { getServerLocale, getServerLocales } from '@/lib/server-locale'
 import {
   getAllProducts,
+  getAllCatalogues,
   getAllCategories,
   getPreorderProducts,
   getWholesaleProducts,
 } from '@/lib/products'
-import { getViewerShop } from '@/lib/wholesalers'
+import { getViewerShop, getViewerWholesaleRole } from '@/lib/wholesalers'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -75,7 +76,15 @@ export default async function RootLayout({
 }>) {
   // Read the saved language on the server so the first paint is already in the
   // right language — no English flash before the client picks it up.
-  const locale = await getServerLocale()
+  //
+  // Both scopes, not just the active one: this layout stays mounted while the
+  // viewer crosses between the storefront (English) and the wholesale section
+  // (Bangla), and the provider needs each side's answer to switch without a
+  // round trip. `getServerLocale` picks the one `<html lang>` starts on.
+  const [locale, locales] = await Promise.all([
+    getServerLocale(),
+    getServerLocales(),
+  ])
 
   // Fetch the catalogue once on the server and hydrate the client context, so
   // every client component reads products from the real database.
@@ -87,29 +96,40 @@ export default async function RootLayout({
   // Pre-orders come from their own query rather than being filtered out of
   // `products`: the Coming Soon card needs the booked count, and that is an
   // aggregate the catalogue-wide query has no reason to pay for.
-  const [shop, products, preorderProducts, categories] = await Promise.all([
-    getViewerShop(),
-    getAllProducts(),
-    getPreorderProducts(),
-    getAllCategories(),
-  ])
+  // `getViewerWholesaleRole` reads the same request-scoped user row
+  // `getViewerShop` already fetches, so it is free to ask for alongside it.
+  const [shop, wholesaleRole, products, preorderProducts, categories, catalogues] =
+    await Promise.all([
+      getViewerShop(),
+      getViewerWholesaleRole(),
+      getAllProducts(),
+      getPreorderProducts(),
+      getAllCategories(),
+      getAllCatalogues(),
+    ])
 
-  // Marketplace listings are fetched only for approved wholesalers. Fetching
-  // them unconditionally would put the whole trade catalogue into every
-  // visitor's HTML, which defeats the point of hiding /wholesale/market.
-  const wholesaleProducts = shop ? await getWholesaleProducts() : []
+  // Marketplace listings go into the context only for someone who can act on
+  // them — an approved shop, or a joined wholesale buyer. /wholesale shows the
+  // same stock to everyone else, but locked, and fetches it on the page itself
+  // rather than putting the whole trade catalogue into every visitor's HTML.
+  const wholesaleProducts =
+    shop || wholesaleRole === 'buyer' ? await getWholesaleProducts() : []
 
   return (
     <ClerkProvider>
       <html lang={locale} suppressHydrationWarning>
         <body className={`font-sans antialiased`}>
-          <LanguageProvider initialLocale={locale}>
+          <LanguageProvider
+            siteLocale={locales.site}
+            wholesaleLocale={locales.wholesale}
+          >
             <CatalogueProvider
               products={products}
               preorderProducts={preorderProducts}
               wholesaleProducts={wholesaleProducts}
               isWholesaler={Boolean(shop)}
               categories={categories}
+              catalogues={catalogues}
             >
               <StoreProvider>
                 <SkipLink />

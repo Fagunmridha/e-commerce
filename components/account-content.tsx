@@ -78,7 +78,10 @@ export function AccountContent({
             href={
               wholesaleStatus === 'approved'
                 ? '/wholesale/dashboard'
-                : '/wholesale/apply'
+                : // /wholesale rather than the form: this button is shown to
+                  // everyone, including people who have not chosen a side, and
+                  // the chooser routes each of them to the right place.
+                  '/wholesale'
             }
           >
             {wholesaleStatus === 'approved'

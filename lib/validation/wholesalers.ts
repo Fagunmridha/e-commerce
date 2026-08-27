@@ -29,14 +29,6 @@ const optionalText = (max = 200) =>
 const optionalImage = imageSchema.nullish().transform((value) => value || null)
 
 /**
- * A required image with its own "you left this out" wording. `imageSchema` on
- * its own reports a blank field as "An image is required", which is no help on
- * a form carrying three of them.
- */
-const requiredImage = (message: string) =>
-  z.string().trim().min(1, message).pipe(imageSchema)
-
-/**
  * Optional phone: '' and undefined both collapse to null, like `optionalText`.
  *
  * `phoneSchema.nullish()` is not enough — it admits null and undefined but not
@@ -82,19 +74,14 @@ export const wholesaleApplicationSchema = z.object({
   district: optionalText(120),
   postcode: optionalText(20),
 
-  // Proof the admin looks at before approving. Optional in the schema so a shop
-  // can save progress and a rejected applicant can resubmit without re-picking
-  // every file; the admin decides whether what is attached is enough.
+  // Proof the admin looks at before approving. All three are optional: a shop
+  // can save progress, a rejected applicant can resubmit without re-picking
+  // every file, and an applicant who has to go and photograph their storefront
+  // is one who abandons the form. The admin decides whether what is attached is
+  // enough and chases the rest — approval is the gate, not the upload widget.
   tradeLicenseImage: optionalImage,
-  /**
-   * The two uploads that are not optional. A trade licence can be chased up
-   * later, but a shop with no picture of itself and no picture of the person
-   * behind it is not something an admin can vet at all.
-   */
-  ownerPhoto: requiredImage(
-    'A passport-size photo of the shop owner is required',
-  ),
-  shopPhoto: requiredImage('A photo of your shop is required'),
+  ownerPhoto: optionalImage,
+  shopPhoto: optionalImage,
 
   note: optionalText(2000),
 })
@@ -122,6 +109,14 @@ export const sellerProductSchema = z
     name: z.string().trim().min(2, 'Give the product a name').max(200),
     image: imageSchema,
     category: z.string().trim().min(1, 'Pick a category').max(64),
+    /** Optional, and paired against the category server-side — see the admin
+     *  schema's note. A seller who leaves it blank still lists under "All". */
+    catalogue: z
+      .string()
+      .trim()
+      .max(64)
+      .nullish()
+      .transform((value) => value || null),
     price: moneySchema.refine((value) => value > 0, 'Set a price above 0'),
     stock: z
       .number()

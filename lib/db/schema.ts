@@ -27,6 +27,23 @@ export const users = pgTable('users', {
   role: text('role', { enum: ['customer', 'admin'] })
     .notNull()
     .default('customer'),
+  /**
+   * Which side of the wholesale programme this account joined, or null for the
+   * ordinary shopper who never picked one.
+   *
+   * A single nullable column rather than two flags, because the two sides are
+   * mutually exclusive by rule: a buyer orders trade stock and never lists any,
+   * a seller lists it and never orders any. One column makes that impossible to
+   * violate instead of merely discouraged.
+   *
+   * Separate from `role` above, which is the app-level admin/customer axis —
+   * an admin is still allowed to join either side.
+   *
+   * Picking `seller` only opens the application; it is the `approved` row in
+   * `wholesaler_applications` that actually lets them list anything. Picking
+   * `buyer` needs no approval and takes effect immediately.
+   */
+  wholesaleRole: text('wholesale_role', { enum: ['buyer', 'seller'] }),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })
 
@@ -35,6 +52,32 @@ export const categories = pgTable('categories', {
   name: jsonb('name').$type<Localized>().notNull(),
   image: text('image').notNull(),
 })
+
+/**
+ * The second level of the catalogue tree: "Jeans" and "Shirts" under Men's,
+ * "Borka", "Three-piece" and "Saree" under Women's.
+ *
+ * Its own table rather than a free-text column on `products` so the two
+ * languages stay paired, the admin can rename one in a single place, and the
+ * category pages can list the filter chips without first scanning every
+ * product to discover what values exist.
+ *
+ * `slug` is store-wide unique rather than unique-per-category — the URLs
+ * (`/men?catalogue=jeans`) read better for it, and nothing wants two different
+ * "jeans" anyway.
+ */
+export const catalogues = pgTable('catalogues', {
+  slug: text('slug').primaryKey(),
+  categorySlug: text('category_slug')
+    .notNull()
+    .references(() => categories.slug, { onDelete: 'cascade' })
+    .$type<CategorySlug>(),
+  name: jsonb('name').$type<Localized>().notNull(),
+  /** Admin-controlled order within the parent category; ties break on slug. */
+  position: integer('position').notNull().default(0),
+}, (table) => [
+  index('catalogues_category_slug_idx').on(table.categorySlug),
+])
 
 export const products = pgTable('products', {
   id: text('id').primaryKey(),
@@ -46,6 +89,19 @@ export const products = pgTable('products', {
     .notNull()
     .references(() => categories.slug, { onDelete: 'restrict' })
     .$type<CategorySlug>(),
+  /**
+   * Which catalogue within `category` this sits in — "jeans" under men's.
+   *
+   * Nullable, and deliberately not validated against the parent category in the
+   * database: every product that existed before catalogues did has none, and a
+   * grid that only showed categorised stock would have gone empty overnight. An
+   * uncatalogued product still appears under "All" and disappears the moment a
+   * catalogue filter is applied, which is the honest behaviour. The
+   * category/catalogue pairing is enforced on the admin form instead.
+   */
+  catalogueSlug: text('catalogue_slug').references(() => catalogues.slug, {
+    onDelete: 'set null',
+  }),
   badge: text('badge', { enum: ['new', 'sale'] }),
   sizes: text('sizes').array(),
   /**
@@ -126,6 +182,7 @@ export const products = pgTable('products', {
   // the queries do not quietly turn into scans as the catalogue grows.
   index('products_seller_id_idx').on(table.sellerId),
   index('products_category_idx').on(table.category),
+  index('products_catalogue_slug_idx').on(table.catalogueSlug),
   index('products_created_at_idx').on(table.createdAt),
 ])
 
@@ -493,9 +550,9 @@ export const wholesalerApplications = pgTable('wholesaler_applications', {
   tradeLicenseImage: text('trade_license_image'),
   shopPhoto: text('shop_photo'),
   /**
-   * Passport-size photo of the owner — required by the form, since it is what
-   * ties a set of papers to a person. Nullable all the same: the column arrived
-   * after the first applications did.
+   * Passport-size photo of the owner — what ties a set of papers to a person.
+   * Optional, like the two above: making it mandatory turned "apply" into "go
+   * and find a photo first", and the admin can ask for it during review.
    */
   ownerPhoto: text('owner_photo'),
 
@@ -602,7 +659,10 @@ export const settlements = pgTable('settlements', {
 
 export type UserRow = typeof users.$inferSelect
 export type CategoryRow = typeof categories.$inferSelect
+export type CatalogueRow = typeof catalogues.$inferSelect
 export type ProductRow = typeof products.$inferSelect
+/** Which side of the wholesale programme an account joined. */
+export type WholesaleRole = NonNullable<UserRow['wholesaleRole']>
 export type OrderRow = typeof orders.$inferSelect
 export type OrderItemRow = typeof orderItems.$inferSelect
 export type ReviewRow = typeof reviews.$inferSelect

@@ -7,8 +7,40 @@ import {
   users,
   wholesalerApplications,
   type UserRow,
+  type WholesaleRole,
   type WholesalerApplicationRow,
 } from '@/lib/db/schema'
+
+/**
+ * Which side of the wholesale programme the viewer joined, or null if they
+ * have not picked one (or are signed out).
+ *
+ * Free: `getCurrentUser` is request-scoped and already selects the whole user
+ * row, so nothing here costs a round trip the page was not already paying.
+ */
+export async function getViewerWholesaleRole(): Promise<WholesaleRole | null> {
+  const user = await getCurrentUser()
+  return user?.wholesaleRole ?? null
+}
+
+/**
+ * Guards every path that spends money on trade stock — the mirror of
+ * `requireApprovedWholesaler` on the selling side.
+ *
+ * The two sides are exclusive by rule, and this is where that rule is actually
+ * enforced: the seller console simply never renders an "Add to cart", but a
+ * seller with a stale cart or a hand-made request would otherwise still get an
+ * order through. Throws rather than returning null because the callers are
+ * mutations.
+ */
+export async function requireWholesaleBuyer(): Promise<UserRow> {
+  const user = await getCurrentUser()
+  if (!user) throw new Error('Not authorized')
+  if (user.wholesaleRole !== 'buyer') {
+    throw new Error('Only wholesale buyers can order trade stock')
+  }
+  return user
+}
 
 /** Admin list — every application, newest first, with the applicant's login. */
 export async function getAllApplications(): Promise<

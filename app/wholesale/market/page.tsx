@@ -3,7 +3,7 @@ import { PageHeader } from '@/components/page-header'
 import { WholesaleMarket } from '@/components/wholesale/wholesale-market'
 import { pageMetadata } from '@/lib/metadata'
 
-// Approved wholesalers only — the gate is in ../layout.tsx.
+// Joined wholesale buyers only — the gate is in ./layout.tsx.
 export const dynamic = 'force-dynamic'
 
 export function generateMetadata(): Promise<Metadata> {

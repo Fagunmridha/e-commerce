@@ -13,6 +13,13 @@ export type SeedCategory = {
   image: string
 }
 
+export type SeedCatalogue = {
+  slug: string
+  categorySlug: CategorySlug
+  name: Localized
+  position: number
+}
+
 export type SeedProduct = {
   id: string
   name: Localized
@@ -51,6 +58,31 @@ export const SEED_CATEGORIES: SeedCategory[] = [
     name: { en: 'Accessories', bn: 'অ্যাক্সেসরিজ' },
     image: u('1590874103328-eac38a683ce7', 800),
   },
+]
+
+/**
+ * The catalogue tree's second level. A starting set, not a fixed one — the
+ * admin adds, renames and removes these from /admin/catalogues, and nothing in
+ * the app assumes a particular slug exists.
+ *
+ * Accessories deliberately has none: the storefront hides the dropdown for a
+ * category with no catalogues rather than showing an empty one, and that path
+ * should be exercised by the seed rather than only discovered in production.
+ */
+export const SEED_CATALOGUES: SeedCatalogue[] = [
+  { slug: 'jeans', categorySlug: 'men', name: { en: 'Jeans', bn: 'জিন্স' }, position: 0 },
+  { slug: 'shirts', categorySlug: 'men', name: { en: 'Shirts', bn: 'শার্ট' }, position: 1 },
+  { slug: 'panjabi', categorySlug: 'men', name: { en: 'Panjabi', bn: 'পাঞ্জাবি' }, position: 2 },
+  { slug: 't-shirts', categorySlug: 'men', name: { en: 'T-Shirts', bn: 'টি-শার্ট' }, position: 3 },
+
+  { slug: 'borka', categorySlug: 'women', name: { en: 'Borka', bn: 'বোরকা' }, position: 0 },
+  { slug: 'three-piece', categorySlug: 'women', name: { en: 'Three-piece', bn: 'থ্রি-পিস' }, position: 1 },
+  { slug: 'saree', categorySlug: 'women', name: { en: 'Saree', bn: 'শাড়ি' }, position: 2 },
+  { slug: 'kurti', categorySlug: 'women', name: { en: 'Kurti', bn: 'কুর্তি' }, position: 3 },
+
+  { slug: 'kids-boys', categorySlug: 'kids', name: { en: 'Boys', bn: 'ছেলেদের' }, position: 0 },
+  { slug: 'kids-girls', categorySlug: 'kids', name: { en: 'Girls', bn: 'মেয়েদের' }, position: 1 },
+  { slug: 'kids-baby', categorySlug: 'kids', name: { en: 'Baby', bn: 'শিশু' }, position: 2 },
 ]
 
 const DEFAULT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL']

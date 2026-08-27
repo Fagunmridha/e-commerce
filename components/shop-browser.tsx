@@ -29,13 +29,14 @@ const ITEMS_PER_PAGE = 12
 
 export function ShopBrowser({ initialFilter = 'all' }: { initialFilter?: Filter }) {
   const { t, pick, price: formatPrice } = useLanguage()
-  const { products: allProducts, categories } = useCatalogue()
+  const { products: allProducts, categories, catalogues } = useCatalogue()
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
   // Extract query params
   const categoryParam = (searchParams.get('category') as Filter) || initialFilter
+  const catalogueParam = searchParams.get('catalogue') || ''
   const sortParam = (searchParams.get('sort') as SortKey) || 'featured'
   const queryParam = searchParams.get('q') || ''
   const minPriceParam = searchParams.get('minPrice') || ''
@@ -45,6 +46,7 @@ export function ShopBrowser({ initialFilter = 'all' }: { initialFilter?: Filter 
 
   // Local state initialized from URL params
   const [filter, setFilter] = useState<Filter>(categoryParam)
+  const [catalogue, setCatalogue] = useState(catalogueParam)
   const [sort, setSort] = useState<SortKey>(sortParam)
   const [searchQuery, setSearchQuery] = useState(queryParam)
   const [minPrice, setMinPrice] = useState(minPriceParam)
@@ -58,6 +60,7 @@ export function ShopBrowser({ initialFilter = 'all' }: { initialFilter?: Filter 
   // Sync state when URL params change externally
   useEffect(() => {
     setFilter(categoryParam)
+    setCatalogue(catalogueParam)
     setSort(sortParam)
     setSearchQuery(queryParam)
     setMinPrice(minPriceParam)
@@ -66,6 +69,7 @@ export function ShopBrowser({ initialFilter = 'all' }: { initialFilter?: Filter 
     setViewMode(viewParam)
   }, [
     categoryParam,
+    catalogueParam,
     sortParam,
     queryParam,
     minPriceParam,
@@ -95,8 +99,20 @@ export function ShopBrowser({ initialFilter = 'all' }: { initialFilter?: Filter 
   // Handlers
   const handleCategoryChange = (cat: Filter) => {
     setFilter(cat)
+    setCatalogue('')
     setVisibleCount(ITEMS_PER_PAGE)
-    updateQueryParams({ category: cat === 'all' ? null : cat })
+    // The catalogue almost certainly belonged to the category being left, and
+    // "Men's + Saree" is an empty search rather than a narrower one.
+    updateQueryParams({
+      category: cat === 'all' ? null : cat,
+      catalogue: null,
+    })
+  }
+
+  const handleCatalogueChange = (next: string) => {
+    setCatalogue(next)
+    setVisibleCount(ITEMS_PER_PAGE)
+    updateQueryParams({ catalogue: next || null })
   }
 
   const handleSortChange = (newSort: SortKey) => {
@@ -136,6 +152,7 @@ export function ShopBrowser({ initialFilter = 'all' }: { initialFilter?: Filter 
 
   const handleClearAllFilters = () => {
     setFilter('all')
+    setCatalogue('')
     setSort('featured')
     setSearchQuery('')
     setMinPrice('')
@@ -152,6 +169,12 @@ export function ShopBrowser({ initialFilter = 'all' }: { initialFilter?: Filter 
     // Category Filter
     if (filter !== 'all') {
       list = list.filter((p) => p.category === filter)
+    }
+
+    // Catalogue Filter. Uncatalogued stock never matches — it belongs under
+    // "All", not under whichever branch happens to be selected.
+    if (catalogue) {
+      list = list.filter((p) => p.catalogue === catalogue)
     }
 
     // Search Query Filter
@@ -197,7 +220,16 @@ export function ShopBrowser({ initialFilter = 'all' }: { initialFilter?: Filter 
     }
 
     return list
-  }, [allProducts, filter, searchQuery, minPrice, maxPrice, inStockOnly, sort])
+  }, [
+    allProducts,
+    filter,
+    catalogue,
+    searchQuery,
+    minPrice,
+    maxPrice,
+    inStockOnly,
+    sort,
+  ])
 
   // Displayed slice for pagination
   const displayedProducts = useMemo(
@@ -208,12 +240,13 @@ export function ShopBrowser({ initialFilter = 'all' }: { initialFilter?: Filter 
   const activeFiltersCount = useMemo(() => {
     let count = 0
     if (filter !== 'all') count++
+    if (catalogue) count++
     if (searchQuery.trim()) count++
     if (minPrice !== '') count++
     if (maxPrice !== '') count++
     if (inStockOnly) count++
     return count
-  }, [filter, searchQuery, minPrice, maxPrice, inStockOnly])
+  }, [filter, catalogue, searchQuery, minPrice, maxPrice, inStockOnly])
 
   const categoryOptions = [
     { value: 'all' as Filter, label: t.shop.all },
@@ -222,6 +255,23 @@ export function ShopBrowser({ initialFilter = 'all' }: { initialFilter?: Filter 
       label: pick(c.name),
     })),
   ]
+
+  /**
+   * The catalogues on offer: those under the chosen category (or every one,
+   * with no category chosen) that actually have stock behind them. Measured
+   * against the *unfiltered* list, so picking one does not make the rest of
+   * the options disappear.
+   */
+  const catalogueOptions = useMemo(() => {
+    const inScope =
+      filter === 'all'
+        ? catalogues
+        : catalogues.filter((item) => item.categorySlug === filter)
+
+    return inScope.filter((item) =>
+      allProducts.some((product) => product.catalogue === item.slug),
+    )
+  }, [catalogues, filter, allProducts])
 
   const sortOptions: { value: SortKey; label: string }[] = [
     { value: 'featured', label: t.shop.sortFeatured },
@@ -363,6 +413,25 @@ export function ShopBrowser({ initialFilter = 'all' }: { initialFilter?: Filter 
               </button>
             )}
 
+            {catalogue && (
+              <button
+                type="button"
+                onClick={() => handleCatalogueChange('')}
+                className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-1 text-xs font-medium border border-border shadow-xs hover:border-foreground/40"
+              >
+                <span>
+                  {t.catalogue.catalogue}:{' '}
+                  {(() => {
+                    const match = catalogues.find((c) => c.slug === catalogue)
+                    // A slug from the URL that matches nothing still deserves a
+                    // chip — it is the only way to clear it.
+                    return match ? pick(match.name) : catalogue
+                  })()}
+                </span>
+                <X className="size-3 text-muted-foreground hover:text-foreground" />
+              </button>
+            )}
+
             {searchQuery.trim() && (
               <button
                 type="button"
@@ -443,6 +512,31 @@ export function ShopBrowser({ initialFilter = 'all' }: { initialFilter?: Filter 
                   ))}
                 </div>
               </div>
+
+              {/* Catalogue Filter. Hidden when the chosen category has no
+                  catalogues behind it, rather than shown empty. */}
+              {catalogueOptions.length > 0 && (
+                <div className="rounded-xl border border-border bg-card p-4">
+                  <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    {t.catalogue.catalogue}
+                  </h3>
+                  <div className="space-y-1">
+                    <CatalogueOption
+                      label={t.catalogue.allCatalogues}
+                      active={!catalogue}
+                      onSelect={() => handleCatalogueChange('')}
+                    />
+                    {catalogueOptions.map((item) => (
+                      <CatalogueOption
+                        key={item.slug}
+                        label={pick(item.name)}
+                        active={catalogue === item.slug}
+                        onSelect={() => handleCatalogueChange(item.slug)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Price Range Filter */}
               <div className="rounded-xl border border-border bg-card p-4">
@@ -619,6 +713,31 @@ export function ShopBrowser({ initialFilter = 'all' }: { initialFilter?: Filter 
                 </div>
               </div>
 
+              {/* Catalogue Filter. Hidden when the chosen category has no
+                  catalogues behind it, rather than shown empty. */}
+              {catalogueOptions.length > 0 && (
+                <div>
+                  <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    {t.catalogue.catalogue}
+                  </h3>
+                  <div className="space-y-1">
+                    <CatalogueOption
+                      label={t.catalogue.allCatalogues}
+                      active={!catalogue}
+                      onSelect={() => handleCatalogueChange('')}
+                    />
+                    {catalogueOptions.map((item) => (
+                      <CatalogueOption
+                        key={item.slug}
+                        label={pick(item.name)}
+                        active={catalogue === item.slug}
+                        onSelect={() => handleCatalogueChange(item.slug)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Price Range Filter */}
               <div>
                 <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">
@@ -685,5 +804,37 @@ export function ShopBrowser({ initialFilter = 'all' }: { initialFilter?: Filter 
         </div>
       )}
     </div>
+  )
+}
+
+/**
+ * One row of the catalogue list. Extracted only because the sidebar is
+ * rendered twice — once for desktop, once inside the mobile filter sheet —
+ * and the two must not be able to drift apart.
+ */
+function CatalogueOption({
+  label,
+  active,
+  onSelect,
+}: {
+  label: string
+  active: boolean
+  onSelect: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={active}
+      className={cn(
+        'flex w-full items-center justify-between rounded-lg px-3 py-2 text-xs font-semibold transition-colors',
+        active
+          ? 'bg-foreground text-background'
+          : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
+      )}
+    >
+      <span>{label}</span>
+      {active && <Check className="size-3.5" />}
+    </button>
   )
 }

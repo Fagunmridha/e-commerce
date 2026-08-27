@@ -36,7 +36,7 @@ export function SellerProductForm({
 }) {
   const router = useRouter()
   const { t, pick } = useLanguage()
-  const { categories } = useCatalogue()
+  const { categories, catalogues } = useCatalogue()
   const copy = t.wholesale.dashboard
 
   const [pending, setPending] = useState(false)
@@ -47,6 +47,7 @@ export function SellerProductForm({
     price: product?.price?.toString() ?? '',
     image: product?.image ?? '',
     category: product?.category ?? categories[0]?.slug ?? 'men',
+    catalogue: product?.catalogue ?? '',
     stock: product?.stock?.toString() ?? '',
     // `moq` is undefined on the type when it is 1 (see lib/products.ts), and the
     // field should read "1" rather than blank.
@@ -72,6 +73,7 @@ export function SellerProductForm({
       name: form.name.trim(),
       image: form.image.trim(),
       category: form.category,
+      catalogue: form.catalogue || null,
       price: Number(form.price) || 0,
       stock: Number(form.stock) || 0,
       moq: Number(form.moq) || 1,
@@ -114,7 +116,13 @@ export function SellerProductForm({
           <Field label={copy.category}>
             <select
               value={form.category}
-              onChange={(event) => set('category', event.target.value)}
+              onChange={(event) => {
+                set('category', event.target.value)
+                // The catalogue belongs to the category being left behind. The
+                // server drops a mismatched pair to null; clearing it here
+                // means the seller sees that rather than finding out on save.
+                set('catalogue', '')
+              }}
               className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
             >
               {categories.map((category) => (
@@ -124,6 +132,26 @@ export function SellerProductForm({
               ))}
             </select>
           </Field>
+          {/* Hidden when the picked category has no catalogues — an empty
+              dropdown is a question with no answers. */}
+          {catalogues.some((item) => item.categorySlug === form.category) && (
+            <Field label={t.catalogue.catalogue}>
+              <select
+                value={form.catalogue}
+                onChange={(event) => set('catalogue', event.target.value)}
+                className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+              >
+                <option value="">{t.catalogue.allCatalogues}</option>
+                {catalogues
+                  .filter((item) => item.categorySlug === form.category)
+                  .map((item) => (
+                    <option key={item.slug} value={item.slug}>
+                      {pick(item.name)}
+                    </option>
+                  ))}
+              </select>
+            </Field>
+          )}
         </CardContent>
       </Card>
 

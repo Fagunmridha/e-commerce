@@ -28,6 +28,7 @@ import {
 import { computeTotals } from '@/lib/coupon-math'
 import type { DeliveryZone } from '@/lib/currency'
 import { checkCoupon, redeemCoupon } from '@/lib/coupons'
+import { requireWholesaleBuyer } from '@/lib/wholesalers'
 import { commissionPct, summariseSettlement } from '@/lib/commission'
 import { advancePct, splitPayment } from '@/lib/preorder'
 import type { Localized } from '@/lib/i18n'
@@ -113,6 +114,13 @@ export async function createOrder(
   const sellerIds = [
     ...new Set(rows.flatMap((row) => (row.sellerId ? [row.sellerId] : []))),
   ]
+
+  // …and only *buyers* may take them. The market's gate and the product page's
+  // both turn a seller away already, but a cart survives a role being set and
+  // checkout is reachable without rendering either — so the rule is enforced
+  // once more here, where the money actually moves. House stock is untouched:
+  // an ordinary shopper, signed in or not, still checks out as before.
+  if (sellerIds.length) await requireWholesaleBuyer()
   //
   // The shop *name* comes back on the same query rather than a second one: it
   // is snapshotted onto every settlement below, and the round trip is the cost

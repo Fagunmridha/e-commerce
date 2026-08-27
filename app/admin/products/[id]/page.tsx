@@ -1,7 +1,11 @@
 import { notFound } from 'next/navigation'
 import { ProductForm } from '@/components/admin/product-form'
 import { SetBreadcrumbLabel } from '@/components/breadcrumb-label'
-import { getAdminProductById, getProductImages } from '@/lib/products'
+import {
+  getAdminProductById,
+  getAllCatalogues,
+  getProductImages,
+} from '@/lib/products'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,7 +19,11 @@ export default async function EditProductPage({
   if (!product) notFound()
 
   // `getProductImages` returns the primary shot first; the form edits the rest.
-  const gallery = (await getProductImages(product)).slice(1)
+  const [images, catalogues] = await Promise.all([
+    getProductImages(product),
+    getAllCatalogues(),
+  ])
+  const gallery = images.slice(1)
 
   return (
     <div className="mx-auto w-full max-w-3xl">
@@ -23,7 +31,7 @@ export default async function EditProductPage({
       <h2 className="mb-6 text-xl font-bold text-foreground">
         Edit — {product.name.en}
       </h2>
-      <ProductForm product={product} gallery={gallery} />
+      <ProductForm product={product} gallery={gallery} catalogues={catalogues} />
     </div>
   )
 }

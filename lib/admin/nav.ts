@@ -1,5 +1,6 @@
 import {
   CalendarClock,
+  Layers,
   LayoutDashboard,
   Mail,
   MessageSquareQuote,
@@ -52,6 +53,11 @@ export const ADMIN_NAV: AdminNavGroup[] = [
           { href: '/admin/products', label: 'All products' },
           { href: '/admin/products/new', label: 'Add product' },
         ],
+      },
+      {
+        href: '/admin/catalogues',
+        label: 'Catalogues',
+        icon: Layers,
       },
       {
         href: '/admin/preorders',

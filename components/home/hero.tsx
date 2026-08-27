@@ -11,6 +11,26 @@ import type { FeaturedCoupon } from '@/lib/coupon-math'
 import { cn } from '@/lib/utils'
 
 /**
+ * Imported rather than referenced as `/plant-clothes.png`, and that is
+ * load-bearing.
+ *
+ * An import is fingerprinted — the file ships as
+ * `/_next/static/media/plant-clothes.<contenthash>.png` — so redrawing the
+ * artwork and saving it over the old file changes the URL by itself. A string
+ * path does not: the URL stays identical, and `minimumCacheTTL` in
+ * next.config.mjs holds every derived variant for thirty days, so a replaced
+ * hero would keep serving the old picture to everyone who had already loaded
+ * the page. That config note reasons about R2 uploads, which do get a new key
+ * each time; a file swapped in place under /public is the case it misses.
+ *
+ * Static imports also carry the intrinsic size, which is what lets the two
+ * decorations below drop their hand-written width/height.
+ */
+import heroRack from '@/public/plant-clothes.png'
+import wholesaleBoxes from '@/public/wholesale-boxes.png'
+import couponTickets from '@/public/icons/coupon-tickets.png'
+
+/**
  * The homepage hero: one wide panel carrying the headline and the product
  * photo, with the two standing offers stacked in a rail beside it. On phones
  * the rail drops below the panel and the offers sit side by side.
@@ -74,20 +94,27 @@ export function Hero({ coupon = null }: { coupon?: FeaturedCoupon | null }) {
                     transparent, so it sits straight on the panel's own surface
                     in either theme — no plate, no seam.
 
-                    Contain, not cover: the rack spans the full height of its
+                    Contain, not cover: the rack runs the full height of its
                     own asset, so there is no slack to crop into — cover, or
                     any scale past it, eats the top rail and the hangers first.
-                    The column carries the size instead, and the nudge left
-                    closes the gap to the headline. */}
+                    The column carries the size instead.
+
+                    No horizontal nudge. The asset is trimmed to roughly 6% of
+                    clear canvas either side of the rack, so it already starts
+                    where the column does; the -6% this used to carry was
+                    compensating for an earlier cut-out that had three times
+                    that much dead margin, and against this one it would push
+                    the rack into the headline. Re-measure before adding it
+                    back for a new asset. */}
                 <div className="relative h-72 sm:h-full sm:min-h-[27rem] lg:min-h-[34rem]">
                   <Image
-                    src="/plant-clothes.png"
+                    src={heroRack}
                     alt=""
                     fill
                     // The hero image is the homepage LCP element.
                     priority
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 40vw"
-                    className="-translate-x-[6%] object-contain object-center"
+                    className="object-contain object-center"
                   />
                 </div>
               </div>
@@ -98,7 +125,11 @@ export function Hero({ coupon = null }: { coupon?: FeaturedCoupon | null }) {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 lg:gap-5">
             <Reveal delay={100}>
               <Link
-                href="/wholesale/apply"
+                // The chooser, not the application form. Applying is one of
+                // the two ways into the programme, and this card must not
+                // decide which one for someone who has not picked yet —
+                // /wholesale routes them on by the side they chose.
+                href="/wholesale"
                 className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card p-5 transition-all sm:p-6 duration-300 hover:-translate-y-1 hover:border-transparent hover:shadow-card-hover focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
               >
                 <h2 className="text-xl leading-tight font-bold text-foreground">
@@ -118,10 +149,8 @@ export function Hero({ coupon = null }: { coupon?: FeaturedCoupon | null }) {
                 {/* The carton stack is a transparent PNG, so it drops straight
                     onto the card with no plate behind it. */}
                 <Image
-                  src="/wholesale-boxes.png"
+                  src={wholesaleBoxes}
                   alt=""
-                  width={1024}
-                  height={1024}
                   sizes="128px"
                   className="pointer-events-none absolute right-3 bottom-3 w-24 origin-bottom-right transition-transform duration-500 group-hover:scale-110 sm:w-28 lg:w-32"
                 />
@@ -156,10 +185,8 @@ function CouponCard({ coupon }: { coupon: FeaturedCoupon | null }) {
 
   const decoration = (
     <Image
-      src="/icons/coupon-tickets.png"
+      src={couponTickets}
       alt=""
-      width={512}
-      height={398}
       sizes="128px"
       className="pointer-events-none absolute right-4 bottom-5 w-24 origin-bottom-right transition-transform duration-500 group-hover:scale-110 sm:w-28 lg:w-32"
     />

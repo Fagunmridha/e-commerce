@@ -10,6 +10,13 @@ const en = {
     about: 'About Us',
     contact: 'Contact',
   },
+  /** The category → catalogue dropdowns, shared by every product grid. */
+  catalogue: {
+    category: 'Category',
+    catalogue: 'Catalogue',
+    allCategories: 'All categories',
+    allCatalogues: 'All catalogues',
+  },
   header: {
     openMenu: 'Open menu',
     closeMenu: 'Close menu',
@@ -301,8 +308,11 @@ const en = {
     },
     wholesale: {
       title: 'Wholesale',
+      // Two memberships, not two things one person does — the programme's
+      // sides are exclusive, and the page header is where that starts being
+      // true.
       description:
-        'Sell your shop’s stock through our store, and buy from other verified shops at trade prices.',
+        'Buy from verified shops at trade prices, or sell your own stock through our store.',
       breadcrumb: 'Wholesale',
     },
     wholesaleMarket: {
@@ -584,8 +594,40 @@ const en = {
     badge: 'For businesses',
     title: 'Join as a wholesaler',
     subtitle:
-      'Apply once with your shop’s papers. Once we approve you, you get your own dashboard to list stock — and access to buy from every other verified shop.',
+      'Apply once with your shop’s papers. Once we approve you, you get your own dashboard to list your stock and take trade orders.',
     applyCta: 'Apply now',
+    /**
+     * The chooser on /wholesale — the slim hero above the locked listings.
+     * Everything a signed-out visitor sees of the programme, in two buttons.
+     */
+    join: {
+      badge: 'Wholesale',
+      title: 'Wholesale market',
+      subtitle:
+        'Pick a side below to unlock these listings. You can only join one — buyers order trade stock, wholesalers list it.',
+      buyerCta: 'Join as a wholesale buyer',
+      buyerHint: 'No forms, no waiting — order from the market straight away.',
+      sellerCta: 'Join as a wholesaler',
+      sellerHint: 'Send your shop’s papers. List your stock once we approve you.',
+      /** Fires on any click into the locked grid. */
+      lockedNotice: 'Choose one of the options above first.',
+      lockedBadge: 'Locked',
+      signInFirst: 'Sign in first to join the wholesale programme.',
+      joining: 'Joining…',
+      joinedBuyer: 'You are in — the market is open.',
+      failed: 'Could not join. Please try again.',
+      emptyTitle: 'No wholesale listings yet',
+      emptyBody:
+        'No approved shop has listed anything yet. Join now and you will see them the moment they do.',
+      /** Shown to a seller who reaches the market — they may list, not buy. */
+      sellerCannotBuy:
+        'You joined as a wholesaler, so you list stock rather than order it.',
+      /** …and its mirror, on anything that would let a buyer list stock. */
+      buyerCannotSell:
+        'You joined as a wholesale buyer, so you order stock rather than list it.',
+      sellerHome: 'Go to my shop',
+      buyerHome: 'Browse the market',
+    },
     benefits: [
       {
         title: 'Your price, your stock',
@@ -597,7 +639,7 @@ const en = {
       },
       {
         title: 'A trade-only market',
-        body: 'The wholesale market is closed to ordinary shoppers. Only approved shops see it, and you can buy from it too.',
+        body: 'Your listings are shown only to wholesale buyers who have joined the programme, never to ordinary shoppers.',
       },
     ],
     status: {
@@ -627,11 +669,9 @@ const en = {
       addressSection: 'Address',
       documentsSection: 'Papers',
       documentsHint:
-        'Photos of your papers are how we verify the shop. A clear phone photo is fine. Nothing here is shown to shoppers.',
+        'Photos of your papers are how we verify the shop — all optional here, and we will ask for anything missing while we review. A clear phone photo is fine. Nothing here is shown to shoppers.',
       ownerPhoto: "Shop Owner's Passport-Size Photo",
-      ownerPhotoHint: 'Required — Upload a passport-size photo',
       shopPhoto: 'Photo of your shop',
-      shopPhotoHint: 'Required — storefront photo',
       tradeLicenseImage: 'Trade licence photo',
       shopName: 'Shop or company name',
       shopNamePlaceholder: 'e.g. Karim Traders',
@@ -676,8 +716,6 @@ const en = {
       email: 'Enter a valid email address.',
       address: 'Enter your full address.',
       city: 'Enter your city.',
-      ownerPhoto: 'Add a passport-size photo of the shop owner.',
-      shopPhoto: 'Add a photo of your shop.',
       agree: 'Please confirm the details are correct.',
     },
     market: {
@@ -1130,6 +1168,12 @@ const bn: Dictionary = {
     about: 'আমাদের সম্পর্কে',
     contact: 'যোগাযোগ',
   },
+  catalogue: {
+    category: 'ক্যাটাগরি',
+    catalogue: 'ক্যাটালগ',
+    allCategories: 'সব ক্যাটাগরি',
+    allCatalogues: 'সব ক্যাটালগ',
+  },
   header: {
     openMenu: 'মেনু খুলুন',
     closeMenu: 'মেনু বন্ধ করুন',
@@ -1415,7 +1459,7 @@ const bn: Dictionary = {
     wholesale: {
       title: 'পাইকারি',
       description:
-        'নিজের দোকানের পণ্য আমাদের সাইটে বিক্রি করুন, আর অন্য যাচাই করা দোকান থেকে পাইকারি দামে কিনুন।',
+        'যাচাই করা দোকান থেকে পাইকারি দামে কিনুন, অথবা নিজের দোকানের পণ্য আমাদের সাইটে বিক্রি করুন।',
       breadcrumb: 'পাইকারি',
     },
   },
@@ -1670,8 +1714,34 @@ const bn: Dictionary = {
     badge: 'ব্যবসার জন্য',
     title: 'হোলসেলার হিসেবে যুক্ত হন',
     subtitle:
-      'দোকানের কাগজপত্র দিয়ে একবার আবেদন করুন। অনুমোদন পেলে নিজের একটা ড্যাশবোর্ড পাবেন যেখান থেকে পণ্য তুলবেন — আর অন্য সব যাচাই করা দোকান থেকে কেনার সুযোগ পাবেন।',
+      'দোকানের কাগজপত্র দিয়ে একবার আবেদন করুন। অনুমোদন পেলে নিজের একটা ড্যাশবোর্ড পাবেন, যেখান থেকে পণ্য তুলবেন আর পাইকারি অর্ডার নিবেন।',
     applyCta: 'আবেদন করুন',
+    join: {
+      badge: 'পাইকারি',
+      title: 'পাইকারি বাজার',
+      subtitle:
+        'পণ্যগুলো দেখতে ও কিনতে নিচের যেকোনো একটি অপশন বেছে নিন। যেকোনো একটিই নেওয়া যাবে — ক্রেতা পণ্য অর্ডার করেন, বিক্রেতা পণ্য তোলেন।',
+      buyerCta: 'পাইকারি ক্রেতা হিসেবে যোগ দিন',
+      buyerHint: 'কোনো ফরম নেই, অপেক্ষাও নেই — সাথে সাথেই বাজার থেকে অর্ডার করুন।',
+      sellerCta: 'পাইকারি বিক্রেতা হিসেবে যোগদান করুন',
+      sellerHint:
+        'দোকানের কাগজপত্র জমা দিন। অনুমোদন পেলেই নিজের পণ্য তুলতে পারবেন।',
+      lockedNotice: 'আগে উপরের যেকোনো একটি অপশন বেছে নিন।',
+      lockedBadge: 'লক করা',
+      signInFirst: 'পাইকারিতে যোগ দিতে আগে সাইন ইন করুন।',
+      joining: 'যোগ দেওয়া হচ্ছে…',
+      joinedBuyer: 'হয়ে গেছে — বাজার এখন খোলা।',
+      failed: 'যোগ দেওয়া যায়নি। আবার চেষ্টা করুন।',
+      emptyTitle: 'এখনো কোনো পাইকারি পণ্য নেই',
+      emptyBody:
+        'কোনো অনুমোদিত দোকান এখনো পণ্য তোলেনি। এখনই যোগ দিন — পণ্য উঠলেই দেখতে পাবেন।',
+      sellerCannotBuy:
+        'আপনি বিক্রেতা হিসেবে যোগ দিয়েছেন, তাই আপনি পণ্য তুলবেন — অর্ডার করবেন না।',
+      buyerCannotSell:
+        'আপনি ক্রেতা হিসেবে যোগ দিয়েছেন, তাই আপনি পণ্য অর্ডার করবেন — তুলবেন না।',
+      sellerHome: 'আমার দোকানে যান',
+      buyerHome: 'বাজার দেখুন',
+    },
     benefits: [
       {
         title: 'আপনার দাম, আপনার পণ্য',
@@ -1683,7 +1753,7 @@ const bn: Dictionary = {
       },
       {
         title: 'শুধু ব্যবসায়ীদের বাজার',
-        body: 'পাইকারি বাজার সাধারণ ক্রেতার জন্য বন্ধ। শুধু অনুমোদিত দোকান দেখতে পায়, আর আপনি নিজেও এখান থেকে কিনতে পারবেন।',
+        body: 'আপনার পণ্য শুধু পাইকারি ক্রেতারাই অর্ডার করতে পারবেন, সাধারণ ক্রেতা নয়।',
       },
     ],
     status: {
@@ -1713,11 +1783,9 @@ const bn: Dictionary = {
       addressSection: 'ঠিকানা',
       documentsSection: 'কাগজপত্র',
       documentsHint:
-        'কাগজপত্রের ছবি দেখেই আমরা দোকান যাচাই করি। মোবাইলে তোলা পরিষ্কার ছবিই যথেষ্ট। এগুলো কোনো ক্রেতাকে দেখানো হয় না।',
+        'কাগজপত্রের ছবি দেখেই আমরা দোকান যাচাই করি — সবগুলোই ঐচ্ছিক, কিছু বাদ পড়লে যাচাইয়ের সময় আমরা চেয়ে নিবো। মোবাইলে তোলা পরিষ্কার ছবিই যথেষ্ট। এগুলো কোনো ক্রেতাকে দেখানো হয় না।',
       ownerPhoto: 'দোকান মালিকের পাসপোর্ট সাইজ ছবি',
-      ownerPhotoHint: 'আবশ্যক — পাসপোর্ট সাইজ ছবি দিন',
       shopPhoto: 'দোকানের ছবি',
-      shopPhotoHint: 'আবশ্যক — দোকানের সামনের ছবি',
       tradeLicenseImage: 'ট্রেড লাইসেন্সের ছবি',
       shopName: 'দোকান বা প্রতিষ্ঠানের নাম',
       shopNamePlaceholder: 'যেমন করিম ট্রেডার্স',
@@ -1762,8 +1830,6 @@ const bn: Dictionary = {
       email: 'সঠিক ইমেইল ঠিকানা লিখুন।',
       address: 'আপনার পূর্ণ ঠিকানা লিখুন।',
       city: 'আপনার শহরের নাম লিখুন।',
-      ownerPhoto: 'দোকান মালিকের পাসপোর্ট সাইজ ছবি দিন।',
-      shopPhoto: 'আপনার দোকানের ছবি দিন।',
       agree: 'তথ্যগুলো সঠিক কিনা নিশ্চিত করুন।',
     },
     market: {

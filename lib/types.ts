@@ -27,6 +27,13 @@ export type Product = {
   image: string
   images?: string[]
   category: CategorySlug
+  /**
+   * Which catalogue within `category` this belongs to, if any. Undefined for
+   * stock that predates catalogues or that the admin has not sorted yet — such
+   * a product still shows under "All", and drops out the moment a catalogue
+   * filter is applied.
+   */
+  catalogue?: CatalogueSlug
   badge?: 'new' | 'sale'
   sizes?: string[]
   colors?: ProductColor[]
@@ -106,6 +113,26 @@ export type Category = {
   href: string
   itemCount: number
   image: string
+}
+
+/**
+ * A catalogue's URL slug — "jeans", "borka". Store-wide unique, so it stands
+ * alone in a query string without its category for company.
+ */
+export type CatalogueSlug = string
+
+/**
+ * The second level of the tree: Jeans and Shirts under Men's, Borka and Saree
+ * under Women's. Shown as the dropdown on a category page and as the second
+ * filter in the wholesale market.
+ */
+export type Catalogue = {
+  slug: CatalogueSlug
+  /** The category this hangs under. */
+  categorySlug: CategorySlug
+  name: Localized
+  /** Admin-controlled order within the parent category. */
+  position: number
 }
 
 export type Review = {

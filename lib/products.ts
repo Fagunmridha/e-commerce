@@ -4,8 +4,9 @@ import { unstable_cache } from 'next/cache'
 import { and, asc, desc, eq, ilike, isNull, ne, or, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
-import { getViewerShop } from '@/lib/wholesalers'
+import { getViewerWholesaleRole } from '@/lib/wholesalers'
 import {
+  catalogues,
   categories,
   orderItems,
   orders,
@@ -18,6 +19,7 @@ import {
 } from '@/lib/db/schema'
 import type { Localized } from '@/lib/i18n'
 import type {
+  Catalogue,
   Category,
   CategorySlug,
   Product,
@@ -109,6 +111,7 @@ function toProduct(
     oldPrice: row.oldPrice ?? undefined,
     image: row.image,
     category: row.category,
+    catalogue: row.catalogueSlug ?? undefined,
     badge: row.badge ?? undefined,
     sizes: row.sizes ?? undefined,
     colors: toColors(row.colors),
@@ -412,9 +415,15 @@ function toReview(row: ReviewRow): Review {
 
 /**
  * The marketplace gate: a listing resolves only when the shop is approved and
- * the viewer has an approved shop of their own. Without the second half
- * `/product/w-something` would be a way around the hidden market, and a
+ * the viewer joined the programme as a *buyer*. Without the second half
+ * `/product/w-something` would be a way around the locked market wall, and a
  * suspended shop's stock would stay buyable through a stale link.
+ *
+ * The second half used to be "the viewer has an approved shop", back when a
+ * wholesaler both bought and sold here. It is the buyer role now, which also
+ * closes the door on a seller reaching a listing's Add to Cart by URL — the
+ * two sides are exclusive, and the product page is the last place that rule
+ * could have been sidestepped without a hand-made request.
  *
  * A boolean, not the shop name it used to return. Answering the gate and
  * handing out the seller's identity were the same call, so every caller got
@@ -429,7 +438,7 @@ async function sellerIsVisible(sellerId: string): Promise<boolean> {
     .where(eq(wholesalerApplications.id, sellerId))
 
   if (shop?.status !== 'approved') return false
-  return Boolean(await getViewerShop())
+  return (await getViewerWholesaleRole()) === 'buyer'
 }
 
 /**
@@ -705,6 +714,33 @@ async function fetchAllCategories(): Promise<Category[]> {
 export const getAllCategories = unstable_cache(
   fetchAllCategories,
   ['all-categories'],
+  { tags: ['catalogue'], revalidate: 60 },
+)
+
+/**
+ * Every catalogue in the store, ordered the way the dropdowns render them.
+ *
+ * One flat list rather than a query per category: there are a few dozen rows
+ * at most, the header's mega-menu needs the lot anyway, and grouping them by
+ * `categorySlug` on the client costs nothing next to a Neon round trip each.
+ */
+async function fetchAllCatalogues(): Promise<Catalogue[]> {
+  const rows = await db
+    .select()
+    .from(catalogues)
+    .orderBy(asc(catalogues.categorySlug), asc(catalogues.position), asc(catalogues.slug))
+
+  return rows.map((row) => ({
+    slug: row.slug,
+    categorySlug: row.categorySlug,
+    name: row.name,
+    position: row.position,
+  }))
+}
+
+export const getAllCatalogues = unstable_cache(
+  fetchAllCatalogues,
+  ['all-catalogues'],
   { tags: ['catalogue'], revalidate: 60 },
 )
 

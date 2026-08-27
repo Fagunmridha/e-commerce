@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ChevronRight } from 'lucide-react'
 import { ProductCard } from '@/components/product-card'
+import { CatalogueFilter } from '@/components/catalogue-filter'
 import { Reveal } from '@/components/reveal'
 import { FeatureBar } from '@/components/feature-bar'
 import { Newsletter } from '@/components/newsletter'
@@ -31,10 +32,12 @@ const DEFAULT_BANNER_TINT = 'bg-[#0f172a]'
 
 export function CategoryPage({ slug }: { slug: CategorySlug }) {
   const { t, pick } = useLanguage()
-  const { getCategory, getProductsByCategory } = useCatalogue()
+  const { getCategory, getProductsByCategory, categories, catalogues } =
+    useCatalogue()
   const category = getCategory(slug)
 
   const [size, setSize] = useState<string>('all')
+  const [catalogue, setCatalogue] = useState('')
   const [sort, setSort] = useState<SortKey>('featured')
 
   const all = useMemo(
@@ -42,21 +45,32 @@ export function CategoryPage({ slug }: { slug: CategorySlug }) {
     [slug, getProductsByCategory],
   )
 
+  // Sizes come from the catalogue-narrowed list, not the whole category: a
+  // "38" that only exists on jeans should not stay on offer once the shopper
+  // has switched to shirts.
+  const inCatalogue = useMemo(
+    () =>
+      catalogue ? all.filter((product) => product.catalogue === catalogue) : all,
+    [all, catalogue],
+  )
+
   const sizes = useMemo(() => {
     const found = new Set<string>()
-    all.forEach((product) => product.sizes?.forEach((s) => found.add(s)))
+    inCatalogue.forEach((product) => product.sizes?.forEach((s) => found.add(s)))
     return [...found]
-  }, [all])
+  }, [inCatalogue])
 
   const products = useMemo(() => {
     const list =
-      size === 'all' ? all : all.filter((product) => product.sizes?.includes(size))
+      size === 'all'
+        ? inCatalogue
+        : inCatalogue.filter((product) => product.sizes?.includes(size))
 
     if (sort === 'price-asc') return [...list].sort((a, b) => a.price - b.price)
     if (sort === 'price-desc') return [...list].sort((a, b) => b.price - a.price)
     if (sort === 'rating') return [...list].sort((a, b) => b.rating - a.rating)
     return list
-  }, [all, size, sort])
+  }, [inCatalogue, size, sort])
 
   if (!category) notFound()
 
@@ -137,7 +151,23 @@ export function CategoryPage({ slug }: { slug: CategorySlug }) {
             ))}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* The category is fixed by the route, so no category dropdown —
+                only the catalogue one, which is the whole point of this page
+                having a second level at all. */}
+            <CatalogueFilter
+              categories={categories}
+              catalogues={catalogues}
+              category={slug}
+              catalogue={catalogue}
+              onCatalogueChange={(next) => {
+                setCatalogue(next)
+                // The chosen size may not exist in the new catalogue, and a
+                // filter nothing matches reads as an empty shelf.
+                setSize('all')
+              }}
+              available={all}
+            />
             <label
               htmlFor="category-sort"
               className="shrink-0 text-xs font-bold tracking-wider text-muted-foreground uppercase"

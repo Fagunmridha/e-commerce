@@ -47,6 +47,29 @@ export const userIdSchema = z.number().int().positive()
 
 export const uuidSchema = z.string().uuid()
 
+/**
+ * A catalogue as the admin form submits it.
+ *
+ * The slug is lower-cased on the way in rather than merely validated: it ends
+ * up in a query string (`/men?catalogue=jeans`), and "Jeans" and "jeans"
+ * resolving to different rows is the kind of thing nobody notices until a link
+ * someone shared stops matching anything.
+ */
+export const catalogueSchema = z.object({
+  slug: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .min(1, 'A catalogue slug is required')
+    .max(64)
+    .regex(/^[a-z0-9-]+$/, 'Use lower-case letters, numbers or hyphens'),
+  categorySlug: z.string().trim().min(1, 'Pick a category').max(64),
+  name: localizedSchema,
+  position: z.number().int().min(0).max(9999).nullish().transform((v) => v ?? 0),
+})
+
+export type CatalogueInput = z.infer<typeof catalogueSchema>
+
 export const productSchema = z.object({
   id: z
     .string()
@@ -59,6 +82,17 @@ export const productSchema = z.object({
   oldPrice: moneySchema.nullish().transform((value) => value ?? null),
   image: imageSchema,
   category: z.string().trim().min(1, 'Pick a category').max(64),
+  /**
+   * Optional: plenty of stock predates catalogues, and a category need not
+   * have any. The *pairing* — that the catalogue belongs to the category —
+   * is checked server-side, where the catalogue table is readable.
+   */
+  catalogue: z
+    .string()
+    .trim()
+    .max(64)
+    .nullish()
+    .transform((value) => value || null),
   badge: z
     .enum(['new', 'sale'])
     .nullish()

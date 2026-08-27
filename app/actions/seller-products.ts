@@ -5,6 +5,7 @@ import { and, eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { products } from '@/lib/db/schema'
 import { requireApprovedWholesaler } from '@/lib/wholesalers'
+import { resolveCatalogue } from '@/lib/catalogues'
 import { uniqueProductId } from '@/lib/seller-products'
 import { parseOrThrow } from '@/lib/validation/shared'
 import {
@@ -62,6 +63,7 @@ export async function upsertSellerProduct(
     price: data.price,
     image: data.image,
     category: data.category,
+    catalogueSlug: await resolveCatalogue(data.category, data.catalogue),
     sizes: data.sizes,
     description: data.description
       ? { en: data.description, bn: data.description }

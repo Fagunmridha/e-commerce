@@ -22,10 +22,23 @@ export default async function WholesaleApplyPage() {
   const user = await getCurrentUser()
   if (!user) redirect('/sign-in')
 
-  const [row, locale] = await Promise.all([
-    getApplicationForUser(user.id),
-    getServerLocale(),
-  ])
+  const locale = await getServerLocale()
+
+  // The seller gate. Applying is what choosing the seller side *leads to*, not
+  // a way of choosing it — so anyone who has not chosen, or who chose the
+  // buying side, goes back to /wholesale. Without this the form is reachable
+  // by URL, which is exactly how someone ends up filling in trade papers they
+  // were never meant to see.
+  if (user.wholesaleRole !== 'seller') {
+    return (
+      <Redirecting
+        to="/wholesale"
+        label={getDictionary(locale).common.loading}
+      />
+    )
+  }
+
+  const row = await getApplicationForUser(user.id)
 
   // An approved shop has nothing left to apply for; their work is in the
   // dashboard. Details are changed by an admin, not by resubmitting.

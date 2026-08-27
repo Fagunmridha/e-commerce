@@ -1,11 +1,13 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+import { NextResponse } from 'next/server'
+import { PATHNAME_HEADER } from '@/lib/i18n'
 
 /** Routes that require a signed-in user. This is authentication only —
  * authorization is checked against the database inside the matching layout:
- * /admin against `users.role`, and the wholesale market and seller dashboard
- * against an approved `wholesaler_applications` row. `/wholesale` itself stays
- * open because it is the pitch page carrying the Apply button; it lists no
- * products. */
+ * /admin against `users.role`, /wholesale/dashboard against an approved
+ * `wholesaler_applications` row, and /wholesale/market against the buyer role.
+ * `/wholesale` itself stays open: it is the join page, and the listings it
+ * shows are locked and price-blurred until a side is chosen. */
 const isProtectedRoute = createRouteMatcher([
   '/account(.*)',
   '/admin(.*)',
@@ -21,6 +23,14 @@ export default clerkMiddleware(async (auth, req) => {
   if (isProtectedRoute(req)) {
     await auth.protect()
   }
+
+  // Forward the pathname so server components can read it. `getServerLocale`
+  // needs it to know whether a request is inside the wholesale section, which
+  // opens in Bangla while the rest of the store opens in English — and there
+  // is no other way for a server component to learn its own URL.
+  const headers = new Headers(req.headers)
+  headers.set(PATHNAME_HEADER, req.nextUrl.pathname)
+  return NextResponse.next({ request: { headers } })
 })
 
 export const config = {

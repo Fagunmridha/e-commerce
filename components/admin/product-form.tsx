@@ -14,7 +14,7 @@ import { upsertProduct, type ProductInput } from '@/app/actions/admin'
 import { DEFAULT_ADVANCE_PCT } from '@/lib/preorder'
 import { DEFAULT_COMMISSION_PCT, splitCommission } from '@/lib/commission'
 import { formatPrice } from '@/lib/currency'
-import type { CategorySlug, Product, ProductColor } from '@/lib/types'
+import type { Catalogue, CategorySlug, Product, ProductColor } from '@/lib/types'
 import type { Localized } from '@/lib/i18n'
 
 const CATEGORIES: CategorySlug[] = ['men', 'women', 'kids', 'accessories']
@@ -76,10 +76,13 @@ function serializeHighlights(highlights?: Localized[]): string {
 export function ProductForm({
   product,
   gallery = [],
+  catalogues = [],
 }: {
   product?: Product
   /** Extra shots beyond `product.image`, in position order. */
   gallery?: string[]
+  /** Every catalogue in the store; the field filters to the picked category. */
+  catalogues?: Catalogue[]
 }) {
   const router = useRouter()
   const [pending, setPending] = useState(false)
@@ -97,6 +100,7 @@ export function ProductForm({
     oldPrice: product?.oldPrice?.toString() ?? '',
     image: product?.image ?? '',
     category: (product?.category ?? 'men') as CategorySlug,
+    catalogue: product?.catalogue ?? '',
     badge: product?.badge ?? '',
     stock: product?.stock?.toString() ?? '0',
     // Undefined on the type when it is 1 (see lib/products.ts), but the field
@@ -190,6 +194,7 @@ export function ProductForm({
       oldPrice: form.oldPrice ? Number(form.oldPrice) : null,
       image: form.image.trim(),
       category: form.category,
+      catalogue: form.catalogue || null,
       badge: form.badge ? (form.badge as 'new' | 'sale') : null,
       sizes: form.sizes
         ? form.sizes.split(',').map((s) => s.trim()).filter(Boolean)
@@ -249,7 +254,14 @@ export function ProductForm({
         <Field label="Category">
           <select
             value={form.category}
-            onChange={(e) => set('category', e.target.value)}
+            onChange={(e) => {
+              set('category', e.target.value)
+              // The old catalogue belongs to the category being left behind.
+              // The server drops a mismatched pair to null anyway; clearing it
+              // here means the admin sees that happen rather than discovering
+              // it after saving.
+              set('catalogue', '')
+            }}
             className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm capitalize outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
           >
             {CATEGORIES.map((slug) => (
@@ -260,6 +272,27 @@ export function ProductForm({
           </select>
         </Field>
       </div>
+
+      {/* Only rendered when the picked category has catalogues behind it —
+          an empty dropdown would just be a question with no answers. */}
+      {catalogues.some((item) => item.categorySlug === form.category) && (
+        <Field label="Catalogue">
+          <select
+            value={form.catalogue}
+            onChange={(e) => set('catalogue', e.target.value)}
+            className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+          >
+            <option value="">No catalogue</option>
+            {catalogues
+              .filter((item) => item.categorySlug === form.category)
+              .map((item) => (
+                <option key={item.slug} value={item.slug}>
+                  {item.name.en}
+                </option>
+              ))}
+          </select>
+        </Field>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Name (English)">

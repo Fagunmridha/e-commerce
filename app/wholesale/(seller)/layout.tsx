@@ -1,10 +1,9 @@
 import { Redirecting } from '@/components/redirecting'
-import { getViewerShop } from '@/lib/wholesalers'
+import { getViewerShop, getViewerWholesaleRole } from '@/lib/wholesalers'
 import { getServerDictionary } from '@/lib/server-locale'
 
 /**
- * The approval gate for everything trade-only: the marketplace and the seller
- * dashboard.
+ * The approval gate for the seller dashboard.
  *
  * `middleware.ts` has already established there is a session. What it cannot
  * check is whether that user has an *approved* `wholesaler_applications` row,
@@ -12,8 +11,11 @@ import { getServerDictionary } from '@/lib/server-locale'
  * role lookup. Server actions carry their own `requireApprovedWholesaler()`
  * guard, since an action is reachable without ever rendering this layout.
  *
- * Anyone who is not approved — signed out, never applied, pending, rejected or
- * suspended — goes to the apply page, which explains where they stand.
+ * Where a rejected visitor is sent depends on which side they are on, and the
+ * distinction matters: a seller waiting on approval wants the application, and
+ * gets it; anyone else — a buyer, or someone who has not chosen — has no
+ * business on that form and would only be bounced off it, so they go to
+ * /wholesale and are routed from there.
  */
 export const dynamic = 'force-dynamic'
 
@@ -22,12 +24,22 @@ export default async function SellerLayout({
 }: {
   children: React.ReactNode
 }) {
-  if (!(await getViewerShop())) {
+  const [shop, role] = await Promise.all([
+    getViewerShop(),
+    getViewerWholesaleRole(),
+  ])
+
+  if (!shop) {
     // `Redirecting` rather than `redirect()` for the same reason the apply page
     // uses it: this gate resolves after the shell has streamed, so a bare
-    // redirect shows an empty page until the apply route starts loading.
+    // redirect shows an empty page until the next route starts loading.
     const t = await getServerDictionary()
-    return <Redirecting to="/wholesale/apply" label={t.common.loading} />
+    return (
+      <Redirecting
+        to={role === 'seller' ? '/wholesale/apply' : '/wholesale'}
+        label={t.common.loading}
+      />
+    )
   }
 
   return <>{children}</>

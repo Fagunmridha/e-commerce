@@ -2,7 +2,6 @@ import {
   LayoutDashboard,
   Plus,
   ShoppingCart,
-  Store,
   Wallet,
   type LucideIcon,
 } from 'lucide-react'
@@ -65,17 +64,9 @@ export const SELLER_NAV: SellerNavGroup[] = [
       },
     ],
   },
-  {
-    labelKey: 'groupMarket',
-    items: [
-      {
-        href: '/wholesale/market',
-        labelKey: 'market',
-        icon: Store,
-        external: true,
-      },
-    ],
-  },
+  // No market entry. A seller cannot buy from the market they sell into — the
+  // two sides of the programme are exclusive — so linking them at it would only
+  // be a link to the gate that turns them away.
 ]
 
 /**

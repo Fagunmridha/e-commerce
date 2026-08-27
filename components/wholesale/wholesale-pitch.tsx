@@ -60,15 +60,12 @@ function Cta({ status }: { status: WholesalerStatus | null }) {
   const copy = t.wholesale.status
 
   if (status === 'approved') {
+    // The shop only. A seller does not buy from the market they sell into, so
+    // there is nowhere else for this button to go.
     return (
-      <>
-        <Button asChild size="lg">
-          <Link href="/wholesale/market">{copy.marketCta}</Link>
-        </Button>
-        <Button asChild variant="outline" size="lg">
-          <Link href="/wholesale/dashboard">{copy.approvedCta}</Link>
-        </Button>
-      </>
+      <Button asChild size="lg">
+        <Link href="/wholesale/dashboard">{copy.approvedCta}</Link>
+      </Button>
     )
   }
 

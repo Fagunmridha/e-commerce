@@ -13,7 +13,6 @@ import {
   Pencil,
   Plus,
   Search,
-  Store,
   Trash2,
   Wallet,
   type LucideIcon,
@@ -164,12 +163,8 @@ export function SellerDashboard({
             {totalStock}
           </p>
         </div>
-        <Button asChild variant="outline" size="sm">
-          <Link href="/wholesale/market">
-            <Store className="size-4" aria-hidden="true" />
-            {copy.marketCta}
-          </Link>
-        </Button>
+        {/* No link to the market: a seller lists stock rather than ordering
+            it, and the market's gate would turn them straight back. */}
       </div>
 
       {products.length > 0 && (

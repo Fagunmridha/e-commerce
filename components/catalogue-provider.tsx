@@ -1,7 +1,13 @@
 'use client'
 
 import { createContext, useContext, useMemo } from 'react'
-import type { Category, CategorySlug, Product } from '@/lib/types'
+import type {
+  Catalogue,
+  CatalogueSlug,
+  Category,
+  CategorySlug,
+  Product,
+} from '@/lib/types'
 
 /**
  * The catalogue is fetched once from the database in the server root layout and
@@ -29,9 +35,18 @@ type CatalogueValue = {
   /** True when the viewer has an approved shop — gates the trade-only links. */
   isWholesaler: boolean
   categories: Category[]
+  /** Every catalogue in the store, already in display order. */
+  catalogues: Catalogue[]
   /** Looks in both lists, so a marketplace item in the cart still resolves. */
   getProductById: (id: string) => Product | undefined
   getProductsByCategory: (slug: CategorySlug) => Product[]
+  /** The catalogues hanging under one category, for its dropdown. */
+  getCataloguesFor: (slug: CategorySlug) => Catalogue[]
+  /**
+   * Shelf stock in one catalogue. Products with no catalogue never match —
+   * an uncatalogued item belongs under "All", not under an arbitrary branch.
+   */
+  getProductsByCatalogue: (slug: CatalogueSlug) => Product[]
   getPopularProducts: (limit?: number) => Product[]
   getRecommendedProducts: (excludeId?: string, limit?: number) => Product[]
   getCategory: (slug: CategorySlug) => Category | undefined
@@ -45,6 +60,7 @@ export function CatalogueProvider({
   wholesaleProducts,
   isWholesaler,
   categories,
+  catalogues,
   children,
 }: {
   products: Product[]
@@ -53,6 +69,7 @@ export function CatalogueProvider({
   wholesaleProducts: Product[]
   isWholesaler: boolean
   categories: Category[]
+  catalogues: Catalogue[]
   children: React.ReactNode
 }) {
   const value = useMemo<CatalogueValue>(() => {
@@ -74,9 +91,14 @@ export function CatalogueProvider({
       wholesaleProducts,
       isWholesaler,
       categories,
+      catalogues,
       getProductById: (id) => byId.get(id),
       getProductsByCategory: (slug) =>
         shelf.filter((product) => product.category === slug),
+      getCataloguesFor: (slug) =>
+        catalogues.filter((item) => item.categorySlug === slug),
+      getProductsByCatalogue: (slug) =>
+        shelf.filter((product) => product.catalogue === slug),
       getPopularProducts: (limit = 8) =>
         shelf.filter((product) => product.badge).slice(0, limit),
       getRecommendedProducts: (excludeId, limit = 2) =>
@@ -84,7 +106,14 @@ export function CatalogueProvider({
       getCategory: (slug) =>
         categories.find((category) => category.slug === slug),
     }
-  }, [products, preorderProducts, wholesaleProducts, isWholesaler, categories])
+  }, [
+    products,
+    preorderProducts,
+    wholesaleProducts,
+    isWholesaler,
+    categories,
+    catalogues,
+  ])
 
   return (
     <CatalogueContext.Provider value={value}>

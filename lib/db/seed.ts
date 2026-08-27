@@ -1,7 +1,7 @@
 import 'dotenv/config'
 import { db } from './index'
-import { categories, products } from './schema'
-import { SEED_CATEGORIES, SEED_PRODUCTS } from './seed-data'
+import { catalogues, categories, products } from './schema'
+import { SEED_CATALOGUES, SEED_CATEGORIES, SEED_PRODUCTS } from './seed-data'
 
 /**
  * Seeds the initial catalogue into Neon. Idempotent — re-running upserts by
@@ -19,6 +19,22 @@ async function main() {
       .onConflictDoUpdate({
         target: categories.slug,
         set: { name: category.name, image: category.image },
+      })
+  }
+
+  // After categories: every catalogue points at one by foreign key.
+  console.log('Seeding catalogues…')
+  for (const catalogue of SEED_CATALOGUES) {
+    await db
+      .insert(catalogues)
+      .values(catalogue)
+      .onConflictDoUpdate({
+        target: catalogues.slug,
+        set: {
+          categorySlug: catalogue.categorySlug,
+          name: catalogue.name,
+          position: catalogue.position,
+        },
       })
   }
 
@@ -45,7 +61,7 @@ async function main() {
   }
 
   console.log(
-    `Done — ${SEED_CATEGORIES.length} categories, ${SEED_PRODUCTS.length} products.`,
+    `Done — ${SEED_CATEGORIES.length} categories, ${SEED_CATALOGUES.length} catalogues, ${SEED_PRODUCTS.length} products.`,
   )
 }
 

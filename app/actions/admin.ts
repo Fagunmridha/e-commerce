@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { productImages, products, users } from '@/lib/db/schema'
 import { requireAdmin } from '@/lib/auth'
+import { resolveCatalogue } from '@/lib/catalogues'
 import {
   setAdvanceStatus,
   updateOrderStatus,
@@ -54,6 +55,11 @@ export type ProductInput = {
   oldPrice?: number | null
   image: string
   category: CategorySlug
+  /**
+   * The catalogue within `category`, or null for stock the admin has not
+   * sorted. Dropped to null server-side if it does not belong to `category`.
+   */
+  catalogue?: string | null
   badge?: 'new' | 'sale' | null
   sizes?: string[] | null
   colors?: ProductColor[] | null
@@ -95,6 +101,10 @@ export async function upsertProduct(input: ProductInput): Promise<void> {
     oldPrice: data.oldPrice,
     image: data.image,
     category: data.category as CategorySlug,
+    catalogueSlug: await resolveCatalogue(
+      data.category as CategorySlug,
+      data.catalogue,
+    ),
     badge: data.badge,
     sizes: data.sizes,
     colors: data.colors,
