@@ -5,6 +5,8 @@
 
 # next.js
 /.next/
+# Alternate build dirs from `NEXT_DIST_DIR=… next dev` on a second port.
+/.next-*/
 /out/
 
 # production

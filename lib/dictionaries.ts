@@ -620,24 +620,16 @@ const en = {
       'Apply once with your shop’s papers. Once we approve you, you get your own dashboard to list your stock and take trade orders.',
     applyCta: 'Apply now',
     /**
-     * The chooser on /wholesale — the dialog that opens over the locked
-     * listings. Everything a signed-out visitor sees of the programme, in two
-     * buttons.
+     * The two memberships themselves. Used by the landing page below, by the
+     * market and by the seller panel, so nothing here may pick up the framing
+     * of any one of those — `landing` is where the page copy lives.
      */
     join: {
       badge: 'Wholesale',
-      title: 'Wholesale market',
-      subtitle:
-        'Pick a side to unlock these listings. You can only join one — buyers order trade stock, wholesalers list it.',
       buyerCta: 'Join as a wholesale buyer',
       buyerHint: 'No forms, no waiting — order from the market straight away.',
       sellerCta: 'Join as a wholesaler',
       sellerHint: 'Send your shop’s papers. List your stock once we approve you.',
-      /** Screen-reader label on the dialog's close button. */
-      close: 'Close',
-      /** Puts the chooser back once it has been dismissed. */
-      reopenCta: 'Join to see prices',
-      lockedBadge: 'Locked',
       signInFirst: 'Sign in first to join the wholesale programme.',
       joining: 'Joining…',
       joinedBuyer: 'You are in — the market is open.',
@@ -645,7 +637,11 @@ const en = {
       emptyTitle: 'No wholesale listings yet',
       emptyBody:
         'No approved shop has listed anything yet. Join now and you will see them the moment they do.',
-      /** Shown to a seller who reaches the market — they may list, not buy. */
+      /**
+       * Shown to a seller who reaches a checkout — they may list, not buy, and
+       * that holds for house stock as much as for the trade market.
+       */
+      sellerCannotBuyTitle: 'A wholesaler account cannot order',
       sellerCannotBuy:
         'You joined as a wholesaler, so you list stock rather than order it.',
       /** …and its mirror, on anything that would let a buyer list stock. */
@@ -653,6 +649,60 @@ const en = {
         'You joined as a wholesale buyer, so you order stock rather than list it.',
       sellerHome: 'Go to my shop',
       buyerHome: 'Browse the market',
+    },
+    /**
+     * The signed-out landing page that carries the chooser: a hero, the two
+     * memberships as cards, and the catalogue underneath them.
+     *
+     * Separate from `join` above, which is only the wording of the two
+     * memberships themselves — those strings are also used on the market and in
+     * the seller panel, and must not pick up landing-page framing.
+     */
+    landing: {
+      heroTitle: 'Wholesale Made Simple',
+      heroSubtitle:
+        'Join as a buyer to order products or as a wholesaler to grow your business.',
+      /**
+       * The two memberships as plain nouns, for the cards' headings. `join`
+       * above holds the same two as full sentences — a card cannot use those,
+       * because its own button already says them and nothing should print the
+       * same clause twice a hundred pixels apart.
+       */
+      buyerRole: 'Wholesale buyer',
+      sellerRole: 'Wholesale seller',
+      /** The buyer's button. The seller's reuses `wholesale.applyCta`. */
+      buyerAction: 'Join now',
+      buyerBody: 'Browse wholesale products and order easily.',
+      sellerBody: 'Add your products and grow your business.',
+      browseTitle: 'Browse Wholesale Products',
+      allProducts: 'All Products',
+      catalogueHeading: 'Categories (by catalog)',
+      /** The bucket for stock in a category that has no catalogue set. */
+      otherCatalogue: 'Others',
+      perPiece: '/ piece',
+      moq: 'MOQ: {count} pcs',
+      viewProduct: 'View Product',
+      wholesaleBadge: 'Wholesale',
+      /** The heart on a card — it cannot save anything until they have joined. */
+      saveHint: 'Join to save products',
+      gateTitle: 'Want to view product details or place an order?',
+      gateBody:
+        'Please join as a wholesale buyer or wholesaler to access full features.',
+      perks: [
+        {
+          title: 'Trusted Platform',
+          body: 'Verified wholesalers and quality products.',
+        },
+        { title: 'Bulk Orders', body: 'Order in bulk and get the best prices.' },
+        {
+          title: 'Secure Payments',
+          body: '100% secure payment and transaction.',
+        },
+        {
+          title: 'Dedicated Support',
+          body: 'We’re here to help your business grow.',
+        },
+      ],
     },
     benefits: [
       {
@@ -1763,17 +1813,11 @@ const bn: Dictionary = {
     applyCta: 'আবেদন করুন',
     join: {
       badge: 'পাইকারি',
-      title: 'পাইকারি বাজার',
-      subtitle:
-        'পণ্যগুলো দেখতে ও কিনতে যেকোনো একটি অপশন বেছে নিন। যেকোনো একটিই নেওয়া যাবে — ক্রেতা পণ্য অর্ডার করেন, বিক্রেতা পণ্য তোলেন।',
       buyerCta: 'পাইকারি ক্রেতা হিসেবে যোগ দিন',
       buyerHint: 'কোনো ফরম নেই, অপেক্ষাও নেই — সাথে সাথেই বাজার থেকে অর্ডার করুন।',
       sellerCta: 'পাইকারি বিক্রেতা হিসেবে যোগদান করুন',
       sellerHint:
         'দোকানের কাগজপত্র জমা দিন। অনুমোদন পেলেই নিজের পণ্য তুলতে পারবেন।',
-      close: 'বন্ধ করুন',
-      reopenCta: 'দাম দেখতে যোগ দিন',
-      lockedBadge: 'লক করা',
       signInFirst: 'পাইকারিতে যোগ দিতে আগে সাইন ইন করুন।',
       joining: 'যোগ দেওয়া হচ্ছে…',
       joinedBuyer: 'হয়ে গেছে — বাজার এখন খোলা।',
@@ -1781,12 +1825,47 @@ const bn: Dictionary = {
       emptyTitle: 'এখনো কোনো পাইকারি পণ্য নেই',
       emptyBody:
         'কোনো অনুমোদিত দোকান এখনো পণ্য তোলেনি। এখনই যোগ দিন — পণ্য উঠলেই দেখতে পাবেন।',
+      sellerCannotBuyTitle: 'বিক্রেতা অ্যাকাউন্ট থেকে অর্ডার করা যায় না',
       sellerCannotBuy:
         'আপনি বিক্রেতা হিসেবে যোগ দিয়েছেন, তাই আপনি পণ্য তুলবেন — অর্ডার করবেন না।',
       buyerCannotSell:
         'আপনি ক্রেতা হিসেবে যোগ দিয়েছেন, তাই আপনি পণ্য অর্ডার করবেন — তুলবেন না।',
       sellerHome: 'আমার দোকানে যান',
       buyerHome: 'বাজার দেখুন',
+    },
+    landing: {
+      heroTitle: 'পাইকারি এখন সহজ',
+      heroSubtitle:
+        'পণ্য অর্ডার করতে ক্রেতা হিসেবে যোগ দিন, আর ব্যবসা বাড়াতে বিক্রেতা হিসেবে।',
+      buyerRole: 'পাইকারি ক্রেতা',
+      sellerRole: 'পাইকারি বিক্রেতা',
+      buyerAction: 'যোগ দিন',
+      buyerBody: 'পাইকারি পণ্য দেখুন এবং সহজে অর্ডার করুন।',
+      sellerBody: 'আপনার পণ্য যোগ করুন এবং আপনার ব্যবসা বাড়ান।',
+      browseTitle: 'পাইকারি পণ্য দেখুন',
+      allProducts: 'সব পণ্য',
+      catalogueHeading: 'ক্যাটাগরি (ক্যাটালগ অনুযায়ী)',
+      otherCatalogue: 'অন্যান্য',
+      perPiece: '/ পিস',
+      moq: 'সর্বনিম্ন: {count} পিস',
+      viewProduct: 'পণ্য দেখুন',
+      wholesaleBadge: 'পাইকারি',
+      saveHint: 'পছন্দের তালিকায় রাখতে যোগ দিন',
+      gateTitle: 'পণ্যের বিস্তারিত দেখতে বা অর্ডার করতে চান?',
+      gateBody:
+        'সব সুবিধা পেতে পাইকারি ক্রেতা বা পাইকারি বিক্রেতা হিসেবে যোগ দিন।',
+      perks: [
+        {
+          title: 'নির্ভরযোগ্য প্ল্যাটফর্ম',
+          body: 'যাচাই করা বিক্রেতা আর মানসম্মত পণ্য।',
+        },
+        { title: 'পাইকারি অর্ডার', body: 'একসাথে বেশি নিন, সেরা দামে পান।' },
+        { title: 'নিরাপদ পেমেন্ট', body: '১০০% নিরাপদ পেমেন্ট আর লেনদেন।' },
+        {
+          title: 'সার্বক্ষণিক সহায়তা',
+          body: 'আপনার ব্যবসা বাড়াতে আমরা পাশে আছি।',
+        },
+      ],
     },
     benefits: [
       {

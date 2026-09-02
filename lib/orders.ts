@@ -28,7 +28,10 @@ import {
 import { computeTotals } from '@/lib/coupon-math'
 import type { DeliveryZone } from '@/lib/currency'
 import { checkCoupon, redeemCoupon } from '@/lib/coupons'
-import { requireWholesaleBuyer } from '@/lib/wholesalers'
+import {
+  assertNotWholesaleSeller,
+  requireWholesaleBuyer,
+} from '@/lib/wholesalers'
 import { commissionPct, summariseSettlement } from '@/lib/commission'
 import { advancePct, splitPayment } from '@/lib/preorder'
 import type { Localized } from '@/lib/i18n'
@@ -103,6 +106,12 @@ export async function createOrder(
   if (input.items.length === 0) {
     throw new Error('Cannot place an empty order')
   }
+
+  // A wholesaler buys nothing here, whatever is in the cart. The checkout pages
+  // turn a seller away before the form, but this is a public HTTP endpoint and
+  // a cart survives the role being set — so the rule is enforced where the
+  // money moves, ahead of any of the work below.
+  await assertNotWholesaleSeller()
 
   const ids = [...new Set(input.items.map((item) => item.productId))]
   const rows = await db.select().from(products).where(inArray(products.id, ids))

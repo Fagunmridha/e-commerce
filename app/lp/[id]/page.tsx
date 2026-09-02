@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { ProductLanding } from '@/components/product-landing'
+import { SellerNoBuy } from '@/components/wholesale/seller-no-buy'
+import { getViewerWholesaleRole } from '@/lib/wholesalers'
 import { getProductDetail } from '@/lib/products'
 import { getDictionary } from '@/lib/dictionaries'
 import { getServerLocale } from '@/lib/server-locale'
@@ -101,12 +103,19 @@ export default async function LandingPage({ params }: LandingPageProps) {
 
   // One batched round trip already carries the gallery and the approved
   // reviews, so the social-proof band below the fold costs no extra query.
-  const [{ product, images, reviews }, locale] = await Promise.all([
+  const [{ product, images, reviews }, locale, role] = await Promise.all([
     getProductDetail(id),
     getServerLocale(),
+    getViewerWholesaleRole(),
   ])
 
   if (!product) notFound()
+
+  // This page's whole point is the order form, and a wholesaler cannot use one
+  // — `assertNotWholesaleSeller` would reject it at `createOrder`. Showing the
+  // funnel and failing at the last step is the worst of both, so they get the
+  // reason instead. Ad traffic is signed out, so this is the rare case.
+  if (role === 'seller') return <SellerNoBuy />
 
   return (
     <>

@@ -22,9 +22,10 @@ import { getServerDictionary } from '@/lib/server-locale'
  *  - a seller — the pitch and their application status, which is the only
  *    thing left standing between them and a shop.
  *
- * Public on purpose, and it now lists real stock rather than the old
- * gives-nothing-away pitch. Trade prices are still withheld — `WholesaleJoin`
- * blurs them — so what a search engine gets is a catalogue, not a price list.
+ * Public on purpose, and it lists real stock rather than the old
+ * gives-nothing-away pitch: trade price and minimum order are both on the
+ * cards, so a shopkeeper can judge the market before committing to a side.
+ * Ordering still needs a membership, which is what `WholesaleJoin` gates.
  */
 export const dynamic = 'force-dynamic'
 
@@ -65,23 +66,22 @@ export default async function WholesalePage({
     getAllCatalogues(),
   ])
 
+  // No `PageHeader` on this branch: `WholesaleJoin` opens with its own hero,
+  // and the band above it would only be a second title over the first.
   return (
-    <>
-      <PageHeader pageKey="wholesale" />
-      <WholesaleJoin
-        products={products}
-        categories={categories}
-        catalogues={catalogues}
-        signedIn={Boolean(user)}
-        // Set when they picked a side, were sent to sign in, and have just come
-        // back. Never trusted as a role — the component only replays the click,
-        // and `chooseWholesaleRole` validates it like any other.
-        resumeJoin={
-          user && (params.join === 'buyer' || params.join === 'seller')
-            ? params.join
-            : undefined
-        }
-      />
-    </>
+    <WholesaleJoin
+      products={products}
+      categories={categories}
+      catalogues={catalogues}
+      signedIn={Boolean(user)}
+      // Set when they picked a side, were sent to sign in, and have just come
+      // back. Never trusted as a role — the component only replays the click,
+      // and `chooseWholesaleRole` validates it like any other.
+      resumeJoin={
+        user && (params.join === 'buyer' || params.join === 'seller')
+          ? params.join
+          : undefined
+      }
+    />
   )
 }

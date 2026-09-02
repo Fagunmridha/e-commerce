@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { PreorderCheckoutContent } from '@/components/preorder/preorder-checkout-content'
+import { SellerNoBuy } from '@/components/wholesale/seller-no-buy'
+import { getViewerWholesaleRole } from '@/lib/wholesalers'
 import { getPreorderProductById } from '@/lib/products'
 import { advancePct } from '@/lib/preorder'
 import { BKASH_NUMBER, NAGAD_NUMBER } from '@/lib/site-config'
@@ -30,6 +32,14 @@ export default async function PreorderCheckoutPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
+  // Ahead of the product lookup: a wholesaler books nothing either, and there
+  // is no reason to price something they cannot have. `assertNotWholesaleSeller`
+  // inside `createOrder` is the guard that actually holds; this is what tells
+  // them why, since a server action's error text never reaches the client.
+  if ((await getViewerWholesaleRole()) === 'seller') {
+    return <SellerNoBuy />
+  }
+
   const params = await searchParams
   const first = (value: string | string[] | undefined) =>
     Array.isArray(value) ? value[0] : value

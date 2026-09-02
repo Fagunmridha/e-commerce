@@ -6,8 +6,10 @@ import { PATHNAME_HEADER } from '@/lib/i18n'
  * authorization is checked against the database inside the matching layout:
  * /admin against `users.role`, /wholesale/dashboard against an approved
  * `wholesaler_applications` row, and /wholesale/market against the buyer role.
- * `/wholesale` itself stays open: it is the join page, and the listings it
- * shows are locked and price-blurred until a side is chosen. */
+ * `/wholesale` itself stays open: it is the join page. Its listings are inert —
+ * nothing links to a product, and ordering needs a membership — while the trade
+ * price and minimum order are public on purpose, so a shopkeeper can judge the
+ * market before committing to a side. */
 const isProtectedRoute = createRouteMatcher([
   '/account(.*)',
   '/admin(.*)',

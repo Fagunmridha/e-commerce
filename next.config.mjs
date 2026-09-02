@@ -14,6 +14,11 @@ const r2Hostname = (() => {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Two `next dev` instances cannot share one build directory — the second to
+  // start fails on the lock in `.next/dev`. Overridable so a throwaway server
+  // (a second port, to look at a change beside the one already running) gets
+  // its own, without anyone having to edit this file to do it.
+  distDir: process.env.NEXT_DIST_DIR || '.next',
   typescript: {
     ignoreBuildErrors: true,
   },

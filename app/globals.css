@@ -16,6 +16,13 @@
   --muted-foreground: oklch(0.48 0.01 265);
   --accent: oklch(0.955 0.015 283);
   --accent-foreground: oklch(0.42 0.19 283);
+  /* The warm counterpart to `--accent`, for the one place the store has to show
+     two options side by side and say they are different things rather than a
+     ranking: the wholesale seller's card next to the buyer's. Its own token
+     pair rather than a raw amber, so the two move together when the palette
+     does. */
+  --accent-warm: oklch(0.96 0.035 75);
+  --accent-warm-foreground: oklch(0.52 0.14 55);
   --destructive: oklch(0.6 0.235 27.5);
   --destructive-foreground: oklch(1 0 0);
   --border: oklch(0.925 0.004 265);
@@ -33,6 +40,10 @@
      lighter accent used for headline highlights, links and icons. */
   --button: #4631e5;
   --button-foreground: #ffffff;
+  /* …and the filled button that goes with `--accent-warm`, deeper than the
+     tint for the same reason `--button` runs deeper than `--primary`. */
+  --button-warm: #f59e0b;
+  --button-warm-foreground: #ffffff;
   /* The tinted panel behind the hero. */
   --surface: #f6f7f9;
   /* The outline icons in the service-promise bar — a softer purple than
@@ -171,6 +182,8 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-warm: var(--accent-warm);
+  --color-accent-warm-foreground: var(--accent-warm-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
@@ -184,6 +197,8 @@
   --color-badge-count-foreground: var(--badge-count-foreground);
   --color-button: var(--button);
   --color-button-foreground: var(--button-foreground);
+  --color-button-warm: var(--button-warm);
+  --color-button-warm-foreground: var(--button-warm-foreground);
   --color-surface: var(--surface);
   --color-feature-icon: var(--feature-icon);
   --color-chart-1: var(--chart-1);

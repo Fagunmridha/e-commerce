@@ -42,6 +42,26 @@ export async function requireWholesaleBuyer(): Promise<UserRow> {
   return user
 }
 
+/**
+ * A wholesaler orders nothing at all — house stock included.
+ *
+ * Wider than `requireWholesaleBuyer` above, and the two are not redundant.
+ * That one asks "is this a buyer?" and guards *trade* lines, which is what
+ * keeps an ordinary shopper out of the marketplace. This one asks "is this a
+ * seller?" and guards *every* line, which is what keeps a wholesaler out of the
+ * shop. Between them: shoppers buy house stock, buyers buy both, sellers buy
+ * neither.
+ *
+ * Signed-out visitors and anyone who has not joined pass straight through —
+ * only a chosen seller is turned away, and the choice is theirs to make.
+ */
+export async function assertNotWholesaleSeller(): Promise<void> {
+  const user = await getCurrentUser()
+  if (user?.wholesaleRole === 'seller') {
+    throw new Error('Wholesalers list stock rather than order it')
+  }
+}
+
 /** Admin list — every application, newest first, with the applicant's login. */
 export async function getAllApplications(): Promise<
   (WholesalerApplicationRow & { userEmail: string })[]
