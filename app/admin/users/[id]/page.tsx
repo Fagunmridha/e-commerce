@@ -4,6 +4,10 @@ import { ArrowLeft } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { RoleToggle } from '@/components/admin/role-toggle'
+import {
+  RoleBadge,
+  WholesaleRoleBadge,
+} from '@/components/admin/customers/role-badges'
 import { SetBreadcrumbLabel } from '@/components/breadcrumb-label'
 import { StatCard } from '@/components/admin/dashboard/stat-card'
 import { getCurrentUser } from '@/lib/auth'
@@ -67,16 +71,10 @@ export default async function AdminCustomerDetailPage({
         </div>
 
         <div className="flex items-center gap-2">
-          <Badge
-            variant="secondary"
-            className={
-              customer.role === 'admin'
-                ? 'border-0 bg-primary/10 capitalize text-primary'
-                : 'border-0 bg-muted capitalize text-muted-foreground'
-            }
-          >
-            {customer.role}
-          </Badge>
+          <RoleBadge role={customer.role} />
+          {customer.wholesaleRole && (
+            <WholesaleRoleBadge role={customer.wholesaleRole} />
+          )}
           <RoleToggle
             userId={customer.id}
             role={customer.role}

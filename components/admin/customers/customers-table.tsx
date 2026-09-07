@@ -5,7 +5,6 @@ import { useMemo } from 'react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { MoreHorizontal } from 'lucide-react'
 import { toast } from 'sonner'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -23,13 +22,19 @@ import {
 import { DataTable } from '@/components/admin/data-table/data-table'
 import { DataTableColumnHeader } from '@/components/admin/data-table/column-header'
 import { RoleToggle } from '@/components/admin/role-toggle'
+import {
+  RoleBadge,
+  WholesaleRoleBadge,
+} from '@/components/admin/customers/role-badges'
 import { useLanguage } from '@/components/language-provider'
+import type { WholesaleRole } from '@/lib/db/schema'
 
 export type CustomerRowView = {
   id: number
   name: string
   email: string
   role: 'customer' | 'admin'
+  wholesaleRole: WholesaleRole | null
   orderCount: number
   lifetimeValue: number
   lastOrderAt: string | null
@@ -78,6 +83,29 @@ export function CustomersTable({
         ),
       },
       {
+        accessorKey: 'role',
+        meta: { label: 'Role' },
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Role" />
+        ),
+        cell: ({ row }) => <RoleBadge role={row.original.role} />,
+        filterFn: (row, id, value) => row.getValue(id) === value,
+      },
+      {
+        accessorKey: 'wholesaleRole',
+        meta: { label: 'Wholesale' },
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title="Wholesale" />
+        ),
+        cell: ({ row }) => (
+          <WholesaleRoleBadge role={row.original.wholesaleRole} />
+        ),
+        // `none` stands in for null in the facet, since a filter value of null
+        // reads as "no filter" to the table.
+        filterFn: (row, id, value) =>
+          (row.getValue(id) ?? 'none') === value,
+      },
+      {
         accessorKey: 'orderCount',
         meta: { label: 'Orders' },
         header: ({ column }) => (
@@ -118,26 +146,6 @@ export function CustomersTable({
               : '—'}
           </span>
         ),
-      },
-      {
-        accessorKey: 'role',
-        meta: { label: 'Role' },
-        header: ({ column }) => (
-          <DataTableColumnHeader column={column} title="Role" />
-        ),
-        cell: ({ row }) => (
-          <Badge
-            variant="secondary"
-            className={
-              row.original.role === 'admin'
-                ? 'border-0 bg-primary/10 capitalize text-primary'
-                : 'border-0 bg-muted capitalize text-muted-foreground'
-            }
-          >
-            {row.original.role}
-          </Badge>
-        ),
-        filterFn: (row, id, value) => row.getValue(id) === value,
       },
       {
         id: 'actions',
@@ -197,6 +205,15 @@ export function CustomersTable({
           options: [
             { value: 'customer', label: 'Customer' },
             { value: 'admin', label: 'Admin' },
+          ],
+        },
+        {
+          column: 'wholesaleRole',
+          label: 'Wholesale',
+          options: [
+            { value: 'buyer', label: 'Buyer' },
+            { value: 'seller', label: 'Seller' },
+            { value: 'none', label: 'Not joined' },
           ],
         },
       ]}

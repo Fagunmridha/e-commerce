@@ -28,6 +28,7 @@ export default async function AdminCustomersPage({
     name: row.name || '—',
     email: row.email,
     role: row.role,
+    wholesaleRole: row.wholesaleRole,
     orderCount: row.orderCount,
     lifetimeValue: row.lifetimeValue,
     lastOrderAt: row.lastOrderAt?.toISOString() ?? null,
