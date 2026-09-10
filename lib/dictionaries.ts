@@ -752,6 +752,10 @@ const en = {
       shopName: 'Shop or company name',
       shopNamePlaceholder: 'e.g. Karim Traders',
       businessType: 'Business type',
+      category: 'What you trade in',
+      categoryPlaceholder: 'Select a category',
+      categoryHint:
+        'Once approved you can list products anywhere inside this line, and nowhere else.',
       businessTypes: {
         retail_shop: 'Retail shop',
         distributor: 'Distributor',
@@ -787,6 +791,7 @@ const en = {
     },
     errors: {
       shopName: 'Enter your shop or company name.',
+      category: 'Pick the category your shop trades in.',
       contactName: 'Enter a contact name.',
       phone: 'Enter a valid Bangladeshi mobile number.',
       email: 'Enter a valid email address.',
@@ -868,6 +873,10 @@ const en = {
       name: 'Product name',
       namePlaceholder: 'e.g. Cotton Panjabi',
       category: 'Category',
+      categoryLocked: 'Your shop is approved for this category.',
+      categoryLine: 'The categories your shop’s trade line covers.',
+      categoryUnset:
+        'Your shop has no trade line yet — ask us to set one.',
       price: 'Selling price (৳)',
       priceHint:
         'What a buyer pays, in taka. This is your price — we do not change it.',
@@ -1915,6 +1924,10 @@ const bn: Dictionary = {
       shopName: 'দোকান বা প্রতিষ্ঠানের নাম',
       shopNamePlaceholder: 'যেমন করিম ট্রেডার্স',
       businessType: 'ব্যবসার ধরন',
+      category: 'আপনি কীসের ব্যবসা করেন',
+      categoryPlaceholder: 'ক্যাটাগরি বাছুন',
+      categoryHint:
+        'অনুমোদনের পরে এই লাইনের ভেতরে যেকোনো ক্যাটাগরিতে পণ্য দিতে পারবেন, বাইরে নয়।',
       businessTypes: {
         retail_shop: 'খুচরা দোকান',
         distributor: 'পরিবেশক',
@@ -1950,6 +1963,7 @@ const bn: Dictionary = {
     },
     errors: {
       shopName: 'দোকান বা প্রতিষ্ঠানের নাম লিখুন।',
+      category: 'আপনার দোকান যে ক্যাটাগরিতে ব্যবসা করে সেটি বাছুন।',
       contactName: 'যোগাযোগের ব্যক্তির নাম লিখুন।',
       phone: 'সঠিক বাংলাদেশি মোবাইল নম্বর লিখুন।',
       email: 'সঠিক ইমেইল ঠিকানা লিখুন।',
@@ -2024,6 +2038,10 @@ const bn: Dictionary = {
       name: 'পণ্যের নাম',
       namePlaceholder: 'যেমন সুতির পাঞ্জাবি',
       category: 'ক্যাটাগরি',
+      categoryLocked: 'আপনার দোকান এই ক্যাটাগরির জন্য অনুমোদিত।',
+      categoryLine: 'আপনার দোকানের ব্যবসার লাইনে যে ক্যাটাগরিগুলো আছে।',
+      categoryUnset:
+        'আপনার দোকানের কোনো ব্যবসার লাইন এখনও ঠিক করা হয়নি — আমাদের জানান।',
       price: 'বিক্রয়মূল্য (৳)',
       priceHint: 'ক্রেতা যত টাকা দিবে। দামটা আপনারই — আমরা বদলাই না।',
       stock: 'কত পিস আছে',

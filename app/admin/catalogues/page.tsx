@@ -1,14 +1,21 @@
 import { CataloguesManager } from '@/components/admin/catalogues-manager'
 import { getAdminCatalogues } from '@/lib/catalogues'
 import { getAllCategories } from '@/lib/products'
+import { leafCategories } from '@/lib/category-tree'
 
 export const dynamic = 'force-dynamic'
 
 export default async function CataloguesPage() {
-  const [catalogues, categories] = await Promise.all([
+  const [catalogues, allCategories] = await Promise.all([
     getAdminCatalogues(),
     getAllCategories(),
   ])
+
+  // Only leaves: a catalogue is the level below a category, so offering a
+  // grouping row like "Cloth" here would file Jeans under a trade line rather
+  // than under Men's. Every scope is offered — a trade-only category still
+  // wants its own catalogues.
+  const categories = leafCategories(allCategories)
 
   return (
     <div className="space-y-6">

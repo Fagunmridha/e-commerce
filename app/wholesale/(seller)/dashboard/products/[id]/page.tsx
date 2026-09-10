@@ -52,7 +52,11 @@ export default async function EditSellerProductPage({
           </p>
         </div>
       </div>
-      <SellerProductForm product={product} defaultCommissionPct={settings.defaultCommissionPct} />
+      <SellerProductForm
+        product={product}
+        defaultCommissionPct={settings.defaultCommissionPct}
+        sellerLine={shop.categorySlug}
+      />
     </div>
   )
 }

@@ -39,11 +39,12 @@ import { useLanguage } from '@/components/language-provider'
 import { chooseWholesaleRole } from '@/app/actions/wholesale'
 import { getDictionary, type Dictionary } from '@/lib/dictionaries'
 import { cn } from '@/lib/utils'
+import {
+  CatalogueTree,
+  UNSORTED,
+} from '@/components/wholesale/catalogue-tree'
 import type { Catalogue, Category, Product } from '@/lib/types'
 import type { WholesaleRole } from '@/lib/db/schema'
-
-/** The catalogue filter for stock in a category that has none set. */
-const UNSORTED = '__unsorted__'
 
 /** In the order of `t.wholesale.landing.perks`. */
 const PERK_ICONS = [ShieldCheck, Truck, CreditCard, Headset] as const
@@ -169,52 +170,13 @@ export function WholesaleJoin({
     [categories, products],
   )
 
-  // The sidebar tree: a category, then the catalogues under it that have stock,
-  // plus an "Others" row where the category holds anything unsorted.
-  const groups = useMemo(
-    () =>
-      usableCategories.map((item) => {
-        const inCategory = products.filter(
-          (product) => product.category === item.slug,
-        )
-
-        const branches = catalogues
-          .filter(
-            (entry) =>
-              entry.categorySlug === item.slug &&
-              inCategory.some((product) => product.catalogue === entry.slug),
-          )
-          .map((entry) => ({ value: entry.slug, label: pick(entry.name) }))
-
-        return {
-          slug: item.slug,
-          label: pick(item.name),
-          branches: inCategory.some((product) => !product.catalogue)
-            ? [...branches, { value: UNSORTED, label: copy.otherCatalogue }]
-            : branches,
-        }
-      }),
-    [usableCategories, catalogues, products, pick, copy.otherCatalogue],
-  )
-
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
-
+  // The tabs above the grid. The sidebar tree owns its own selection logic;
+  // this is the flat version for narrow screens, where the tree is hidden.
   const selectCategory = useCallback((slug: string) => {
     setCategory(slug)
     // The old catalogue almost certainly belongs to the category being left.
     setCatalogue('')
   }, [])
-
-  const selectCatalogue = useCallback(
-    (categorySlug: string, value: string) => {
-      // Clicking the row you are already on clears it, which is the only way
-      // back to the whole category without going via the tabs.
-      const same = category === categorySlug && catalogue === value
-      setCategory(same ? '' : categorySlug)
-      setCatalogue(same ? '' : value)
-    },
-    [category, catalogue],
-  )
 
   const visible = products.filter(
     (product) =>
@@ -335,80 +297,15 @@ export function WholesaleJoin({
 
               <div className="mt-8 grid gap-6 lg:grid-cols-[15rem_minmax(0,1fr)]">
                 <aside className="hidden lg:block">
-                  <div className="overflow-hidden rounded-xl border border-border bg-card">
-                    <h3 className="border-b border-border px-4 py-3 text-xs font-bold tracking-wider text-primary uppercase">
-                      {copy.catalogueHeading}
-                    </h3>
-                    <div className="divide-y divide-border">
-                      {groups.map((group) => (
-                        <div key={group.slug}>
-                          <button
-                            type="button"
-                            aria-expanded={!collapsed[group.slug]}
-                            onClick={() =>
-                              setCollapsed((current) => ({
-                                ...current,
-                                [group.slug]: !current[group.slug],
-                              }))
-                            }
-                            className="flex w-full items-center gap-2 px-4 py-3 text-left focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
-                          >
-                            <Users
-                              className="size-4 shrink-0 text-primary"
-                              aria-hidden="true"
-                            />
-                            <span className="min-w-0 flex-1 truncate text-sm font-bold text-foreground uppercase">
-                              {group.label}
-                            </span>
-                            <ChevronDown
-                              aria-hidden="true"
-                              className={cn(
-                                'size-4 shrink-0 text-muted-foreground transition-transform duration-300',
-                                collapsed[group.slug] && '-rotate-90',
-                              )}
-                            />
-                          </button>
-
-                          {!collapsed[group.slug] && group.branches.length > 0 && (
-                            <ul className="pb-2">
-                              {group.branches.map((branch) => {
-                                const active =
-                                  category === group.slug &&
-                                  catalogue === branch.value
-
-                                return (
-                                  <li key={branch.value}>
-                                    <button
-                                      type="button"
-                                      aria-pressed={active}
-                                      onClick={() =>
-                                        selectCatalogue(group.slug, branch.value)
-                                      }
-                                      className={cn(
-                                        'flex w-full items-center gap-2 py-1.5 pr-4 pl-6 text-left text-sm transition-colors',
-                                        'focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none',
-                                        active
-                                          ? 'font-semibold text-primary'
-                                          : 'text-muted-foreground hover:text-primary',
-                                      )}
-                                    >
-                                      <ArrowRight
-                                        className="size-3 shrink-0"
-                                        aria-hidden="true"
-                                      />
-                                      <span className="min-w-0 truncate">
-                                        {branch.label}
-                                      </span>
-                                    </button>
-                                  </li>
-                                )
-                              })}
-                            </ul>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  <CatalogueTree
+                    categories={categories}
+                    catalogues={catalogues}
+                    products={products}
+                    category={category}
+                    catalogue={catalogue}
+                    onCategoryChange={setCategory}
+                    onCatalogueChange={setCatalogue}
+                  />
                 </aside>
 
                 <div>

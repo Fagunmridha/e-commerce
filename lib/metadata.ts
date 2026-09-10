@@ -35,7 +35,18 @@ export async function categoryMetadata(slug: CategorySlug): Promise<Metadata> {
   const locale = await getServerLocale()
   const t = await getServerDictionary()
   const category = await getCategory(slug)
-  const name = category ? category.name[locale] : slug
+
+  // Now that /:slug catches anything unclaimed, this runs for every mistyped
+  // URL on the way to a 404. Echoing the slug back would put "asdf" in the
+  // title of a not-found page, so an unknown category gets the store's own.
+  if (!category) {
+    return {
+      title: t.meta.siteTitle,
+      description: t.meta.siteDescription,
+    }
+  }
+
+  const name = category.name[locale]
 
   return {
     title: `${name} ${t.meta.suffix}`,

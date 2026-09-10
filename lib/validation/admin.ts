@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { RESERVED_CATEGORY_SLUGS } from '@/lib/reserved-slugs'
 import {
   hexColorSchema,
   imageSchema,
@@ -55,6 +56,41 @@ export const uuidSchema = z.string().uuid()
  * resolving to different rows is the kind of thing nobody notices until a link
  * someone shared stops matching anything.
  */
+export const categorySchema = z
+  .object({
+    slug: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .min(1, 'A category slug is required')
+      .max(64)
+      .regex(/^[a-z0-9-]+$/, 'Use lower-case letters, numbers or hyphens')
+      .refine(
+        (value) => !RESERVED_CATEGORY_SLUGS.has(value),
+        'That name is already a page on the store — pick another slug',
+      ),
+    name: localizedSchema,
+    image: imageSchema,
+    scope: z.enum(['retail', 'wholesale', 'both']),
+    /**
+     * Empty means the row is a trade line in its own right. Whether the parent
+     * exists, and whether it is itself a child, are database questions —
+     * `upsertCategory` asks them.
+     */
+    parentSlug: z
+      .string()
+      .trim()
+      .max(64)
+      .nullish()
+      .transform((value) => value || null),
+  })
+  .refine((data) => data.parentSlug !== data.slug, {
+    message: 'A category cannot be its own parent',
+    path: ['parentSlug'],
+  })
+
+export type CategoryInput = z.infer<typeof categorySchema>
+
 export const catalogueSchema = z.object({
   slug: z
     .string()

@@ -18,7 +18,8 @@ import { getServerLocale, getServerLocales } from '@/lib/server-locale'
 import {
   getAllProducts,
   getAllCatalogues,
-  getAllCategories,
+  getRetailCategories,
+  getWholesaleCategories,
   getPreorderProducts,
   getWholesaleProducts,
 } from '@/lib/products'
@@ -98,15 +99,26 @@ export default async function RootLayout({
   // aggregate the catalogue-wide query has no reason to pay for.
   // `getViewerWholesaleRole` reads the same request-scoped user row
   // `getViewerShop` already fetches, so it is free to ask for alongside it.
-  const [shop, wholesaleRole, products, preorderProducts, categories, catalogues] =
-    await Promise.all([
-      getViewerShop(),
-      getViewerWholesaleRole(),
-      getAllProducts(),
-      getPreorderProducts(),
-      getAllCategories(),
-      getAllCatalogues(),
-    ])
+  // Two category lists, not one filtered later: the storefront must never be
+  // handed a trade-only row, and the wholesale pages must never lose one. Both
+  // come off the same cached fetch, so the second costs no round trip.
+  const [
+    shop,
+    wholesaleRole,
+    products,
+    preorderProducts,
+    categories,
+    wholesaleCategories,
+    catalogues,
+  ] = await Promise.all([
+    getViewerShop(),
+    getViewerWholesaleRole(),
+    getAllProducts(),
+    getPreorderProducts(),
+    getRetailCategories(),
+    getWholesaleCategories(),
+    getAllCatalogues(),
+  ])
 
   // Marketplace listings go into the context only for someone who can act on
   // them — an approved shop, or a joined wholesale buyer. /wholesale shows the
@@ -129,6 +141,7 @@ export default async function RootLayout({
               wholesaleProducts={wholesaleProducts}
               isWholesaler={Boolean(shop)}
               categories={categories}
+              wholesaleCategories={wholesaleCategories}
               catalogues={catalogues}
             >
               <StoreProvider>

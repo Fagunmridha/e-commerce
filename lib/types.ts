@@ -107,12 +107,27 @@ export type Product = {
   preorderAdvancePct?: number
 }
 
+/**
+ * Which side of the store a category serves. `both` is the widest, and what
+ * every row created before the column existed carries.
+ */
+export type CategoryScope = 'retail' | 'wholesale' | 'both'
+
 export type Category = {
   slug: CategorySlug
   name: Localized
   href: string
+  /**
+   * House shelf stock filed here — the number the storefront tile promises.
+   * Marketplace listings and pre-orders are excluded, so a `wholesale`-scoped
+   * category always reads 0. Never use it to decide whether a row can be
+   * deleted; `AdminCategory.productCount` in lib/categories.ts is that number.
+   */
   itemCount: number
   image: string
+  scope: CategoryScope
+  /** The trade line this sits under, or null when the row *is* a line. */
+  parentSlug: CategorySlug | null
 }
 
 /**

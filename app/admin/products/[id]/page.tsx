@@ -5,7 +5,9 @@ import {
   getAdminProductById,
   getAllCatalogues,
   getProductImages,
+  getRetailCategories,
 } from '@/lib/products'
+import { leafCategories } from '@/lib/category-tree'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,11 +21,13 @@ export default async function EditProductPage({
   if (!product) notFound()
 
   // `getProductImages` returns the primary shot first; the form edits the rest.
-  const [images, catalogues] = await Promise.all([
+  const [images, catalogues, retail] = await Promise.all([
     getProductImages(product),
     getAllCatalogues(),
+    getRetailCategories(),
   ])
   const gallery = images.slice(1)
+  const categories = leafCategories(retail)
 
   return (
     <div className="mx-auto w-full max-w-3xl">
@@ -31,7 +35,12 @@ export default async function EditProductPage({
       <h2 className="mb-6 text-xl font-bold text-foreground">
         Edit — {product.name.en}
       </h2>
-      <ProductForm product={product} gallery={gallery} catalogues={catalogues} />
+      <ProductForm
+        product={product}
+        gallery={gallery}
+        categories={categories}
+        catalogues={catalogues}
+      />
     </div>
   )
 }

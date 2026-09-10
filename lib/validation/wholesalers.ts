@@ -52,6 +52,20 @@ export const wholesaleApplicationSchema = z.object({
     .min(2, 'Your shop or company name is required')
     .max(200),
   businessType: z.enum(BUSINESS_TYPES),
+  /**
+   * The one trade line this shop deals in. Required — the whole point is that
+   * an approved shop sits in exactly one, and "whichever happened to be first
+   * in the list" is not a decision anybody made.
+   *
+   * Whether the slug exists, and whether it is a line rather than a category
+   * under one, cannot be asked here: this schema is shared with the client and
+   * has no database. `submitWholesaleApplication` asks.
+   */
+  categorySlug: z
+    .string()
+    .trim()
+    .min(1, 'Pick the category your shop trades in')
+    .max(64),
   taxToken: optionalText(80),
   binNumber: optionalText(80),
   tradeLicenseNo: optionalText(80),

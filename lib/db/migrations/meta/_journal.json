@@ -169,6 +169,13 @@
       "when": 1787644934785,
       "tag": "0023_dashing_thena",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1789065500361,
+      "tag": "0024_even_vector",
+      "breakpoints": true
     }
   ]
 }

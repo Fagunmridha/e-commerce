@@ -9,6 +9,8 @@ export type WholesaleApplicationView = {
   status: WholesalerApplicationRow['status']
   shopName: string
   businessType: BusinessType
+  /** Null on a shop approved before trade lines existed. */
+  categorySlug: string | null
   taxToken: string | null
   binNumber: string | null
   tradeLicenseNo: string | null

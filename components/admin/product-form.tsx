@@ -14,10 +14,14 @@ import { upsertProduct, type ProductInput } from '@/app/actions/admin'
 import { DEFAULT_ADVANCE_PCT } from '@/lib/preorder'
 import { DEFAULT_COMMISSION_PCT, splitCommission } from '@/lib/commission'
 import { formatPrice } from '@/lib/currency'
-import type { Catalogue, CategorySlug, Product, ProductColor } from '@/lib/types'
+import type {
+  Catalogue,
+  Category,
+  CategorySlug,
+  Product,
+  ProductColor,
+} from '@/lib/types'
 import type { Localized } from '@/lib/i18n'
-
-const CATEGORIES: CategorySlug[] = ['men', 'women', 'kids', 'accessories']
 
 /**
  * "Black|কালো|#111827, Print|প্রিন্ট" → [{ name: {en,bn}, hex? }].
@@ -76,11 +80,17 @@ function serializeHighlights(highlights?: Localized[]): string {
 export function ProductForm({
   product,
   gallery = [],
+  categories = [],
   catalogues = [],
 }: {
   product?: Product
   /** Extra shots beyond `product.image`, in position order. */
   gallery?: string[]
+  /**
+   * Where house stock may be filed: storefront categories, leaves only. A
+   * grouping row like Cloth is a heading in the tree, never a destination.
+   */
+  categories?: Category[]
   /** Every catalogue in the store; the field filters to the picked category. */
   catalogues?: Catalogue[]
 }) {
@@ -99,7 +109,7 @@ export function ProductForm({
     price: product?.price?.toString() ?? '',
     oldPrice: product?.oldPrice?.toString() ?? '',
     image: product?.image ?? '',
-    category: (product?.category ?? 'men') as CategorySlug,
+    category: (product?.category ?? categories[0]?.slug ?? '') as CategorySlug,
     catalogue: product?.catalogue ?? '',
     badge: product?.badge ?? '',
     stock: product?.stock?.toString() ?? '0',
@@ -132,6 +142,26 @@ export function ProductForm({
   // strings, instead of every field being stringly typed for the sake of one.
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
     setForm((current) => ({ ...current, [key]: value }))
+
+  // A product edited after its category was made trade-only, or turned into a
+  // grouping row, would otherwise find its own value missing from the list:
+  // the select would render blank and saving would silently refile the product
+  // somewhere else. Carrying the orphan as a labelled option keeps the value
+  // visible and makes changing it a decision rather than an accident.
+  const options = categories.some((item) => item.slug === form.category)
+    ? categories.map((category) => ({ ...category, orphaned: false }))
+    : [
+        ...categories.map((category) => ({ ...category, orphaned: false })),
+        ...(form.category
+          ? [
+              {
+                slug: form.category,
+                name: { en: form.category, bn: form.category },
+                orphaned: true,
+              },
+            ]
+          : []),
+      ]
 
   // Spells the percentage out in taka against the price being typed, so an
   // admin sees what they are actually asking a customer for. Blank and 0 are
@@ -262,11 +292,12 @@ export function ProductForm({
               // it after saving.
               set('catalogue', '')
             }}
-            className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm capitalize outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+            className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
           >
-            {CATEGORIES.map((slug) => (
-              <option key={slug} value={slug} className="capitalize">
-                {slug}
+            {options.map((category) => (
+              <option key={category.slug} value={category.slug}>
+                {category.name.en}
+                {category.orphaned ? ' (not on the storefront)' : ''}
               </option>
             ))}
           </select>

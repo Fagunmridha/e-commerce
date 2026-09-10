@@ -18,6 +18,10 @@ async function main() {
       .values(category)
       .onConflictDoUpdate({
         target: categories.slug,
+        // `scope` and `parentSlug` are deliberately absent from the update:
+        // both are the admin's to set from /admin/categories, and re-running
+        // the seed after they have grouped Men under "Cloth" must not quietly
+        // undo it. They still apply on the first insert.
         set: { name: category.name, image: category.image },
       })
   }

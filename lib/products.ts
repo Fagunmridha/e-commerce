@@ -707,15 +707,53 @@ async function fetchAllCategories(): Promise<Category[]> {
       href: `/${row.slug}`,
       image: row.image,
       itemCount: countMap.get(row.slug as CategorySlug) ?? 0,
+      scope: row.scope,
+      parentSlug: row.parentSlug ?? null,
     }))
     .sort((a, b) => rank(a.slug) - rank(b.slug) || a.slug.localeCompare(b.slug))
 }
 
+/**
+ * Every category row, whatever it is for. The unfiltered source the three
+ * helpers below narrow — and the right read for the admin console, which is
+ * the one place that edits rows it must be able to see regardless of scope.
+ */
 export const getAllCategories = unstable_cache(
   fetchAllCategories,
   ['all-categories'],
   { tags: ['catalogue'], revalidate: 60 },
 )
+
+/**
+ * The storefront's categories — everything a shopper may browse. `both` counts:
+ * a category can be a shop aisle and part of a trade line at the same time,
+ * which is what the four seeded ones are.
+ *
+ * Derived from the one cached fetch rather than a query of its own, so the
+ * split costs nothing and the lists can never disagree about a row.
+ */
+export async function getRetailCategories(): Promise<Category[]> {
+  const all = await getAllCategories()
+  return all.filter((c) => c.scope === 'retail' || c.scope === 'both')
+}
+
+/** Everything usable on the trade side — lines and their children alike. */
+export async function getWholesaleCategories(): Promise<Category[]> {
+  const all = await getAllCategories()
+  return all.filter((c) => c.scope === 'wholesale' || c.scope === 'both')
+}
+
+/**
+ * The trade lines a shop can be approved for: top-level rows open to trade.
+ *
+ * This is what the application form offers and what `submitWholesaleApplication`
+ * checks against — a shop is approved for "Cloth", never for "Men's Wear", and
+ * picks between its children per listing.
+ */
+export async function getWholesaleLines(): Promise<Category[]> {
+  const wholesale = await getWholesaleCategories()
+  return wholesale.filter((c) => c.parentSlug === null)
+}
 
 /**
  * Every catalogue in the store, ordered the way the dropdowns render them.

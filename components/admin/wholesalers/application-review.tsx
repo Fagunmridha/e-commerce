@@ -14,7 +14,10 @@ import {
   WHOLESALER_STATUS_LABEL,
   type WholesalerStatus,
 } from '@/lib/admin/wholesaler-status'
-import { reviewApplication } from '@/app/actions/wholesalers'
+import {
+  reviewApplication,
+  setApplicationCategory,
+} from '@/app/actions/wholesalers'
 
 export type ApplicationDetailView = {
   id: string
@@ -35,6 +38,9 @@ export type ApplicationDetailView = {
   reviewNote: string | null
   reviewedBy: string | null
   reviewedAt: string | null
+  /** The shop's trade line, and every line it could be moved to. */
+  categorySlug: string | null
+  lines: { slug: string; name: string }[]
 }
 
 export function ApplicationReview({
@@ -45,6 +51,20 @@ export function ApplicationReview({
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [note, setNote] = useState(application.reviewNote ?? '')
+  const [line, setLine] = useState(application.categorySlug ?? '')
+
+  const saveLine = () =>
+    startTransition(async () => {
+      try {
+        await setApplicationCategory(application.id, line)
+        toast.success('Trade line updated')
+        router.refresh()
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : 'Something went wrong',
+        )
+      }
+    })
 
   const decide = (status: WholesalerStatus, success: string) =>
     startTransition(async () => {
@@ -222,6 +242,43 @@ export function ApplicationReview({
             onChange={(event) => setNote(event.target.value)}
             placeholder="Shown on their /wholesale page — required in practice when rejecting."
           />
+        </div>
+
+        {/* An approved seller never sees the application form again, so this
+            is the only place a wrong or missing trade line can be corrected —
+            and the only way a shop approved before lines existed gets one. */}
+        <div className="mt-4 space-y-1.5">
+          <Label htmlFor="trade-line">Trade line</Label>
+          <div className="flex flex-wrap gap-3">
+            <select
+              id="trade-line"
+              value={line}
+              onChange={(event) => setLine(event.target.value)}
+              className="h-9 min-w-48 rounded-md border border-border bg-background px-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+            >
+              <option value="" disabled>
+                Not set
+              </option>
+              {application.lines.map((option) => (
+                <option key={option.slug} value={option.slug}>
+                  {option.name}
+                </option>
+              ))}
+            </select>
+            <Button
+              variant="outline"
+              disabled={
+                pending || !line || line === (application.categorySlug ?? '')
+              }
+              onClick={saveLine}
+            >
+              Save line
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Bounds what this shop may list. Existing listings stay where they
+            are until the seller next edits them.
+          </p>
         </div>
 
         <div className="mt-4 flex flex-wrap gap-3">

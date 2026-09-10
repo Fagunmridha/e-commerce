@@ -8,6 +8,7 @@ import {
   Percent,
   ReceiptText,
   Settings,
+  Shapes,
   ShoppingCart,
   Store,
   Users,
@@ -53,6 +54,13 @@ export const ADMIN_NAV: AdminNavGroup[] = [
           { href: '/admin/products', label: 'All products' },
           { href: '/admin/products/new', label: 'Add product' },
         ],
+      },
+      // Above Catalogues: a catalogue hangs off a category, so the tree reads
+      // top-down in the sidebar the way it does on the pages themselves.
+      {
+        href: '/admin/categories',
+        label: 'Categories',
+        icon: Shapes,
       },
       {
         href: '/admin/catalogues',

@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next'
-import { getAllProducts, getAllCategories } from '@/lib/products'
+import { getAllProducts, getRetailCategories } from '@/lib/products'
 
 // Generated on request from the live catalogue rather than at build time.
 export const dynamic = 'force-dynamic'
@@ -9,9 +9,11 @@ const BASE_URL = (
 ).replace(/\/$/, '')
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // Retail only: a trade-only category has no `/slug` page, so listing one
+  // here would advertise a 404 to every crawler that reads this.
   const [products, categories] = await Promise.all([
     getAllProducts(),
-    getAllCategories(),
+    getRetailCategories(),
   ])
 
   const staticRoutes = ['', '/shop', '/about', '/contact', '/wishlist'].map(

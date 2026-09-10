@@ -6,6 +6,8 @@ import { db } from '@/lib/db'
 import { products } from '@/lib/db/schema'
 import { requireApprovedWholesaler } from '@/lib/wholesalers'
 import { resolveCatalogue } from '@/lib/catalogues'
+import { isInLine } from '@/lib/category-tree'
+import { getWholesaleCategories } from '@/lib/products'
 import { uniqueProductId } from '@/lib/seller-products'
 import { parseOrThrow } from '@/lib/validation/shared'
 import {
@@ -54,6 +56,35 @@ export async function upsertSellerProduct(
       ok: false,
       error: error instanceof Error ? error.message : 'Invalid product',
     }
+  }
+
+  /**
+   * A shop lists inside the trade line it was approved for, and nowhere else.
+   * A cloth shop may file under Men's, Women's or Kids; it may not file under
+   * Electronics.
+   *
+   * The form only offers those categories, which is what an honest seller
+   * sees — this is the copy that counts, because a server action is a public
+   * endpoint and the form's `<select>` is a suggestion to anyone willing to
+   * skip it. Both sides read `categoriesInLine`, so neither can drift.
+   *
+   * A shop approved before the column existed has no line. Rather than locking
+   * it out of its own dashboard it falls back to "any wholesale category" —
+   * still narrower than before, since a storefront-only category is refused
+   * either way. The migration guessed a line from what such a shop already
+   * listed, and an admin can set it from the review screen.
+   */
+  const wholesale = await getWholesaleCategories()
+
+  if (shop.categorySlug) {
+    if (!isInLine(wholesale, shop.categorySlug, data.category)) {
+      return {
+        ok: false,
+        error: 'You can only list products in your shop’s trade line.',
+      }
+    }
+  } else if (!wholesale.some((category) => category.slug === data.category)) {
+    return { ok: false, error: 'Pick a category from the list.' }
   }
 
   const values = {

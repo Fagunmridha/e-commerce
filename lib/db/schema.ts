@@ -11,6 +11,7 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
+  type AnyPgColumn,
 } from 'drizzle-orm/pg-core'
 import type { Localized } from '@/lib/i18n'
 import type { CategorySlug, ProductColor } from '@/lib/types'
@@ -51,6 +52,33 @@ export const categories = pgTable('categories', {
   slug: text('slug').primaryKey(),
   name: jsonb('name').$type<Localized>().notNull(),
   image: text('image').notNull(),
+  /**
+   * Which side of the store may use this row. The four seeded categories
+   * backfill to `both` — they are shop aisles that wholesalers also trade in,
+   * and narrowing them would have emptied /men overnight.
+   *
+   * A grouping row like "Cloth" is kept `wholesale`: it is a seller's trade
+   * line rather than an aisle, so no tile appears on the homepage and no
+   * `/cloth` page is ever built.
+   */
+  scope: text('scope', { enum: ['retail', 'wholesale', 'both'] })
+    .notNull()
+    .default('both'),
+  /**
+   * The trade line this category sits under — "Cloth" for Men's.
+   *
+   * Null means the row *is* a line, and a line is what a wholesaler picks when
+   * they apply. The tree is deliberately capped at two levels: a parent may not
+   * itself have a parent. Going deeper would make four levels once catalogues
+   * are counted, and no screen wants to draw that. The cap lives in
+   * `categorySchema` and `upsertCategory`, not in the database.
+   *
+   * RESTRICT: deleting a line that still has children would orphan them, and
+   * those children are what every seller approval hangs off.
+   */
+  parentSlug: text('parent_slug')
+    .references((): AnyPgColumn => categories.slug, { onDelete: 'restrict' })
+    .$type<CategorySlug>(),
 })
 
 /**
@@ -523,6 +551,23 @@ export const wholesalerApplications = pgTable('wholesaler_applications', {
   businessType: text('business_type', {
     enum: ['retail_shop', 'distributor', 'online_seller', 'other'],
   }).notNull(),
+  /**
+   * The one trade line this shop deals in — a top-level `categories` row
+   * ("Cloth", "Electronics"). Whether a given listing is Men's or Women's is
+   * the seller's choice per product; this row only draws the boundary.
+   *
+   * Nullable, because every shop approved before this column existed has none,
+   * and an approved seller cannot resubmit their application to fill it in —
+   * `app/wholesale/apply/page.tsx` sends them to the dashboard instead. An
+   * admin sets it from the review screen.
+   *
+   * SET NULL rather than RESTRICT: falling back to "seller with no line" is a
+   * state an admin can fix, whereas a category that one seller picked being
+   * permanently undeletable is not.
+   */
+  categorySlug: text('category_slug')
+    .references(() => categories.slug, { onDelete: 'set null' })
+    .$type<CategorySlug>(),
   /** TIN / tax token. */
   taxToken: text('tax_token'),
   /** VAT registration (BIN). */

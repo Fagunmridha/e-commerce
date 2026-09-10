@@ -61,6 +61,7 @@ export default async function WholesaleApplyPage() {
         status: row.status,
         shopName: row.shopName,
         businessType: row.businessType,
+        categorySlug: row.categorySlug,
         taxToken: row.taxToken,
         binNumber: row.binNumber,
         tradeLicenseNo: row.tradeLicenseNo,

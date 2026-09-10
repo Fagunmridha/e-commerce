@@ -14,6 +14,10 @@ import { ProductCard } from '@/components/product-card'
 import { CatalogueFilter } from '@/components/catalogue-filter'
 import { useLanguage } from '@/components/language-provider'
 import { useCatalogue } from '@/components/catalogue-provider'
+import {
+  CatalogueTree,
+  UNSORTED,
+} from '@/components/wholesale/catalogue-tree'
 
 /**
  * The market as a joined buyer sees it — the one place trade stock is
@@ -26,7 +30,13 @@ import { useCatalogue } from '@/components/catalogue-provider'
  */
 export function WholesaleMarket() {
   const { t, pick } = useLanguage()
-  const { wholesaleProducts, categories, catalogues } = useCatalogue()
+  // The trade list, not the storefront one: this page sells to wholesale
+  // buyers, and a shop aisle that is closed to trade has no filter here.
+  const {
+    wholesaleProducts,
+    wholesaleCategories: categories,
+    catalogues,
+  } = useCatalogue()
   const copy = t.wholesale.market
 
   const [search, setSearch] = useState('')
@@ -38,7 +48,11 @@ export function WholesaleMarket() {
     return wholesaleProducts.filter(
       (product) =>
         (!category || product.category === category) &&
-        (!catalogue || product.catalogue === catalogue) &&
+        // The tree's "Others" row selects a sentinel, not a catalogue slug.
+        (!catalogue ||
+          (catalogue === UNSORTED
+            ? !product.catalogue
+            : product.catalogue === catalogue)) &&
         // Product names only. The shop behind a listing is never shown to a
         // buyer, so searching by it would leak the very thing that is hidden.
         (!term || pick(product.name).toLowerCase().includes(term)),
@@ -94,26 +108,44 @@ export function WholesaleMarket() {
             />
           </div>
 
-          {visible.length === 0 ? (
-            <p className="py-16 text-center text-sm text-muted-foreground">
-              {copy.noResults}
-            </p>
-          ) : (
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-              {visible.map((product) => (
-                <div key={product.id} className="flex flex-col">
-                  <ProductCard product={product} />
-                  {/* Deliberately neutral. The buyer is trading with the
-                      store, and which shop supplied the goods is not theirs
-                      to know — see lib/wholesale/orders.ts for the other half
-                      of the same rule. */}
-                  <p className="mt-1.5 truncate px-1 text-xs text-muted-foreground">
-                    {copy.soldByStore}
-                  </p>
+          <div className="grid gap-6 lg:grid-cols-[15rem_minmax(0,1fr)]">
+            {/* Hidden below lg, where the dropdowns above are the only filter
+                — the same arrangement the join page uses. */}
+            <aside className="hidden lg:block">
+              <CatalogueTree
+                categories={categories}
+                catalogues={catalogues}
+                products={wholesaleProducts}
+                category={category}
+                catalogue={catalogue}
+                onCategoryChange={setCategory}
+                onCatalogueChange={setCatalogue}
+              />
+            </aside>
+
+            <div>
+              {visible.length === 0 ? (
+                <p className="py-16 text-center text-sm text-muted-foreground">
+                  {copy.noResults}
+                </p>
+              ) : (
+                <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-4">
+                  {visible.map((product) => (
+                    <div key={product.id} className="flex flex-col">
+                      <ProductCard product={product} />
+                      {/* Deliberately neutral. The buyer is trading with the
+                          store, and which shop supplied the goods is not
+                          theirs to know — see lib/wholesale/orders.ts for the
+                          other half of the same rule. */}
+                      <p className="mt-1.5 truncate px-1 text-xs text-muted-foreground">
+                        {copy.soldByStore}
+                      </p>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
-          )}
+          </div>
         </>
       )}
     </div>

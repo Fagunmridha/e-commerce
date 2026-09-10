@@ -37,6 +37,7 @@ function buildSchema(errors: Dictionary['wholesale']['errors']) {
   return z.object({
     shopName: z.string().min(2, errors.shopName),
     businessType: z.enum(BUSINESS_TYPES),
+    categorySlug: z.string().min(1, errors.category),
     taxToken: optional,
     binNumber: optional,
     tradeLicenseNo: optional,
@@ -95,15 +96,23 @@ export function WholesaleForm({
   defaultEmail: string
   onCancel?: () => void
 }) {
-  const { t } = useLanguage()
+  const { t, pick } = useLanguage()
   const router = useRouter()
   const copy = t.wholesale.form
+
+  // Trade lines only. A shop is approved for "Cloth", never for "Men's Wear" —
+  // it picks between that line's categories per listing once it is approved.
+  const { wholesaleCategories } = useCatalogue()
+  const lines = wholesaleCategories.filter(
+    (category) => category.parentSlug === null,
+  )
 
   const form = useForm<WholesaleValues>({
     resolver: zodResolver(buildSchema(t.wholesale.errors)),
     defaultValues: {
       shopName: application?.shopName ?? '',
       businessType: application?.businessType ?? 'retail_shop',
+      categorySlug: application?.categorySlug ?? '',
       taxToken: application?.taxToken ?? '',
       binNumber: application?.binNumber ?? '',
       tradeLicenseNo: application?.tradeLicenseNo ?? '',
@@ -138,6 +147,7 @@ export function WholesaleForm({
     const result = await submitWholesaleApplication({
       shopName: values.shopName,
       businessType: values.businessType,
+      categorySlug: values.categorySlug,
       taxToken: values.taxToken,
       binNumber: values.binNumber,
       tradeLicenseNo: values.tradeLicenseNo,
@@ -199,6 +209,35 @@ export function WholesaleForm({
                       ))}
                     </select>
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="categorySlug"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{copy.category}</FormLabel>
+                  <FormControl>
+                    <select
+                      {...field}
+                      className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                    >
+                      {/* Disabled placeholder rather than a preselected first
+                          option: an untouched form must fail validation, not
+                          quietly book the shop into whatever sorted first. */}
+                      <option value="" disabled>
+                        {copy.categoryPlaceholder}
+                      </option>
+                      {lines.map((line) => (
+                        <option key={line.slug} value={line.slug}>
+                          {pick(line.name)}
+                        </option>
+                      ))}
+                    </select>
+                  </FormControl>
+                  <FormDescription>{copy.categoryHint}</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

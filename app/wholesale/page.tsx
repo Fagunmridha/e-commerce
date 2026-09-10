@@ -7,7 +7,7 @@ import { getCurrentUser } from '@/lib/auth'
 import { getApplicationForUser } from '@/lib/wholesalers'
 import {
   getAllCatalogues,
-  getAllCategories,
+  getWholesaleCategories,
   getWholesaleProducts,
 } from '@/lib/products'
 import { pageMetadata } from '@/lib/metadata'
@@ -62,7 +62,7 @@ export default async function WholesalePage({
 
   const [products, categories, catalogues] = await Promise.all([
     getWholesaleProducts(),
-    getAllCategories(),
+    getWholesaleCategories(),
     getAllCatalogues(),
   ])
 

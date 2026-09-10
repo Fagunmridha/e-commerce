@@ -34,7 +34,20 @@ type CatalogueValue = {
   wholesaleProducts: Product[]
   /** True when the viewer has an approved shop — gates the trade-only links. */
   isWholesaler: boolean
+  /**
+   * The storefront's categories — what a shopper may browse. Already narrowed
+   * to `retail`/`both` by the root layout.
+   */
   categories: Category[]
+  /**
+   * Categories usable on the trade side: the lines a shop can be approved for
+   * and the categories under them.
+   *
+   * A separate list rather than a filter of the one above. The two overlap on
+   * `both`-scoped rows but neither contains the other, and mixing them is
+   * exactly how a trade-only category ends up in a shopper's mega-menu.
+   */
+  wholesaleCategories: Category[]
   /** Every catalogue in the store, already in display order. */
   catalogues: Catalogue[]
   /** Looks in both lists, so a marketplace item in the cart still resolves. */
@@ -60,6 +73,7 @@ export function CatalogueProvider({
   wholesaleProducts,
   isWholesaler,
   categories,
+  wholesaleCategories,
   catalogues,
   children,
 }: {
@@ -69,6 +83,7 @@ export function CatalogueProvider({
   wholesaleProducts: Product[]
   isWholesaler: boolean
   categories: Category[]
+  wholesaleCategories: Category[]
   catalogues: Catalogue[]
   children: React.ReactNode
 }) {
@@ -91,6 +106,7 @@ export function CatalogueProvider({
       wholesaleProducts,
       isWholesaler,
       categories,
+      wholesaleCategories,
       catalogues,
       getProductById: (id) => byId.get(id),
       getProductsByCategory: (slug) =>
@@ -103,8 +119,13 @@ export function CatalogueProvider({
         shelf.filter((product) => product.badge).slice(0, limit),
       getRecommendedProducts: (excludeId, limit = 2) =>
         shelf.filter((product) => product.id !== excludeId).slice(0, limit),
+      // Looks in both lists, like `getProductById` above: this is a lookup,
+      // not a menu. A seller's dashboard resolves the name of a trade-only
+      // category it has listings in, and the storefront never asks for one it
+      // has no link to in the first place.
       getCategory: (slug) =>
-        categories.find((category) => category.slug === slug),
+        categories.find((category) => category.slug === slug) ??
+        wholesaleCategories.find((category) => category.slug === slug),
     }
   }, [
     products,
@@ -112,6 +133,7 @@ export function CatalogueProvider({
     wholesaleProducts,
     isWholesaler,
     categories,
+    wholesaleCategories,
     catalogues,
   ])
 

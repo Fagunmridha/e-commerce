@@ -32,9 +32,11 @@ const DEFAULT_BANNER_TINT = 'bg-[#0f172a]'
 
 export function CategoryPage({ slug }: { slug: CategorySlug }) {
   const { t, pick } = useLanguage()
-  const { getCategory, getProductsByCategory, categories, catalogues } =
-    useCatalogue()
-  const category = getCategory(slug)
+  const { getProductsByCategory, categories, catalogues } = useCatalogue()
+  // Looked up in the storefront list rather than through `getCategory`, which
+  // resolves trade-only rows too. The route already refuses those server-side;
+  // this keeps the second net checking the same thing the first one did.
+  const category = categories.find((item) => item.slug === slug)
 
   const [size, setSize] = useState<string>('all')
   const [catalogue, setCatalogue] = useState('')

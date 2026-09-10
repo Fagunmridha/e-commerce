@@ -15,7 +15,8 @@ import { useCatalogue } from '@/components/catalogue-provider'
 import { upsertSellerProduct } from '@/app/actions/seller-products'
 import { splitCommission } from '@/lib/commission'
 import { formatPrice } from '@/lib/currency'
-import type { Product } from '@/lib/types'
+import { categoriesInLine } from '@/lib/category-tree'
+import type { CategorySlug, Product } from '@/lib/types'
 
 /**
  * One listing, as its owner edits it.
@@ -30,14 +31,27 @@ import type { Product } from '@/lib/types'
 export function SellerProductForm({
   product,
   defaultCommissionPct,
+  sellerLine,
 }: {
   product?: Product
   defaultCommissionPct: number
+  /**
+   * The trade line this shop was approved for. Null for a shop approved before
+   * lines existed — those keep the full list until an admin sets one.
+   */
+  sellerLine: CategorySlug | null
 }) {
   const router = useRouter()
   const { t, pick } = useLanguage()
-  const { categories, catalogues } = useCatalogue()
+  const { wholesaleCategories, catalogues } = useCatalogue()
   const copy = t.wholesale.dashboard
+
+  // Where this shop may file a listing. A line with no sub-categories is its
+  // own only destination, which `categoriesInLine` already answers — see
+  // lib/category-tree.ts, the same module the server action checks against.
+  const categories = sellerLine
+    ? categoriesInLine(wholesaleCategories, sellerLine)
+    : wholesaleCategories
 
   const [pending, setPending] = useState(false)
 
@@ -46,7 +60,12 @@ export function SellerProductForm({
     name: product?.name.en ?? '',
     price: product?.price?.toString() ?? '',
     image: product?.image ?? '',
-    category: product?.category ?? categories[0]?.slug ?? 'men',
+    // The shop's line wins over the product's own category, so a listing
+    // filed before the line was set corrects itself the next time it is saved.
+    category:
+      product?.category && categories.some((c) => c.slug === product.category)
+        ? product.category
+        : (categories[0]?.slug ?? ''),
     catalogue: product?.catalogue ?? '',
     stock: product?.stock?.toString() ?? '',
     // `moq` is undefined on the type when it is 1 (see lib/products.ts), and the
@@ -113,25 +132,43 @@ export function SellerProductForm({
               placeholder={copy.namePlaceholder}
             />
           </Field>
-          <Field label={copy.category}>
-            <select
-              value={form.category}
-              onChange={(event) => {
-                set('category', event.target.value)
-                // The catalogue belongs to the category being left behind. The
-                // server drops a mismatched pair to null; clearing it here
-                // means the seller sees that rather than finding out on save.
-                set('catalogue', '')
-              }}
-              className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
-            >
-              {categories.map((category) => (
-                <option key={category.slug} value={category.slug}>
-                  {pick(category.name)}
-                </option>
-              ))}
-            </select>
-          </Field>
+          {/* A line with one destination is stated, not offered: a select
+              holding a single disabled option reads as a list that failed to
+              load rather than as a decision already made. */}
+          {categories.length === 1 ? (
+            <Field label={copy.category}>
+              <p className="flex h-9 items-center text-sm text-foreground">
+                {pick(categories[0].name)}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {copy.categoryLocked}
+              </p>
+            </Field>
+          ) : (
+            <Field label={copy.category}>
+              <select
+                value={form.category}
+                onChange={(event) => {
+                  set('category', event.target.value)
+                  // The catalogue belongs to the category being left behind.
+                  // The server drops a mismatched pair to null; clearing it
+                  // here means the seller sees that rather than finding out
+                  // on save.
+                  set('catalogue', '')
+                }}
+                className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+              >
+                {categories.map((category) => (
+                  <option key={category.slug} value={category.slug}>
+                    {pick(category.name)}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-foreground">
+                {sellerLine ? copy.categoryLine : copy.categoryUnset}
+              </p>
+            </Field>
+          )}
           {/* Hidden when the picked category has no catalogues — an empty
               dropdown is a question with no answers. */}
           {catalogues.some((item) => item.categorySlug === form.category) && (

@@ -5,6 +5,7 @@ import { eq, inArray } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { wholesalerApplications } from '@/lib/db/schema'
 import { requireAdmin } from '@/lib/auth'
+import { getWholesaleLines } from '@/lib/products'
 import { parseOrThrow } from '@/lib/validation/shared'
 import {
   reviewDecisionSchema,
@@ -72,6 +73,38 @@ export async function reviewApplication(
  * the listings with it — unlike suspending, which is reversible. That is the
  * whole difference between the two, and why the table asks before calling this.
  */
+/**
+ * Moves a shop to a different trade line.
+ *
+ * The only way this is ever set after approval: an approved seller is bounced
+ * from /wholesale/apply to their dashboard, so they never see the form again.
+ * Without this an approval filed against the wrong line — or the null one a
+ * shop approved before lines existed still carries — would be permanent.
+ *
+ * Existing listings are left where they are. They stay live until the seller
+ * next edits one, at which point the form corrects the value on save. Sweeping
+ * them would mean deciding what to do with stock in a category this shop can no
+ * longer reach, which is a bigger decision than a correction to one row.
+ */
+export async function setApplicationCategory(
+  id: string,
+  categorySlug: string,
+): Promise<void> {
+  await requireAdmin()
+
+  const lines = await getWholesaleLines()
+  if (!lines.some((line) => line.slug === categorySlug)) {
+    throw new Error('That is not a wholesale trade line')
+  }
+
+  await db
+    .update(wholesalerApplications)
+    .set({ categorySlug, updatedAt: new Date() })
+    .where(eq(wholesalerApplications.id, id))
+
+  refresh()
+}
+
 export async function deleteApplication(id: string): Promise<void> {
   await requireAdmin()
   await db

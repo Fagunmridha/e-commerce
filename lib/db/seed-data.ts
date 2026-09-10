@@ -1,5 +1,5 @@
 import type { Localized } from '@/lib/i18n'
-import type { CategorySlug, ProductColor } from '@/lib/types'
+import type { CategorySlug, CategoryScope, ProductColor } from '@/lib/types'
 
 /**
  * The initial catalogue. This file is the SOURCE used only by the seed script
@@ -11,6 +11,7 @@ export type SeedCategory = {
   slug: CategorySlug
   name: Localized
   image: string
+  scope: CategoryScope
 }
 
 export type SeedCatalogue = {
@@ -42,21 +43,29 @@ export const SEED_CATEGORIES: SeedCategory[] = [
     slug: 'men',
     name: { en: "Men's Wear", bn: 'পুরুষদের পোশাক' },
     image: u('1516257984-b1b4d707412e', 800),
+    // Shop aisles that wholesalers trade in too — see `scope` in schema.ts.
+    scope: 'both',
   },
   {
     slug: 'women',
     name: { en: "Women's Wear", bn: 'নারীদের পোশাক' },
     image: u('1483985988355-763728e1935b', 800),
+    // Shop aisles that wholesalers trade in too — see `scope` in schema.ts.
+    scope: 'both',
   },
   {
     slug: 'kids',
     name: { en: 'Kids Wear', bn: 'শিশুদের পোশাক' },
     image: u('1519238263530-99bdd11df2ea', 800),
+    // Shop aisles that wholesalers trade in too — see `scope` in schema.ts.
+    scope: 'both',
   },
   {
     slug: 'accessories',
     name: { en: 'Accessories', bn: 'অ্যাক্সেসরিজ' },
     image: u('1590874103328-eac38a683ce7', 800),
+    // Shop aisles that wholesalers trade in too — see `scope` in schema.ts.
+    scope: 'both',
   },
 ]
 

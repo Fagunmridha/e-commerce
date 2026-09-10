@@ -5,6 +5,7 @@ import { and, eq, isNull } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { users, wholesalerApplications, type WholesaleRole } from '@/lib/db/schema'
 import { getCurrentUser } from '@/lib/auth'
+import { getWholesaleLines } from '@/lib/products'
 import { parseOrThrow } from '@/lib/validation/shared'
 import {
   wholesaleApplicationSchema,
@@ -101,6 +102,16 @@ export async function submitWholesaleApplication(
     }
   }
 
+  // The schema can only say the field was filled in. Whether that slug exists,
+  // and whether it is a trade line rather than a category under one, are
+  // database questions — and this action is a public endpoint, so a
+  // hand-rolled request must not be able to book a shop into the
+  // storefront-only "kids" aisle, or into a line that does not exist.
+  const lines = await getWholesaleLines()
+  if (!lines.some((line) => line.slug === data.categorySlug)) {
+    return { ok: false, error: 'Pick a category from the list.' }
+  }
+
   const [existing] = await db
     .select({ status: wholesalerApplications.status })
     .from(wholesalerApplications)
@@ -120,6 +131,7 @@ export async function submitWholesaleApplication(
     userId: user.id,
     shopName: data.shopName,
     businessType: data.businessType,
+    categorySlug: data.categorySlug,
     taxToken: data.taxToken,
     binNumber: data.binNumber,
     tradeLicenseNo: data.tradeLicenseNo,
