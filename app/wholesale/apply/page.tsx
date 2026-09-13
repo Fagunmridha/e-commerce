@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { PageHeader } from '@/components/page-header'
 import { Redirecting } from '@/components/redirecting'
 import { WholesaleContent } from '@/components/wholesale/wholesale-content'
 import type { WholesaleApplicationView } from '@/components/wholesale/types'
@@ -93,15 +92,14 @@ export default async function WholesaleApplyPage() {
       }
     : null
 
+  // No `PageHeader`: `WholesaleContent` opens with its own hero, and the band
+  // above it made three headings in a row on the picker step.
   return (
-    <>
-      <PageHeader pageKey="wholesale" />
-      <WholesaleContent
-        application={application}
-        defaultName={user.name ?? ''}
-        defaultEmail={user.email}
-        lines={lines}
-      />
-    </>
+    <WholesaleContent
+      application={application}
+      defaultName={user.name ?? ''}
+      defaultEmail={user.email}
+      lines={lines}
+    />
   )
 }

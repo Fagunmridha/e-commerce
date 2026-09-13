@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { BadgeCheck, Clock, ShieldAlert, XCircle } from 'lucide-react'
+import { BadgeCheck, ChevronRight, Clock, ShieldAlert, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { Container } from '@/components/layout/container'
 import { useLanguage } from '@/components/language-provider'
 import { WholesaleForm } from '@/components/wholesale/wholesale-form'
 import { TradeLinePicker } from '@/components/wholesale/trade-line-picker'
@@ -54,71 +54,101 @@ export function WholesaleContent({
     application.status === 'rejected'
   const showForm = !application || editing || application.status === 'rejected'
 
+  /**
+   * One hero, and it says whichever step is actually on screen.
+   *
+   * The page used to stack three titles: the site's own `PageHeader` band, this
+   * component's heading, and then the picker's. They were each correct on their
+   * own and nonsense together — a reader scrolled past two headings to reach the
+   * thing they had come to do. `PageHeader` is gone from the route and the
+   * picker's heading moved here, so there is exactly one.
+   */
+  const hero =
+    showForm && pickingLine
+      ? { title: copy.linePicker.title, body: copy.linePicker.subtitle }
+      : { title: copy.title, body: copy.subtitle }
+
   return (
-    <div className="mx-auto max-w-page px-4 py-10 sm:px-6 sm:py-12 lg:px-4">
-      {application && (
-        <StatusCard
-          application={application}
-          onEdit={canEdit && !showForm ? () => setEditing(true) : undefined}
-        />
-      )}
-
-      {/* The benefits grid lives on /wholesale, which is where anyone arriving
-          here has just come from — repeating it would only push the form down. */}
-      {!application && (
-        <div className="mb-10">
-          <Badge variant="secondary" className="border-0">
-            {copy.badge}
-          </Badge>
-          <h2 className="mt-3 text-2xl font-bold text-foreground sm:text-3xl">
-            {copy.title}
-          </h2>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            {copy.subtitle}
-          </p>
-        </div>
-      )}
-
-      {showForm &&
-        (pickingLine ? (
-          <TradeLinePicker
-            lines={lines}
-            value={line}
-            onChange={setLine}
-            onContinue={() => setPickingLine(false)}
-          />
-        ) : (
-          <>
-            {/* What they picked, and the way back to change it. The form below
-                never asks again — the line is settled by the time it renders,
-                which is the whole point of splitting the two screens. */}
-            <div className="mb-6 flex flex-wrap items-center gap-3 rounded-lg border border-border px-4 py-3">
-              <span className="text-xs text-muted-foreground">
-                {copy.linePicker.chosen}
-              </span>
-              <span className="text-sm font-semibold text-foreground">
-                {lineName ? pick(lineName.name) : line}
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="ml-auto"
-                onClick={() => setPickingLine(true)}
+    <>
+      <section className="border-b border-border bg-muted/50">
+        <Container className="py-10 sm:py-12">
+          <div className="mx-auto max-w-2xl text-center">
+            <nav
+              aria-label="Breadcrumb"
+              className="flex items-center justify-center gap-1 text-xs text-muted-foreground"
+            >
+              <Link
+                href="/wholesale"
+                className="transition-colors hover:text-primary"
               >
-                {copy.linePicker.change}
-              </Button>
-            </div>
+                {t.pages.wholesale.breadcrumb}
+              </Link>
+              <ChevronRight className="size-3.5" aria-hidden="true" />
+              <span className="text-foreground">{copy.applyCta}</span>
+            </nav>
 
-            <WholesaleForm
-              application={application}
-              defaultName={defaultName}
-              defaultEmail={defaultEmail}
-              categorySlug={line}
-              onCancel={editing ? () => setEditing(false) : undefined}
+            <p className="mt-4 text-xs font-bold tracking-[0.18em] text-primary uppercase">
+              {copy.badge}
+            </p>
+            <h1 className="mt-2 text-display-sm text-balance text-foreground">
+              {hero.title}
+            </h1>
+            <p className="mx-auto mt-4 max-w-xl text-sm text-balance text-muted-foreground sm:text-base">
+              {hero.body}
+            </p>
+          </div>
+        </Container>
+      </section>
+
+      <Container className="py-10 sm:py-12">
+        {application && (
+          <StatusCard
+            application={application}
+            onEdit={canEdit && !showForm ? () => setEditing(true) : undefined}
+          />
+        )}
+
+        {showForm &&
+          (pickingLine ? (
+            <TradeLinePicker
+              lines={lines}
+              value={line}
+              onChange={setLine}
+              onContinue={() => setPickingLine(false)}
             />
-          </>
-        ))}
-    </div>
+          ) : (
+            <>
+              {/* What they picked, and the way back to change it. The form below
+                  never asks again — the line is settled by the time it renders,
+                  which is the whole point of splitting the two screens. */}
+              <div className="mb-6 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/40 px-4 py-3">
+                <span className="text-xs text-muted-foreground">
+                  {copy.linePicker.chosen}
+                </span>
+                <span className="text-sm font-semibold text-foreground">
+                  {lineName ? pick(lineName.name) : line}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="ml-auto"
+                  onClick={() => setPickingLine(true)}
+                >
+                  {copy.linePicker.change}
+                </Button>
+              </div>
+
+              <WholesaleForm
+                application={application}
+                defaultName={defaultName}
+                defaultEmail={defaultEmail}
+                categorySlug={line}
+                onCancel={editing ? () => setEditing(false) : undefined}
+              />
+            </>
+          ))}
+      </Container>
+    </>
   )
 }
 
