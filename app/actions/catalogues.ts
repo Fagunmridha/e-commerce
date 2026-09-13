@@ -4,6 +4,7 @@ import { revalidatePath, updateTag } from 'next/cache'
 import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { catalogues } from '@/lib/db/schema'
+import { isUniqueViolation } from '@/lib/db/errors'
 import { requireAdmin } from '@/lib/auth'
 import { catalogueSchema, type CatalogueInput } from '@/lib/validation/admin'
 import { parseOrThrow } from '@/lib/validation/shared'
@@ -36,12 +37,26 @@ export async function upsertCatalogue(input: CatalogueInput): Promise<void> {
     categorySlug: data.categorySlug,
     name: data.name,
     position: data.position,
+    status: data.status,
   }
 
-  await db
-    .insert(catalogues)
-    .values(values)
-    .onConflictDoUpdate({ target: catalogues.slug, set: values })
+  try {
+    await db
+      .insert(catalogues)
+      .values(values)
+      // `createdAt` stays out of the update — an edit is not a new row.
+      .onConflictDoUpdate({
+        target: catalogues.slug,
+        set: { ...values, updatedAt: new Date() },
+      })
+  } catch (error) {
+    if (isUniqueViolation(error, 'catalogues_category_name_idx')) {
+      throw new Error(
+        'A catalogue with that English name already exists in this category',
+      )
+    }
+    throw error
+  }
 
   refresh()
 }

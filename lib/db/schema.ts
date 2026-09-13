@@ -6,6 +6,7 @@ import {
   integer,
   jsonb,
   pgTable,
+  primaryKey,
   serial,
   text,
   timestamp,
@@ -13,6 +14,7 @@ import {
   uuid,
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
 import type { Localized } from '@/lib/i18n'
 import type { CategorySlug, ProductColor } from '@/lib/types'
 
@@ -79,7 +81,48 @@ export const categories = pgTable('categories', {
   parentSlug: text('parent_slug')
     .references((): AnyPgColumn => categories.slug, { onDelete: 'restrict' })
     .$type<CategorySlug>(),
-})
+  /**
+   * Admin-controlled order within the parent line; ties break on slug. Lines
+   * themselves order against each other, since they share a null parent.
+   *
+   * Stored rather than derived because the shop's aisles are an editorial
+   * decision — Men's before Women's is a choice about the storefront, not a
+   * fact about the rows. It replaces a hard-coded list of the four seeded
+   * slugs in `fetchAllCategories`, which sorted anything added later to the
+   * end by definition.
+   */
+  position: integer('position').notNull().default(0),
+  /**
+   * `inactive` takes the row out of every list a *new* choice is made from —
+   * the storefront tiles, the seller's product form, the admin's product form
+   * — while leaving `products.category` alone. Nothing is reassigned and
+   * nothing is deleted, so flipping it back restores the aisle whole.
+   *
+   * The filter lives in `getRetailCategories`/`getWholesaleCategories`, beside
+   * the scope filter; `getAllCategories` stays unfiltered because the admin
+   * console must be able to see and edit what it just switched off.
+   */
+  status: text('status', { enum: ['active', 'inactive'] })
+    .notNull()
+    .default('active'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [
+  // Every read of the tree orders by position within a parent.
+  index('categories_parent_position_idx').on(table.parentSlug, table.position),
+  /**
+   * No two rows under the same parent may share an English name.
+   *
+   * `coalesce` is load-bearing: Postgres treats NULLs as distinct in a unique
+   * index, so without it two trade lines could both be called "Electronics" —
+   * which is exactly the pair an admin is most likely to create by accident.
+   * Lower-cased so "Jeans" and "jeans" collide too.
+   */
+  uniqueIndex('categories_parent_name_idx').on(
+    sql`coalesce(${table.parentSlug}, '')`,
+    sql`lower(${table.name}->>'en')`,
+  ),
+])
 
 /**
  * The second level of the catalogue tree: "Jeans" and "Shirts" under Men's,
@@ -103,8 +146,19 @@ export const catalogues = pgTable('catalogues', {
   name: jsonb('name').$type<Localized>().notNull(),
   /** Admin-controlled order within the parent category; ties break on slug. */
   position: integer('position').notNull().default(0),
+  /** Same meaning as `categories.status`: hidden from new choices, not deleted. */
+  status: text('status', { enum: ['active', 'inactive'] })
+    .notNull()
+    .default('active'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => [
   index('catalogues_category_slug_idx').on(table.categorySlug),
+  /** As on `categories` — no duplicate English names under one category. */
+  uniqueIndex('catalogues_category_name_idx').on(
+    table.categorySlug,
+    sql`lower(${table.name}->>'en')`,
+  ),
 ])
 
 export const products = pgTable('products', {
@@ -202,6 +256,39 @@ export const products = pgTable('products', {
    * marketplace listing.
    */
   commissionPct: integer('commission_pct'),
+  /**
+   * Whether this listing may be seen by anyone but its owner.
+   *
+   * Defaulted to `approved`, which is load-bearing in two directions. Every row
+   * that existed before this column did is live stock that must stay live —
+   * defaulting to `pending` would have emptied the marketplace on deploy. And a
+   * *house* product is written by the admin, who is the approver: sending the
+   * store owner's own stock into a queue they would then have to approve is a
+   * loop with no one else in it. `upsertSellerProduct` writes `pending`
+   * explicitly, which is the only path that needs a verdict.
+   *
+   * `draft` is in the enum because the workflow names it; nothing writes it
+   * yet — there is no "save without submitting" on the seller form. Every state
+   * other than `approved` is treated identically by the read gates, so adding
+   * the door later changes no query.
+   *
+   * Separate from `wholesaler_applications.status`, which gates the whole shop.
+   * Both have to say yes: suspending a shop hides approved listings, and a
+   * rejected listing stays hidden under an approved shop.
+   */
+  approvalStatus: text('approval_status', {
+    enum: ['draft', 'pending', 'approved', 'rejected', 'suspended'],
+  })
+    .notNull()
+    .default('approved'),
+  /** Why it was turned down — shown to the seller, who fixes it and resubmits. */
+  rejectionReason: text('rejection_reason'),
+  /** When it last entered the queue. Null on house stock, which never does. */
+  submittedAt: timestamp('submitted_at'),
+  reviewedAt: timestamp('reviewed_at'),
+  reviewedByUserId: integer('reviewed_by_user_id').references(() => users.id, {
+    onDelete: 'set null',
+  }),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 }, (table) => [
   // Every catalogue read filters on `seller_id IS NULL` (house stock) or joins
@@ -212,6 +299,97 @@ export const products = pgTable('products', {
   index('products_category_idx').on(table.category),
   index('products_catalogue_slug_idx').on(table.catalogueSlug),
   index('products_created_at_idx').on(table.createdAt),
+  // The admin's review queue is "marketplace listings awaiting a verdict", and
+  // every marketplace read now filters on this column as well as the join.
+  index('products_approval_status_idx').on(table.approvalStatus),
+])
+
+/**
+ * What an admin decides a product in a given part of the tree has to say about
+ * itself — Size and Fabric under Clothing, RAM and Warranty under Electronics.
+ *
+ * A definition table rather than columns on `products`, because the fields are
+ * the admin's to invent: adding "Screen size" to Electronics must not be a
+ * migration, and a `products` table with one nullable column per attribute any
+ * category ever wanted is a table that only grows.
+ *
+ * `scopeSlug` points at a `categories` row and is read *inclusively*: a
+ * definition on a trade line applies to every category under it, so "Brand" is
+ * declared once on Electronics rather than again on Mobile, Laptop and TV. A
+ * definition on a leaf category applies only there. That is the whole
+ * inheritance rule — see `definitionsForCategory` in lib/attributes.ts, which
+ * is the one place it is implemented.
+ */
+export const attributeDefinitions = pgTable('attribute_definitions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  scopeSlug: text('scope_slug')
+    .notNull()
+    .references(() => categories.slug, { onDelete: 'cascade' })
+    .$type<CategorySlug>(),
+  /**
+   * The machine name, unique within its scope — `ram`, `fabric`. Stable across
+   * renames of the label, because it is what `product_attribute_values` rows
+   * are read back by in every report anyone ever writes.
+   */
+  key: text('key').notNull(),
+  label: jsonb('label').$type<Localized>().notNull(),
+  /**
+   * How the field is drawn and what a value means. `select` reads `options`;
+   * the rest ignore it. Kept deliberately small — four types cover every
+   * example in the brief, and a fifth is a migration away when one does not.
+   */
+  type: text('type', {
+    enum: ['text', 'number', 'select', 'boolean'],
+  })
+    .notNull()
+    .default('text'),
+  /** `select` only: the choices, in the order they are offered. */
+  options: jsonb('options').$type<Localized[]>(),
+  /** A required attribute blocks the product form until it is answered. */
+  required: boolean('required').notNull().default(false),
+  position: integer('position').notNull().default(0),
+  /** `inactive` stops it being asked for without discarding answers already given. */
+  status: text('status', { enum: ['active', 'inactive'] })
+    .notNull()
+    .default('active'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex('attribute_definitions_scope_key_idx').on(
+    table.scopeSlug,
+    table.key,
+  ),
+  index('attribute_definitions_scope_position_idx').on(
+    table.scopeSlug,
+    table.position,
+  ),
+])
+
+/**
+ * One product's answer to one definition.
+ *
+ * `value` is text whatever the definition's type says, and the type is applied
+ * on the way in and out rather than in the column. A per-type column set
+ * (`value_text`, `value_number`, …) buys nothing here: nothing sorts or sums
+ * across attributes, every read is "this product's specs", and a single column
+ * keeps the write one row per answer instead of one row per answer per shape.
+ *
+ * Both foreign keys cascade. Deleting a product takes its specs, and deleting a
+ * definition takes every answer to it — an answer to a question nobody asks any
+ * more is not data, it is litter. Switching the definition to `inactive` is the
+ * move that keeps the answers.
+ */
+export const productAttributeValues = pgTable('product_attribute_values', {
+  productId: text('product_id')
+    .notNull()
+    .references(() => products.id, { onDelete: 'cascade' }),
+  definitionId: uuid('definition_id')
+    .notNull()
+    .references(() => attributeDefinitions.id, { onDelete: 'cascade' }),
+  value: text('value').notNull(),
+}, (table) => [
+  primaryKey({ columns: [table.productId, table.definitionId] }),
+  index('product_attribute_values_definition_idx').on(table.definitionId),
 ])
 
 /** Extra gallery shots; the primary `products.image` is always shown first. */
@@ -552,9 +730,13 @@ export const wholesalerApplications = pgTable('wholesaler_applications', {
     enum: ['retail_shop', 'distributor', 'online_seller', 'other'],
   }).notNull(),
   /**
-   * The one trade line this shop deals in — a top-level `categories` row
-   * ("Cloth", "Electronics"). Whether a given listing is Men's or Women's is
-   * the seller's choice per product; this row only draws the boundary.
+   * The shop's *primary* trade line — the first one it was approved for.
+   *
+   * `wholesaler_trade_lines` is the source of truth for what a shop may list
+   * under; this is kept beside it as the one-line answer every screen that only
+   * has room for one wants ("Cloth shop"), and as the fallback for a shop
+   * approved before that table existed, whose grants the migration backfilled
+   * but whose code path predates it.
    *
    * Nullable, because every shop approved before this column existed has none,
    * and an approved seller cannot resubmit their application to fill it in —
@@ -618,6 +800,47 @@ export const wholesalerApplications = pgTable('wholesaler_applications', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 })
+
+/**
+ * Which trade lines a shop asked for, and which of those an admin granted.
+ *
+ * A shop deals in more than one line — cloth and cosmetics out of the same
+ * warehouse is ordinary — and the single `wholesaler_applications.category_slug`
+ * could only ever hold the first. A join table rather than an array column
+ * because the *verdict* is per line: an admin approves Clothing and refuses
+ * Cosmetics on one application, and that is a fact about the pair, not about
+ * either row alone.
+ *
+ * `requested` is what the applicant picked; `approved` is what they may
+ * actually list under. A row is never deleted on refusal — it stays
+ * `requested`, so the review screen keeps showing what was asked for and an
+ * admin can grant it later without the shop reapplying.
+ *
+ * CASCADE on both sides. Deleting an application takes its lines with it, as it
+ * does its listings. Deleting a *category* takes the grant with it too — a
+ * composite primary key has no null to fall back to, unlike
+ * `wholesaler_applications.category_slug`. The admin's delete confirmation
+ * already counts the shops attached to a category, which is where that is said.
+ */
+export const wholesalerTradeLines = pgTable('wholesaler_trade_lines', {
+  applicationId: uuid('application_id')
+    .notNull()
+    .references(() => wholesalerApplications.id, { onDelete: 'cascade' }),
+  categorySlug: text('category_slug')
+    .notNull()
+    .references(() => categories.slug, { onDelete: 'cascade' })
+    .$type<CategorySlug>(),
+  status: text('status', { enum: ['requested', 'approved'] })
+    .notNull()
+    .default('requested'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.applicationId, table.categorySlug] }),
+  // Every read is "the lines for this shop"; the primary key's leading column
+  // already serves it, and this is here for the reverse — "which shops trade in
+  // this line", which the category delete warning counts.
+  index('wholesaler_trade_lines_category_idx').on(table.categorySlug),
+])
 
 /**
  * What the store owes one shop for one order.

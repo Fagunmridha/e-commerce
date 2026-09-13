@@ -3,7 +3,7 @@
 import { revalidatePath, updateTag } from 'next/cache'
 import { eq, inArray } from 'drizzle-orm'
 import { db } from '@/lib/db'
-import { wholesalerApplications } from '@/lib/db/schema'
+import { wholesalerApplications, wholesalerTradeLines } from '@/lib/db/schema'
 import { requireAdmin } from '@/lib/auth'
 import { getWholesaleLines } from '@/lib/products'
 import { parseOrThrow } from '@/lib/validation/shared'
@@ -74,33 +74,72 @@ export async function reviewApplication(
  * whole difference between the two, and why the table asks before calling this.
  */
 /**
- * Moves a shop to a different trade line.
+ * Grants a shop exactly this set of trade lines — the admin's half of the
+ * application, and the only thing that decides what a seller may list under.
  *
- * The only way this is ever set after approval: an approved seller is bounced
- * from /wholesale/apply to their dashboard, so they never see the form again.
- * Without this an approval filed against the wrong line — or the null one a
- * shop approved before lines existed still carries — would be permanent.
+ * The set is replaced rather than added to, so unticking a line revokes it.
+ * Revoking writes the row back to `requested` instead of deleting it: what the
+ * applicant asked for is a fact about their application and must survive the
+ * verdict, otherwise an admin who unticks Cosmetics can never see that it was
+ * ever wanted.
+ *
+ * `category_slug` is re-stamped to the first grant, so the one-line answer
+ * every summary screen shows agrees with the grants. It is deliberately not
+ * cleared when nothing is granted — a shop mid-review keeps the line it had.
  *
  * Existing listings are left where they are. They stay live until the seller
  * next edits one, at which point the form corrects the value on save. Sweeping
  * them would mean deciding what to do with stock in a category this shop can no
  * longer reach, which is a bigger decision than a correction to one row.
  */
-export async function setApplicationCategory(
+export async function setApplicationLines(
   id: string,
-  categorySlug: string,
+  categorySlugs: string[],
 ): Promise<void> {
   await requireAdmin()
 
+  const granted = [...new Set(categorySlugs)]
   const lines = await getWholesaleLines()
-  if (!lines.some((line) => line.slug === categorySlug)) {
+  const known = new Set(lines.map((line) => line.slug))
+
+  if (!granted.every((slug) => known.has(slug))) {
     throw new Error('That is not a wholesale trade line')
   }
 
-  await db
-    .update(wholesalerApplications)
-    .set({ categorySlug, updatedAt: new Date() })
-    .where(eq(wholesalerApplications.id, id))
+  // Neon's HTTP driver has no interactive transaction, so this is one batch:
+  // the demotion and the grants cannot land apart and leave a shop holding
+  // neither. `onConflictDoUpdate` rather than insert — the row usually already
+  // exists as `requested`, which is how it got in front of the admin.
+  await db.batch([
+    db
+      .update(wholesalerTradeLines)
+      .set({ status: 'requested' })
+      .where(eq(wholesalerTradeLines.applicationId, id)),
+    ...(granted.length > 0
+      ? ([
+          db
+            .insert(wholesalerTradeLines)
+            .values(
+              granted.map((slug) => ({
+                applicationId: id,
+                categorySlug: slug,
+                status: 'approved' as const,
+              })),
+            )
+            .onConflictDoUpdate({
+              target: [
+                wholesalerTradeLines.applicationId,
+                wholesalerTradeLines.categorySlug,
+              ],
+              set: { status: 'approved' as const },
+            }),
+          db
+            .update(wholesalerApplications)
+            .set({ categorySlug: granted[0], updatedAt: new Date() })
+            .where(eq(wholesalerApplications.id, id)),
+        ] as const)
+      : []),
+  ])
 
   refresh()
 }

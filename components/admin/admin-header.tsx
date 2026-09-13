@@ -79,15 +79,21 @@ export function AdminHeader({
   pendingOrders,
   pendingWholesalers = 0,
   pendingReviews = 0,
+  pendingListings = 0,
   newMessages = 0,
 }: {
   pendingOrders: number
   pendingWholesalers?: number
   pendingReviews?: number
+  pendingListings?: number
   newMessages?: number
 }) {
   const pendingTotal =
-    pendingOrders + pendingWholesalers + pendingReviews + newMessages
+    pendingOrders +
+    pendingWholesalers +
+    pendingReviews +
+    pendingListings +
+    newMessages
   const pathname = usePathname()
   const router = useRouter()
   const [paletteOpen, setPaletteOpen] = useState(false)
@@ -204,6 +210,14 @@ export function AdminHeader({
                 <Link href="/admin/reviews?status=pending">
                   {pendingReviews} review{pendingReviews === 1 ? '' : 's'} to
                   approve
+                </Link>
+              </DropdownMenuItem>
+            )}
+            {pendingListings > 0 && (
+              <DropdownMenuItem asChild>
+                <Link href="/admin/products/review">
+                  {pendingListings} listing{pendingListings === 1 ? '' : 's'} to
+                  review
                 </Link>
               </DropdownMenuItem>
             )}

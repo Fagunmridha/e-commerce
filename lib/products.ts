@@ -129,6 +129,9 @@ function toProduct(
     // Null means "use the store default", exactly as for the advance below. A
     // stored 0 — a shop carried at cost — is a real choice and must survive.
     commissionPct: row.commissionPct ?? undefined,
+    approvalStatus: row.approvalStatus,
+    rejectionReason: row.rejectionReason ?? undefined,
+    submittedAt: row.submittedAt?.toISOString(),
     // False is the overwhelming majority, so it is left undefined rather than
     // shipped on every row — consumers test it for truthiness either way.
     preorder: row.preorder || undefined,
@@ -172,11 +175,15 @@ export const getAllProducts = unstable_cache(fetchAllProducts, ['all-products-v2
 /**
  * Everything listed by approved wholesalers, newest first.
  *
- * The join is the visibility gate, not decoration — drop it and a suspended
- * shop's stock reappears in the market. The shop *name* is deliberately not
- * selected: this feeds the client `CatalogueProvider`, so anything on these
- * rows is serialised into the buyer's page, and the buyer must not learn which
- * wholesaler supplied what.
+ * Two gates, not one, and both are load-bearing. The join is the shop's
+ * standing — drop it and a suspended shop's stock reappears in the market. The
+ * `approval_status` filter is the *listing's* own — drop it and a seller
+ * publishes to the marketplace by pressing Save, which is the whole point of
+ * the queue. A rejected listing under an approved shop fails the second.
+ *
+ * The shop *name* is deliberately not selected: this feeds the client
+ * `CatalogueProvider`, so anything on these rows is serialised into the buyer's
+ * page, and the buyer must not learn which wholesaler supplied what.
  */
 async function fetchWholesaleProducts(): Promise<Product[]> {
   const [rows, aggregates] = await Promise.all([
@@ -187,7 +194,12 @@ async function fetchWholesaleProducts(): Promise<Product[]> {
         wholesalerApplications,
         eq(products.sellerId, wholesalerApplications.id),
       )
-      .where(eq(wholesalerApplications.status, 'approved'))
+      .where(
+        and(
+          eq(wholesalerApplications.status, 'approved'),
+          eq(products.approvalStatus, 'approved'),
+        ),
+      )
       .orderBy(desc(products.createdAt), asc(products.id)),
     reviewAggregates(),
   ])
@@ -382,8 +394,14 @@ async function loadProductDetail(
   // the viewer is an approved wholesaler — see the note on the gate below. The
   // shop's *name* is deliberately not carried through: the buyer trades with
   // the store, not with whoever supplied the goods.
-  if (row.sellerId && !(await sellerIsVisible(row.sellerId))) {
-    return EMPTY_DETAIL
+  //
+  // The listing's own verdict is checked first and without a round trip: a
+  // pending or rejected marketplace listing must not resolve by URL either,
+  // and asking about the shop before asking about the row would be a query
+  // spent on an answer that cannot matter.
+  if (row.sellerId) {
+    if (row.approvalStatus !== 'approved') return EMPTY_DETAIL
+    if (!(await sellerIsVisible(row.sellerId))) return EMPTY_DETAIL
   }
 
   return {
@@ -489,6 +507,36 @@ export async function getSellerProductById(
     .where(and(eq(products.id, id), eq(products.sellerId, shopId)))
 
   return row ? toProduct(row, await reviewAggregate(id)) : undefined
+}
+
+/**
+ * The admin's review queue: marketplace listings waiting on a verdict, oldest
+ * first, because the shop that has been waiting longest should be answered
+ * first.
+ *
+ * `seller_id IS NOT NULL` is the whole definition of "a listing" here — house
+ * stock is the admin's own and defaults to `approved`, so it would never appear
+ * anyway, but saying so keeps the queue's meaning in the query rather than in a
+ * column default. The shop name *is* selected: the reviewer is the admin, who
+ * is deciding about a particular shop and needs to know which.
+ */
+export async function getPendingListings(): Promise<Product[]> {
+  const [rows, aggregates] = await Promise.all([
+    db
+      .select({ product: products, shopName: wholesalerApplications.shopName })
+      .from(products)
+      .innerJoin(
+        wholesalerApplications,
+        eq(products.sellerId, wholesalerApplications.id),
+      )
+      .where(eq(products.approvalStatus, 'pending'))
+      .orderBy(asc(products.submittedAt), asc(products.id)),
+    reviewAggregates(),
+  ])
+
+  return rows.map((row) =>
+    toProduct(row.product, aggregates.get(row.product.id), row.shopName),
+  )
 }
 
 /** A single shop's listings, live or hidden — powers the seller dashboard. */
@@ -690,16 +738,10 @@ async function fetchAllCategories(): Promise<Category[]> {
 
   const countMap = new Map(counts.map((row) => [row.category, Number(row.count)]))
 
-  // The four seeded categories keep their editorial order; anything the admin
-  // adds later sorts alphabetically after them. `indexOf` returns -1 for an
-  // unknown slug, so it has to be mapped past the end of the known list rather
-  // than used directly — otherwise new categories would sort to the front.
-  const order: CategorySlug[] = ['men', 'women', 'kids', 'accessories']
-  const rank = (slug: CategorySlug) => {
-    const index = order.indexOf(slug)
-    return index === -1 ? order.length : index
-  }
-
+  // Ordered by the admin's own `position`, slug breaking ties. This used to be
+  // a hard-coded list of the four seeded slugs, which sorted anything added
+  // later to the end by definition — a store that trades in Electronics could
+  // never put it first. The seeded order survives as the backfilled positions.
   return rows
     .map((row) => ({
       slug: row.slug as CategorySlug,
@@ -709,8 +751,10 @@ async function fetchAllCategories(): Promise<Category[]> {
       itemCount: countMap.get(row.slug as CategorySlug) ?? 0,
       scope: row.scope,
       parentSlug: row.parentSlug ?? null,
+      position: row.position,
+      status: row.status,
     }))
-    .sort((a, b) => rank(a.slug) - rank(b.slug) || a.slug.localeCompare(b.slug))
+    .sort((a, b) => a.position - b.position || a.slug.localeCompare(b.slug))
 }
 
 /**
@@ -731,16 +775,26 @@ export const getAllCategories = unstable_cache(
  *
  * Derived from the one cached fetch rather than a query of its own, so the
  * split costs nothing and the lists can never disagree about a row.
+ *
+ * `inactive` rows are dropped here and in every helper below. That makes this
+ * the boundary the admin's switch acts on: the console reads `getAllCategories`
+ * and still sees what it turned off, while nothing a shopper or a seller picks
+ * from offers it. Existing `products.category` values are untouched.
  */
 export async function getRetailCategories(): Promise<Category[]> {
   const all = await getAllCategories()
-  return all.filter((c) => c.scope === 'retail' || c.scope === 'both')
+  return all.filter(
+    (c) => c.status === 'active' && (c.scope === 'retail' || c.scope === 'both'),
+  )
 }
 
 /** Everything usable on the trade side — lines and their children alike. */
 export async function getWholesaleCategories(): Promise<Category[]> {
   const all = await getAllCategories()
-  return all.filter((c) => c.scope === 'wholesale' || c.scope === 'both')
+  return all.filter(
+    (c) =>
+      c.status === 'active' && (c.scope === 'wholesale' || c.scope === 'both'),
+  )
 }
 
 /**
@@ -773,6 +827,7 @@ async function fetchAllCatalogues(): Promise<Catalogue[]> {
     categorySlug: row.categorySlug,
     name: row.name,
     position: row.position,
+    status: row.status,
   }))
 }
 
@@ -781,6 +836,20 @@ export const getAllCatalogues = unstable_cache(
   ['all-catalogues'],
   { tags: ['catalogue'], revalidate: 60 },
 )
+
+/**
+ * The catalogues anything may still be filed under — the mirror of
+ * `getRetailCategories` one level down, and what every picker and filter chip
+ * outside the admin console reads.
+ *
+ * A product already filed under a switched-off catalogue keeps its
+ * `catalogue_slug`; it simply shows under "All" until the row is switched back
+ * on, which is the same bargain an uncatalogued product has always had.
+ */
+export async function getActiveCatalogues(): Promise<Catalogue[]> {
+  const all = await getAllCatalogues()
+  return all.filter((catalogue) => catalogue.status === 'active')
+}
 
 export async function getCategory(
   slug: CategorySlug,

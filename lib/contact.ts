@@ -89,13 +89,3 @@ export async function getContactStatusCounts(): Promise<
   }
   return counts
 }
-
-/** Drives the admin header bell, beside pending orders, reviews and applications. */
-export async function getNewContactCount(): Promise<number> {
-  const [row] = await db
-    .select({ n: count() })
-    .from(contactMessages)
-    .where(eq(contactMessages.status, 'new'))
-
-  return row?.n ?? 0
-}

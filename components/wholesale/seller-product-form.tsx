@@ -15,7 +15,14 @@ import { useCatalogue } from '@/components/catalogue-provider'
 import { upsertSellerProduct } from '@/app/actions/seller-products'
 import { splitCommission } from '@/lib/commission'
 import { formatPrice } from '@/lib/currency'
-import { categoriesInLine } from '@/lib/category-tree'
+import { categoriesInLine, categoriesInLines } from '@/lib/category-tree'
+import {
+  definitionsForCategory,
+  firstMissing,
+  toValueMap,
+} from '@/lib/attribute-tree'
+import { ProductAttributeFields } from '@/components/product-attribute-fields'
+import type { AttributeDefinition, AttributeValue } from '@/lib/attribute-tree'
 import type { CategorySlug, Product } from '@/lib/types'
 
 /**
@@ -31,27 +38,54 @@ import type { CategorySlug, Product } from '@/lib/types'
 export function SellerProductForm({
   product,
   defaultCommissionPct,
-  sellerLine,
+  sellerLines,
+  definitions,
+  attributeValues = [],
 }: {
   product?: Product
   defaultCommissionPct: number
+  /** Every admin-defined field in the store; narrowed per category below. */
+  definitions: AttributeDefinition[]
+  /** This listing's stored answers, on the edit screen. */
+  attributeValues?: AttributeValue[]
   /**
-   * The trade line this shop was approved for. Null for a shop approved before
-   * lines existed — those keep the full list until an admin sets one.
+   * The trade lines this shop was approved for. Empty for a shop approved
+   * before lines existed — those keep the full list until an admin grants some.
    */
-  sellerLine: CategorySlug | null
+  sellerLines: CategorySlug[]
 }) {
   const router = useRouter()
   const { t, pick } = useLanguage()
   const { wholesaleCategories, catalogues } = useCatalogue()
   const copy = t.wholesale.dashboard
 
-  // Where this shop may file a listing. A line with no sub-categories is its
-  // own only destination, which `categoriesInLine` already answers — see
-  // lib/category-tree.ts, the same module the server action checks against.
-  const categories = sellerLine
-    ? categoriesInLine(wholesaleCategories, sellerLine)
-    : wholesaleCategories
+  // Where this shop may file a listing, across every line it was approved for.
+  // A line with no sub-categories is its own only destination, which
+  // `categoriesInLines` already answers — see lib/category-tree.ts, the same
+  // module the server action checks against.
+  const categories =
+    sellerLines.length > 0
+      ? categoriesInLines(wholesaleCategories, sellerLines)
+      : wholesaleCategories
+
+  /**
+   * The same list, split by trade line, for a shop approved for more than one.
+   *
+   * An `<optgroup>` rather than a second "pick a line" select above this one:
+   * it puts the line in front of the seller — the thing requirement-17 calls
+   * step 1 — without a second piece of state that can disagree with the first,
+   * and without changing the shape of the form for the ordinary one-line shop.
+   *
+   * A childless line is its own category, so it labels its own group.
+   */
+  const grouped = sellerLines.map((slug) => {
+    const line = wholesaleCategories.find((category) => category.slug === slug)
+    return {
+      slug,
+      label: line ? pick(line.name) : slug,
+      categories: categoriesInLine(wholesaleCategories, slug),
+    }
+  })
 
   const [pending, setPending] = useState(false)
 
@@ -78,11 +112,35 @@ export function SellerProductForm({
   const set = (key: keyof typeof form, value: string) =>
     setForm((current) => ({ ...current, [key]: value }))
 
+  /**
+   * The admin-defined fields for the category currently picked, and this
+   * listing's answers to them.
+   *
+   * The answers are keyed by definition id and kept across a category change on
+   * purpose: moving a shirt from Men's to Women's should not throw away its
+   * fabric, and `attributeWrites` drops any answer whose definition no longer
+   * applies on the way in — so nothing wrong can be saved either way.
+   */
+  const fields = definitionsForCategory(
+    definitions,
+    wholesaleCategories,
+    form.category,
+  )
+  const [attributes, setAttributes] = useState(() => toValueMap(attributeValues))
+  const setAttribute = (definitionId: string, value: string) =>
+    setAttributes((current) => ({ ...current, [definitionId]: value }))
+
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault()
 
     if (!form.name.trim() || !form.image.trim() || !form.price.trim()) {
       toast.error(copy.failed, { description: copy.required })
+      return
+    }
+
+    const missing = firstMissing(fields, attributes)
+    if (missing) {
+      toast.error(copy.failed, { description: pick(missing.label) })
       return
     }
 
@@ -100,6 +158,10 @@ export function SellerProductForm({
         ? form.sizes.split(',').map((size) => size.trim()).filter(Boolean)
         : null,
       description: form.description.trim() || null,
+      attributes: Object.entries(attributes).map(([definitionId, value]) => ({
+        definitionId,
+        value,
+      })),
     })
 
     if (!result.ok) {
@@ -158,14 +220,24 @@ export function SellerProductForm({
                 }}
                 className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
               >
-                {categories.map((category) => (
-                  <option key={category.slug} value={category.slug}>
-                    {pick(category.name)}
-                  </option>
-                ))}
+                {grouped.length > 1
+                  ? grouped.map((group) => (
+                      <optgroup key={group.slug} label={group.label}>
+                        {group.categories.map((category) => (
+                          <option key={category.slug} value={category.slug}>
+                            {pick(category.name)}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))
+                  : categories.map((category) => (
+                      <option key={category.slug} value={category.slug}>
+                        {pick(category.name)}
+                      </option>
+                    ))}
               </select>
               <p className="text-xs text-muted-foreground">
-                {sellerLine ? copy.categoryLine : copy.categoryUnset}
+                {sellerLines.length > 0 ? copy.categoryLine : copy.categoryUnset}
               </p>
             </Field>
           )}
@@ -191,6 +263,27 @@ export function SellerProductForm({
           )}
         </CardContent>
       </Card>
+
+      {/* Whatever the admin decided a product in this category must state.
+          Its own card rather than more fields in Basic Details: the set
+          changes as the category changes, and mixing it into a fixed block
+          makes the form look like it lost fields when it did not. */}
+      {fields.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{copy.specs}</CardTitle>
+            <CardDescription>{copy.specsHint}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ProductAttributeFields
+              definitions={fields}
+              values={attributes}
+              onChange={setAttribute}
+              pick={pick}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

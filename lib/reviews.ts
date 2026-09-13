@@ -163,13 +163,3 @@ export async function getReviewStatusCounts(): Promise<
   }
   return counts
 }
-
-/** Drives the admin header bell, beside pending orders and applications. */
-export async function getPendingReviewCount(): Promise<number> {
-  const [row] = await db
-    .select({ n: count() })
-    .from(reviews)
-    .where(eq(reviews.status, 'pending'))
-
-  return row?.n ?? 0
-}

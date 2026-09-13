@@ -17,7 +17,7 @@ import { getDictionary } from '@/lib/dictionaries'
 import { getServerLocale, getServerLocales } from '@/lib/server-locale'
 import {
   getAllProducts,
-  getAllCatalogues,
+  getActiveCatalogues,
   getRetailCategories,
   getWholesaleCategories,
   getPreorderProducts,
@@ -117,7 +117,7 @@ export default async function RootLayout({
     getPreorderProducts(),
     getRetailCategories(),
     getWholesaleCategories(),
-    getAllCatalogues(),
+    getActiveCatalogues(),
   ])
 
   // Marketplace listings go into the context only for someone who can act on

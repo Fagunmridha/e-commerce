@@ -2,6 +2,7 @@ import {
   CalendarClock,
   Layers,
   LayoutDashboard,
+  ListChecks,
   Mail,
   MessageSquareQuote,
   Package,
@@ -53,6 +54,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
         children: [
           { href: '/admin/products', label: 'All products' },
           { href: '/admin/products/new', label: 'Add product' },
+          { href: '/admin/products/review', label: 'Review listings' },
         ],
       },
       // Above Catalogues: a catalogue hangs off a category, so the tree reads
@@ -66,6 +68,13 @@ export const ADMIN_NAV: AdminNavGroup[] = [
         href: '/admin/catalogues',
         label: 'Catalogues',
         icon: Layers,
+      },
+      // Under the tree it hangs off: a product field is declared against a
+      // line or a category, so it belongs beside them rather than in Products.
+      {
+        href: '/admin/attributes',
+        label: 'Product fields',
+        icon: ListChecks,
       },
       {
         href: '/admin/preorders',

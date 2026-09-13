@@ -18,6 +18,7 @@ export async function getAdminCatalogues(): Promise<
       categorySlug: catalogues.categorySlug,
       name: catalogues.name,
       position: catalogues.position,
+      status: catalogues.status,
       productCount: sql<string>`count(${products.id})`,
     })
     .from(catalogues)

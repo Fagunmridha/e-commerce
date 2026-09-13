@@ -4,7 +4,11 @@ import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SellerProductForm } from '@/components/wholesale/seller-product-form'
 import { SetBreadcrumbLabel } from '@/components/breadcrumb-label'
-import { getViewerShop } from '@/lib/wholesalers'
+import { getApplicationLines, getViewerShop } from '@/lib/wholesalers'
+import {
+  getAllAttributeDefinitions,
+  getProductAttributes,
+} from '@/lib/attributes'
 import { getSellerProductById } from '@/lib/products'
 import { getServerDictionary } from '@/lib/server-locale'
 import { getStoreSettings } from '@/app/actions/settings'
@@ -22,11 +26,15 @@ export default async function EditSellerProductPage({
 
   // Scoped by shop, so another seller's id is a 404 rather than a form that
   // silently refuses to save.
-  const [product, t, settings] = await Promise.all([
-    getSellerProductById(shop.id, id),
-    getServerDictionary(),
-    getStoreSettings(),
-  ])
+  const [product, t, settings, lines, definitions, attributeValues] =
+    await Promise.all([
+      getSellerProductById(shop.id, id),
+      getServerDictionary(),
+      getStoreSettings(),
+      getApplicationLines(shop),
+      getAllAttributeDefinitions(),
+      getProductAttributes(id),
+    ])
   if (!product) notFound()
 
   return (
@@ -55,7 +63,9 @@ export default async function EditSellerProductPage({
       <SellerProductForm
         product={product}
         defaultCommissionPct={settings.defaultCommissionPct}
-        sellerLine={shop.categorySlug}
+        sellerLines={lines.approved}
+        definitions={definitions}
+        attributeValues={attributeValues}
       />
     </div>
   )

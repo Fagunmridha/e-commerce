@@ -16,7 +16,7 @@ import {
 } from '@/lib/admin/wholesaler-status'
 import {
   reviewApplication,
-  setApplicationCategory,
+  setApplicationLines,
 } from '@/app/actions/wholesalers'
 
 export type ApplicationDetailView = {
@@ -38,9 +38,11 @@ export type ApplicationDetailView = {
   reviewNote: string | null
   reviewedBy: string | null
   reviewedAt: string | null
-  /** The shop's trade line, and every line it could be moved to. */
-  categorySlug: string | null
+  /** Every line this shop could be granted. */
   lines: { slug: string; name: string }[]
+  /** What the applicant asked for, and what has actually been granted. */
+  requestedLines: string[]
+  approvedLines: string[]
 }
 
 export function ApplicationReview({
@@ -51,12 +53,16 @@ export function ApplicationReview({
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [note, setNote] = useState(application.reviewNote ?? '')
-  const [line, setLine] = useState(application.categorySlug ?? '')
+  // A shop trades in one line. `setApplicationLines` still takes a list — the
+  // join table is keyed per line and the verdict is per pair — so this sends a
+  // list of one rather than a second action that means almost the same thing.
+  const [granted, setGranted] = useState(application.approvedLines[0] ?? '')
+  const dirty = granted !== (application.approvedLines[0] ?? '')
 
-  const saveLine = () =>
+  const saveLines = () =>
     startTransition(async () => {
       try {
-        await setApplicationCategory(application.id, line)
+        await setApplicationLines(application.id, granted ? [granted] : [])
         toast.success('Trade line updated')
         router.refresh()
       } catch (error) {
@@ -252,32 +258,35 @@ export function ApplicationReview({
           <div className="flex flex-wrap gap-3">
             <select
               id="trade-line"
-              value={line}
-              onChange={(event) => setLine(event.target.value)}
+              value={granted}
+              onChange={(event) => setGranted(event.target.value)}
               className="h-9 min-w-48 rounded-md border border-border bg-background px-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
             >
-              <option value="" disabled>
-                Not set
-              </option>
+              <option value="">Not set</option>
               {application.lines.map((option) => (
                 <option key={option.slug} value={option.slug}>
                   {option.name}
+                  {/* What the applicant asked for, marked in the list itself:
+                      the admin's job here is usually to confirm it, and a
+                      second row saying so would only be read once. */}
+                  {application.requestedLines.includes(option.slug)
+                    ? ' — asked for'
+                    : ''}
                 </option>
               ))}
             </select>
             <Button
               variant="outline"
-              disabled={
-                pending || !line || line === (application.categorySlug ?? '')
-              }
-              onClick={saveLine}
+              disabled={pending || !dirty}
+              onClick={saveLines}
             >
               Save line
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Bounds what this shop may list. Existing listings stay where they
-            are until the seller next edits them.
+            Bounds what this shop may list. Changing it keeps the original
+            request on record. Existing listings stay where they are until the
+            seller next edits them.
           </p>
         </div>
 

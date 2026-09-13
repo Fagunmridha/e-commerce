@@ -6,7 +6,16 @@ import { ProductReviews } from '@/components/product-reviews'
 import { ProductFaq } from '@/components/product-faq'
 import { ProductHelp } from '@/components/product-help'
 import { FeatureBar } from '@/components/feature-bar'
-import { getAllProducts, getProductDetail } from '@/lib/products'
+import {
+  getAllCategories,
+  getAllProducts,
+  getProductDetail,
+} from '@/lib/products'
+import {
+  definitionsForCategory,
+  getAllAttributeDefinitions,
+  getProductAttributes,
+} from '@/lib/attributes'
 import { getDictionary } from '@/lib/dictionaries'
 import { getServerLocale } from '@/lib/server-locale'
 import type { Locale } from '@/lib/i18n'
@@ -64,14 +73,52 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   // One batched round trip for the product, its gallery and its reviews; the
   // catalogue is already cached, so the related rail costs no query at all.
-  const [{ product, images, reviews, viewerReview }, catalogue, locale] =
-    await Promise.all([
-      getProductDetail(id),
-      getAllProducts(),
-      getServerLocale(),
-    ])
+  const [
+    { product, images, reviews, viewerReview },
+    catalogue,
+    locale,
+    definitions,
+    answers,
+    categories,
+  ] = await Promise.all([
+    getProductDetail(id),
+    getAllProducts(),
+    getServerLocale(),
+    getAllAttributeDefinitions(),
+    getProductAttributes(id),
+    getAllCategories(),
+  ])
 
   if (!product) notFound()
+
+  /**
+   * The admin-defined fields this product has actually answered, in the order
+   * the admin put them.
+   *
+   * Resolved here rather than in the client component so `ProductDetail` never
+   * has to know definitions exist — it is handed label/value pairs. Walking the
+   * definitions rather than the answers is what keeps the order and drops any
+   * answer whose field has since been switched off or moved to another branch.
+   */
+  const answerFor = new Map(answers.map((a) => [a.definitionId, a.value]))
+  const specs = definitionsForCategory(
+    definitions,
+    categories,
+    product.category,
+  ).flatMap((definition) => {
+    const value = answerFor.get(definition.id)
+    if (!value) return []
+    return [
+      {
+        key: definition.key,
+        label: definition.label,
+        value,
+        // A choice field stores the option's English text, so its own pair of
+        // languages is what should print; free text has only what was typed.
+        display: definition.options.find((option) => option.en === value),
+      },
+    ]
+  })
 
   const related = catalogue
     .filter((item) => item.category === product.category && item.id !== product.id)
@@ -85,6 +132,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         product={product}
         images={images}
         deliveryWindow={deliveryWindow(locale)}
+        specs={specs}
       />
       <FeatureBar />
       <ProductReviews

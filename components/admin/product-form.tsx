@@ -14,6 +14,13 @@ import { upsertProduct, type ProductInput } from '@/app/actions/admin'
 import { DEFAULT_ADVANCE_PCT } from '@/lib/preorder'
 import { DEFAULT_COMMISSION_PCT, splitCommission } from '@/lib/commission'
 import { formatPrice } from '@/lib/currency'
+import {
+  definitionsForCategory,
+  firstMissing,
+  toValueMap,
+} from '@/lib/attribute-tree'
+import { ProductAttributeFields } from '@/components/product-attribute-fields'
+import type { AttributeDefinition, AttributeValue } from '@/lib/attribute-tree'
 import type {
   Catalogue,
   Category,
@@ -82,8 +89,14 @@ export function ProductForm({
   gallery = [],
   categories = [],
   catalogues = [],
+  definitions = [],
+  attributeValues = [],
 }: {
   product?: Product
+  /** Every admin-defined product field; narrowed per category below. */
+  definitions?: AttributeDefinition[]
+  /** This product's stored answers, on the edit screen. */
+  attributeValues?: AttributeValue[]
   /** Extra shots beyond `product.image`, in position order. */
   gallery?: string[]
   /**
@@ -101,6 +114,11 @@ export function ProductForm({
   // Kept outside the main form object: it is a growable list whose rows are
   // uploaders with their own progress state.
   const [shots, setShots] = useState<string[]>(gallery)
+
+  /** The same per-category fields the seller form asks for. See its note. */
+  const [attributes, setAttributes] = useState(() => toValueMap(attributeValues))
+  const setAttribute = (definitionId: string, value: string) =>
+    setAttributes((current) => ({ ...current, [definitionId]: value }))
 
   const [form, setForm] = useState({
     id: product?.id ?? '',
@@ -162,6 +180,15 @@ export function ProductForm({
             ]
           : []),
       ]
+
+  /**
+   * The admin-defined fields for the category currently picked.
+   *
+   * Read from `categories` — the leaf list this form is given — so a product
+   * filed under a category that has since been switched off simply asks for
+   * nothing, rather than crashing on a branch it can no longer find.
+   */
+  const fields = definitionsForCategory(definitions, categories, form.category)
 
   // Spells the percentage out in taka against the price being typed, so an
   // admin sees what they are actually asking a customer for. Blank and 0 are
@@ -255,6 +282,16 @@ export function ProductForm({
         isMarketplace && form.commissionPct !== ''
           ? Number(form.commissionPct)
           : null,
+      attributes: Object.entries(attributes).map(([definitionId, value]) => ({
+        definitionId,
+        value,
+      })),
+    }
+
+    const missing = firstMissing(fields, attributes)
+    if (missing) {
+      toast.error(`${missing.label.en} is required`)
+      return
     }
 
     setPending(true)
@@ -323,6 +360,24 @@ export function ProductForm({
               ))}
           </select>
         </Field>
+      )}
+
+      {/* Whatever /admin/attributes says a product in this category must
+          state. The set changes with the category select above it, which is
+          why it sits directly under it rather than further down the form. */}
+      {fields.length > 0 && (
+        <div className="space-y-3 rounded-md border border-border p-4">
+          <p className="text-sm font-medium text-foreground">
+            Product details for this category
+          </p>
+          <ProductAttributeFields
+            definitions={fields}
+            values={attributes}
+            onChange={setAttribute}
+            // The admin console is English-only and has no language provider.
+            pick={(text) => text.en}
+          />
+        </div>
       )}
 
       <div className="grid gap-4 sm:grid-cols-2">

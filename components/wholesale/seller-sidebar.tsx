@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { ArrowLeft, ExternalLink, Store } from 'lucide-react'
+import { useMemo } from 'react'
+import { usePathname, useSearchParams } from 'next/navigation'
+import { ArrowLeft, ExternalLink, Layers, Store } from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -14,6 +15,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarRail,
 } from '@/components/ui/sidebar'
 import {
@@ -22,7 +26,10 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { useLanguage } from '@/components/language-provider'
+import { useCatalogue } from '@/components/catalogue-provider'
+import { categoriesInLine } from '@/lib/category-tree'
 import { SELLER_NAV, type SellerNavItem } from '@/lib/wholesale/nav'
+import type { CategorySlug } from '@/lib/types'
 
 /** True when `href` is the current page, or an ancestor of it. */
 function isActive(pathname: string, href: string) {
@@ -84,7 +91,127 @@ function NavRow({
   )
 }
 
-export function SellerSidebar({ shopName }: { shopName: string }) {
+/**
+ * The shop's own slice of the catalogue tree: the lines it was approved for,
+ * the categories under each, and the catalogues under those.
+ *
+ * Built here rather than listed in `lib/wholesale/nav.ts` beside the static
+ * rows, because it is not navigation in the same sense — it is *this* shop's
+ * permissions drawn as a tree, and no two shops see the same one. A seller
+ * approved for Clothing must not be shown Electronics at all, which is why the
+ * whole thing starts from `sellerLines` rather than from the full catalogue.
+ *
+ * Every row links into the dashboard's own filters, so clicking a catalogue
+ * narrows the listing table to it. That is what keeps this from being a
+ * decorative outline of a tree the seller cannot act on.
+ */
+function CatalogueNav({ sellerLines }: { sellerLines: CategorySlug[] }) {
+  const { t, pick } = useLanguage()
+  const { wholesaleCategories, catalogues } = useCatalogue()
+  const params = useSearchParams()
+  const activeCategory = params.get('category') ?? ''
+  const activeCatalogue = params.get('catalogue') ?? ''
+
+  const tree = useMemo(
+    () =>
+      sellerLines.map((slug) => {
+        const line = wholesaleCategories.find(
+          (category) => category.slug === slug,
+        )
+        return {
+          slug,
+          label: line ? pick(line.name) : slug,
+          categories: categoriesInLine(wholesaleCategories, slug).map(
+            (category) => ({
+              slug: category.slug,
+              label: pick(category.name),
+              catalogues: catalogues
+                .filter((entry) => entry.categorySlug === category.slug)
+                .map((entry) => ({
+                  slug: entry.slug,
+                  label: pick(entry.name),
+                })),
+            }),
+          ),
+        }
+      }),
+    [sellerLines, wholesaleCategories, catalogues, pick],
+  )
+
+  // A shop approved before trade lines existed has none, and drawing an empty
+  // "Catalogue" heading over nothing reads as a section that failed to load.
+  if (tree.length === 0) return null
+
+  return (
+    <SidebarGroup>
+      <SidebarGroupLabel>{t.wholesale.nav.groupCatalogue}</SidebarGroupLabel>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {tree.map((line) => (
+            <SidebarMenuItem key={line.slug}>
+              <SidebarMenuButton
+                asChild
+                tooltip={line.label}
+                isActive={!activeCatalogue && activeCategory === line.slug}
+              >
+                <Link href={`/wholesale/dashboard?category=${line.slug}`}>
+                  <Layers />
+                  <span>{line.label}</span>
+                </Link>
+              </SidebarMenuButton>
+
+              {line.categories.length > 0 && (
+                <SidebarMenuSub>
+                  {line.categories.map((category) => (
+                    <SidebarMenuSubItem key={category.slug}>
+                      <SidebarMenuSubButton
+                        asChild
+                        isActive={
+                          !activeCatalogue && activeCategory === category.slug
+                        }
+                      >
+                        <Link
+                          href={`/wholesale/dashboard?category=${category.slug}`}
+                        >
+                          <span>{category.label}</span>
+                        </Link>
+                      </SidebarMenuSubButton>
+
+                      {category.catalogues.map((entry) => (
+                        <SidebarMenuSubButton
+                          key={entry.slug}
+                          asChild
+                          size="sm"
+                          className="ml-3"
+                          isActive={activeCatalogue === entry.slug}
+                        >
+                          <Link
+                            href={`/wholesale/dashboard?category=${category.slug}&catalogue=${entry.slug}`}
+                          >
+                            <span>{entry.label}</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      ))}
+                    </SidebarMenuSubItem>
+                  ))}
+                </SidebarMenuSub>
+              )}
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  )
+}
+
+export function SellerSidebar({
+  shopName,
+  sellerLines,
+}: {
+  shopName: string
+  /** The lines this shop was approved for — the whole of what it may see. */
+  sellerLines: CategorySlug[]
+}) {
   const pathname = usePathname()
   const { t } = useLanguage()
   const nav = t.wholesale.nav
@@ -134,6 +261,8 @@ export function SellerSidebar({ shopName }: { shopName: string }) {
             </SidebarGroupContent>
           </SidebarGroup>
         ))}
+
+        <CatalogueNav sellerLines={sellerLines} />
       </SidebarContent>
 
       <SidebarFooter>

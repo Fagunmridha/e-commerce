@@ -4,6 +4,7 @@ import { revalidatePath, updateTag } from 'next/cache'
 import { count, eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { categories, products } from '@/lib/db/schema'
+import { isUniqueViolation } from '@/lib/db/errors'
 import { requireAdmin } from '@/lib/auth'
 import { categorySchema, type CategoryInput } from '@/lib/validation/admin'
 import { parseOrThrow } from '@/lib/validation/shared'
@@ -66,12 +67,33 @@ export async function upsertCategory(input: CategoryInput): Promise<void> {
     image: data.image,
     scope: data.scope,
     parentSlug: data.parentSlug,
+    position: data.position,
+    status: data.status,
   }
 
-  await db
-    .insert(categories)
-    .values(values)
-    .onConflictDoUpdate({ target: categories.slug, set: values })
+  try {
+    await db
+      .insert(categories)
+      .values(values)
+      // `createdAt` is absent from the update on purpose: an edit must not
+      // restamp when the row first appeared.
+      .onConflictDoUpdate({
+        target: categories.slug,
+        set: { ...values, updatedAt: new Date() },
+      })
+  } catch (error) {
+    // `categories_parent_name_idx` — two rows under one line sharing an English
+    // name. Postgres says "duplicate key value violates unique constraint",
+    // which is true and useless; this says which field to change.
+    if (isUniqueViolation(error, 'categories_parent_name_idx')) {
+      throw new Error(
+        data.parentSlug
+          ? 'A category with that English name already exists under this trade line'
+          : 'A trade line with that English name already exists',
+      )
+    }
+    throw error
+  }
 
   refresh()
 }

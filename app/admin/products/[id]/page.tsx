@@ -3,11 +3,15 @@ import { ProductForm } from '@/components/admin/product-form'
 import { SetBreadcrumbLabel } from '@/components/breadcrumb-label'
 import {
   getAdminProductById,
-  getAllCatalogues,
+  getActiveCatalogues,
   getProductImages,
   getRetailCategories,
 } from '@/lib/products'
 import { leafCategories } from '@/lib/category-tree'
+import {
+  getAllAttributeDefinitions,
+  getProductAttributes,
+} from '@/lib/attributes'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,11 +25,14 @@ export default async function EditProductPage({
   if (!product) notFound()
 
   // `getProductImages` returns the primary shot first; the form edits the rest.
-  const [images, catalogues, retail] = await Promise.all([
-    getProductImages(product),
-    getAllCatalogues(),
-    getRetailCategories(),
-  ])
+  const [images, catalogues, retail, definitions, attributeValues] =
+    await Promise.all([
+      getProductImages(product),
+      getActiveCatalogues(),
+      getRetailCategories(),
+      getAllAttributeDefinitions(),
+      getProductAttributes(id),
+    ])
   const gallery = images.slice(1)
   const categories = leafCategories(retail)
 
@@ -40,6 +47,8 @@ export default async function EditProductPage({
         gallery={gallery}
         categories={categories}
         catalogues={catalogues}
+        definitions={definitions}
+        attributeValues={attributeValues}
       />
     </div>
   )

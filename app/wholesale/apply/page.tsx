@@ -6,6 +6,7 @@ import { WholesaleContent } from '@/components/wholesale/wholesale-content'
 import type { WholesaleApplicationView } from '@/components/wholesale/types'
 import { getCurrentUser } from '@/lib/auth'
 import { getApplicationForUser } from '@/lib/wholesalers'
+import { getWholesaleLines } from '@/lib/products'
 import { pageMetadata } from '@/lib/metadata'
 import { getDictionary } from '@/lib/dictionaries'
 import { getServerLocale } from '@/lib/server-locale'
@@ -38,7 +39,12 @@ export default async function WholesaleApplyPage() {
     )
   }
 
-  const row = await getApplicationForUser(user.id)
+  const [row, lines] = await Promise.all([
+    getApplicationForUser(user.id),
+    // The cards on the step before the form. Trade lines only, and only those
+    // open to trade — the same list `submitWholesaleApplication` checks against.
+    getWholesaleLines(),
+  ])
 
   // An approved shop has nothing left to apply for; their work is in the
   // dashboard. Details are changed by an admin, not by resubmitting.
@@ -94,6 +100,7 @@ export default async function WholesaleApplyPage() {
         application={application}
         defaultName={user.name ?? ''}
         defaultEmail={user.email}
+        lines={lines}
       />
     </>
   )

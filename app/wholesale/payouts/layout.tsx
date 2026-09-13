@@ -3,7 +3,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { SellerSidebar } from '@/components/wholesale/seller-sidebar'
 import { SellerHeader } from '@/components/wholesale/seller-header'
 import { Redirecting } from '@/components/redirecting'
-import { getViewerPayoutShop } from '@/lib/wholesalers'
+import { getApplicationLines, getViewerPayoutShop } from '@/lib/wholesalers'
 
 /**
  * The payouts area — the seller console's chrome, its own gate.
@@ -27,10 +27,14 @@ export default async function SellerPayoutsLayout({
   // the same reason /wholesale/apply uses this component.
   if (!shop) return <Redirecting to="/wholesale/apply" label="Taking you back…" />
 
+  // The sidebar draws this shop's own slice of the catalogue tree, so it needs
+  // the grants. A suspended shop still sees it — the tree is what they sold.
+  const lines = await getApplicationLines(shop)
+
   return (
     <TooltipProvider delayDuration={0}>
       <SidebarProvider>
-        <SellerSidebar shopName={shop.shopName} />
+        <SellerSidebar shopName={shop.shopName} sellerLines={lines.approved} />
         <SidebarInset className="min-w-0">
           <SellerHeader />
           <div className="flex flex-1 flex-col p-4 md:p-6 print:p-0">

@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { imageSchema, moneySchema, phoneSchema } from '@/lib/validation/shared'
+import { attributeValuesSchema } from '@/lib/validation/admin'
 
 /**
  * The wholesale application and a seller's own product listings. Unlike the
@@ -53,9 +54,9 @@ export const wholesaleApplicationSchema = z.object({
     .max(200),
   businessType: z.enum(BUSINESS_TYPES),
   /**
-   * The one trade line this shop deals in. Required — the whole point is that
-   * an approved shop sits in exactly one, and "whichever happened to be first
-   * in the list" is not a decision anybody made.
+   * The one trade line this shop deals in, picked on the screen before the
+   * form. A shop is approved for one line and lists inside it; an admin moves
+   * it from the review screen if it was picked wrong.
    *
    * Whether the slug exists, and whether it is a line rather than a category
    * under one, cannot be asked here: this schema is shared with the client and
@@ -64,7 +65,7 @@ export const wholesaleApplicationSchema = z.object({
   categorySlug: z
     .string()
     .trim()
-    .min(1, 'Pick the category your shop trades in')
+    .min(1, 'Pick the trade line your shop deals in')
     .max(64),
   taxToken: optionalText(80),
   binNumber: optionalText(80),
@@ -148,6 +149,12 @@ export const sellerProductSchema = z
       .nullish()
       .transform((value) => (value?.length ? value : null)),
     description: optionalText(2000),
+    /**
+     * Answers to the admin-defined fields for this listing's category. Which
+     * definitions may be answered depends on that category, which is a database
+     * question — `attributeWrites` drops anything that does not apply.
+     */
+    attributes: attributeValuesSchema,
   })
   // A minimum above the stock on hand is an unbuyable listing. Zero stock is
   // allowed though — that is how a seller marks something sold out without

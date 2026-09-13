@@ -6,7 +6,7 @@ import { WholesalePitch } from '@/components/wholesale/wholesale-pitch'
 import { getCurrentUser } from '@/lib/auth'
 import { getApplicationForUser } from '@/lib/wholesalers'
 import {
-  getAllCatalogues,
+  getActiveCatalogues,
   getWholesaleCategories,
   getWholesaleProducts,
 } from '@/lib/products'
@@ -63,7 +63,7 @@ export default async function WholesalePage({
   const [products, categories, catalogues] = await Promise.all([
     getWholesaleProducts(),
     getWholesaleCategories(),
-    getAllCatalogues(),
+    getActiveCatalogues(),
   ])
 
   // No `PageHeader` on this branch: `WholesaleJoin` opens with its own hero,

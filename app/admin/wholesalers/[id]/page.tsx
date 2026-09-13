@@ -10,7 +10,7 @@ import {
 } from '@/components/admin/wholesalers/application-review'
 import { db } from '@/lib/db'
 import { users } from '@/lib/db/schema'
-import { getApplicationById } from '@/lib/wholesalers'
+import { getApplicationById, getApplicationLines } from '@/lib/wholesalers'
 import { getSellerProducts, getWholesaleLines } from '@/lib/products'
 import { BUSINESS_TYPE_LABEL } from '@/lib/admin/wholesaler-status'
 import { formatPrice } from '@/lib/currency'
@@ -32,7 +32,7 @@ export default async function AdminWholesalerPage({
   const application = await getApplicationById(id)
   if (!application) notFound()
 
-  const [[reviewer], listings, lines] = await Promise.all([
+  const [[reviewer], listings, lines, shopLines] = await Promise.all([
     application.reviewedByUserId
       ? db
           .select({ name: users.name, email: users.email })
@@ -43,6 +43,7 @@ export default async function AdminWholesalerPage({
     // sellers manage their own catalogue once approved.
     getSellerProducts(application.id),
     getWholesaleLines(),
+    getApplicationLines(application),
   ])
 
   const fields: ApplicationDetailView['fields'] = [
@@ -56,9 +57,11 @@ export default async function AdminWholesalerPage({
     {
       label: 'Trades in',
       value:
-        lines.find((line) => line.slug === application.categorySlug)?.name.en ??
-        application.categorySlug ??
-        '—',
+        shopLines.approved
+          .map(
+            (slug) => lines.find((line) => line.slug === slug)?.name.en ?? slug,
+          )
+          .join(', ') || '—',
     },
     { label: 'Tax token / TIN', value: application.taxToken ?? '—' },
     { label: 'VAT / BIN', value: application.binNumber ?? '—' },
@@ -117,10 +120,11 @@ export default async function AdminWholesalerPage({
     reviewedBy: reviewer ? (reviewer.name ?? reviewer.email) : null,
     reviewedAt:
       application.reviewedAt?.toLocaleDateString('en-GB', DATE) ?? null,
-    categorySlug: application.categorySlug,
     // Flattened to plain strings: the admin console is English-only, so the
     // client component has no locale to pick with.
     lines: lines.map((line) => ({ slug: line.slug, name: line.name.en })),
+    requestedLines: shopLines.requested,
+    approvedLines: shopLines.approved,
   }
 
   return (

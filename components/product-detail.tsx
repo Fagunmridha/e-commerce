@@ -17,22 +17,39 @@ import { useCatalogue } from '@/components/catalogue-provider'
 import { formatShipDate } from '@/lib/preorder'
 import { cn } from '@/lib/utils'
 import type { Product } from '@/lib/types'
+import type { Localized } from '@/lib/i18n'
 
 const BADGE_STYLES = {
   new: 'bg-badge-new text-badge-new-foreground',
   sale: 'bg-badge-sale text-badge-sale-foreground',
 } as const
 
+/**
+ * One admin-defined field and this product's answer, resolved on the server.
+ *
+ * `display` is the answer as it should read — the matching option's own pair of
+ * languages for a choice field, and absent for a free-text one, where the
+ * seller typed a single string that has no translation to offer.
+ */
+export type ProductSpec = {
+  key: string
+  label: Localized
+  value: string
+  display?: Localized
+}
+
 export function ProductDetail({
   product,
   images,
   deliveryWindow,
+  specs = [],
 }: {
   product: Product
   images: string[]
   /** Pre-formatted on the server — a client `new Date()` here would risk a
    *  hydration mismatch around midnight. */
   deliveryWindow: string
+  specs?: ProductSpec[]
 }) {
   const { t, pick, locale, price: formatPrice } = useLanguage()
   const { addToCart, isWishlisted, toggleWishlist } = useStore()
@@ -517,6 +534,24 @@ export function ProductDetail({
                     : t.product.inStock}
               </dd>
             </div>
+            {/* The admin-defined fields for this product's category — Fabric
+                under Clothing, RAM under Electronics. Resolved on the server
+                so this component never has to know the definitions exist; it
+                is handed label/value pairs and prints them under the three
+                rows every product has. */}
+            {specs.map((spec) => (
+              <div
+                key={spec.key}
+                className="flex justify-between gap-4 border-b border-border pb-2"
+              >
+                <dt className="text-muted-foreground">{pick(spec.label)}</dt>
+                <dd className="text-right font-medium text-foreground">
+                  {spec.value === 'true'
+                    ? t.common.yes
+                    : pick(spec.display ?? { en: spec.value, bn: spec.value })}
+                </dd>
+              </div>
+            ))}
           </dl>
         </div>
       </div>

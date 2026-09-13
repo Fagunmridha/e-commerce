@@ -19,6 +19,19 @@ export type CategorySlug = string
  */
 export type ProductColor = { name: Localized; hex?: string }
 
+/**
+ * A listing's standing in the review workflow. Only `approved` is visible to
+ * anyone but its owner and an admin — the other four are treated identically
+ * by every read gate, which is what lets `draft` exist before anything writes
+ * it.
+ */
+export type ApprovalStatus =
+  | 'draft'
+  | 'pending'
+  | 'approved'
+  | 'rejected'
+  | 'suspended'
+
 export type Product = {
   id: string
   name: Localized
@@ -84,6 +97,21 @@ export type Product = {
    */
   commissionPct?: number
   /**
+   * Where this listing sits in the review workflow. Only the seller's own
+   * dashboard and the admin queue read it — every buyer-facing query has
+   * already filtered on it, so a card that reaches a shopper is `approved` by
+   * construction.
+   */
+  approvalStatus: ApprovalStatus
+  /** Why it was turned down. Shown to its owner and nobody else. */
+  rejectionReason?: string
+  /**
+   * ISO 8601. When it last entered the review queue — undefined on house stock,
+   * which never does. A string rather than a `Date` because this type crosses
+   * into client components, where a `Date` would have to be serialised anyway.
+   */
+  submittedAt?: string
+  /**
    * Upcoming stock, taken on pre-order. These are kept out of /shop, the
    * category pages and search — they surface only in the Coming Soon rail —
    * so nothing offers "Add to Cart" on something that cannot ship yet.
@@ -113,6 +141,12 @@ export type Product = {
  */
 export type CategoryScope = 'retail' | 'wholesale' | 'both'
 
+/**
+ * Whether a row is offered when something new is filed. `inactive` hides it
+ * from every picker without touching what is already filed under it.
+ */
+export type TreeStatus = 'active' | 'inactive'
+
 export type Category = {
   slug: CategorySlug
   name: Localized
@@ -128,6 +162,9 @@ export type Category = {
   scope: CategoryScope
   /** The trade line this sits under, or null when the row *is* a line. */
   parentSlug: CategorySlug | null
+  /** Admin-controlled order within the parent line; ties break on slug. */
+  position: number
+  status: TreeStatus
 }
 
 /**
@@ -148,6 +185,7 @@ export type Catalogue = {
   name: Localized
   /** Admin-controlled order within the parent category. */
   position: number
+  status: TreeStatus
 }
 
 export type Review = {

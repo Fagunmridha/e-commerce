@@ -739,6 +739,17 @@ const en = {
       cancel: 'Cancel',
       openingDashboard: 'Opening your dashboard…',
     },
+    /** The step between choosing the seller side and the application form. */
+    linePicker: {
+      title: 'What do you trade in?',
+      subtitle:
+        'Pick the line your shop deals in. Once approved you can list anywhere inside it, and nowhere else.',
+      continue: 'Continue to the application',
+      hint: 'An admin can move you to another line later if you pick wrong.',
+      empty: 'No trade lines are open yet. Please check back shortly.',
+      chosen: 'Trading in',
+      change: 'Change',
+    },
     form: {
       businessSection: 'Business details',
       contactSection: 'Contact',
@@ -755,7 +766,7 @@ const en = {
       category: 'What you trade in',
       categoryPlaceholder: 'Select a category',
       categoryHint:
-        'Once approved you can list products anywhere inside this line, and nowhere else.',
+        'Tick every trade line you deal in. An admin approves them one by one, and you can list anywhere inside the ones they grant — and nowhere else.',
       businessTypes: {
         retail_shop: 'Retail shop',
         distributor: 'Distributor',
@@ -791,7 +802,7 @@ const en = {
     },
     errors: {
       shopName: 'Enter your shop or company name.',
-      category: 'Pick the category your shop trades in.',
+      category: 'Pick at least one trade line your shop deals in.',
       contactName: 'Enter a contact name.',
       phone: 'Enter a valid Bangladeshi mobile number.',
       email: 'Enter a valid email address.',
@@ -823,6 +834,8 @@ const en = {
       panel: 'Seller panel',
       groupShop: 'My shop',
       groupSales: 'Sales',
+      /** Heading over the shop's own slice of the catalogue tree. */
+      groupCatalogue: 'What you sell',
       groupMarket: 'Market',
       listings: 'My listings',
       addProduct: 'Add a product',
@@ -839,6 +852,18 @@ const en = {
       marketCta: 'Browse the market',
       addProduct: 'Add a product',
       approvedBadge: 'Approved seller',
+      specs: 'Product details',
+      specsHint:
+        'Set by the store for this category. Fields marked * are required.',
+      /** A listing's standing in the admin's review queue. */
+      listingStatus: {
+        draft: 'Draft',
+        pending: 'Awaiting review',
+        approved: 'Live',
+        rejected: 'Needs changes',
+        suspended: 'Paused by admin',
+      },
+      listingRejected: 'Edit and save to send it back for review.',
       totalProducts: 'Products listed',
       totalStock: 'Pieces in stock',
       outOfStockStat: 'Needs restocking',
@@ -1081,6 +1106,8 @@ const en = {
     next: 'Next',
     close: 'Close',
     loading: 'Loading…',
+    /** How a ticked yes/no product field prints in the spec table. */
+    yes: 'Yes',
   },
   /** Short labels — the bottom bar has room for one word per item. */
   mobileNav: {
@@ -1911,6 +1938,16 @@ const bn: Dictionary = {
       cancel: 'বাতিল',
       openingDashboard: 'আপনার ড্যাশবোর্ড খোলা হচ্ছে…',
     },
+    linePicker: {
+      title: 'আপনি কীসের ব্যবসা করেন?',
+      subtitle:
+        'আপনার দোকান যে লাইনে ব্যবসা করে সেটি বাছুন। অনুমোদনের পরে এই লাইনের ভেতরে যেকোনো ক্যাটাগরিতে পণ্য দিতে পারবেন, বাইরে নয়।',
+      continue: 'আবেদনে এগিয়ে যান',
+      hint: 'ভুল হলে অ্যাডমিন পরে অন্য লাইনে সরিয়ে দিতে পারবেন।',
+      empty: 'এখনো কোনো ট্রেড লাইন খোলা হয়নি। একটু পরে আবার দেখুন।',
+      chosen: 'ব্যবসার লাইন',
+      change: 'বদলান',
+    },
     form: {
       businessSection: 'ব্যবসার তথ্য',
       contactSection: 'যোগাযোগ',
@@ -1927,7 +1964,7 @@ const bn: Dictionary = {
       category: 'আপনি কীসের ব্যবসা করেন',
       categoryPlaceholder: 'ক্যাটাগরি বাছুন',
       categoryHint:
-        'অনুমোদনের পরে এই লাইনের ভেতরে যেকোনো ক্যাটাগরিতে পণ্য দিতে পারবেন, বাইরে নয়।',
+        'যে যে ট্রেড লাইনে ব্যবসা করেন সবগুলো টিক দিন। অ্যাডমিন একেকটা আলাদা করে অনুমোদন করবেন, আর যেগুলো অনুমোদন পাবে তার ভেতরে পণ্য দিতে পারবেন — বাইরে নয়।',
       businessTypes: {
         retail_shop: 'খুচরা দোকান',
         distributor: 'পরিবেশক',
@@ -1963,7 +2000,7 @@ const bn: Dictionary = {
     },
     errors: {
       shopName: 'দোকান বা প্রতিষ্ঠানের নাম লিখুন।',
-      category: 'আপনার দোকান যে ক্যাটাগরিতে ব্যবসা করে সেটি বাছুন।',
+      category: 'আপনার দোকান যে যে ট্রেড লাইনে ব্যবসা করে অন্তত একটি বাছুন।',
       contactName: 'যোগাযোগের ব্যক্তির নাম লিখুন।',
       phone: 'সঠিক বাংলাদেশি মোবাইল নম্বর লিখুন।',
       email: 'সঠিক ইমেইল ঠিকানা লিখুন।',
@@ -1989,6 +2026,7 @@ const bn: Dictionary = {
       panel: 'বিক্রেতা প্যানেল',
       groupShop: 'আমার দোকান',
       groupSales: 'বিক্রি',
+      groupCatalogue: 'আপনি যা বেচেন',
       groupMarket: 'বাজার',
       listings: 'আমার পণ্য',
       addProduct: 'পণ্য যোগ করুন',
@@ -2004,6 +2042,17 @@ const bn: Dictionary = {
       marketCta: 'বাজার দেখুন',
       addProduct: 'পণ্য যোগ করুন',
       approvedBadge: 'অনুমোদিত বিক্রেতা',
+      specs: 'পণ্যের বিবরণ',
+      specsHint:
+        'এই ক্যাটাগরির জন্য দোকান যেগুলো চেয়েছে। * চিহ্নিত ঘরগুলো বাধ্যতামূলক।',
+      listingStatus: {
+        draft: 'খসড়া',
+        pending: 'পর্যালোচনার অপেক্ষায়',
+        approved: 'লাইভ',
+        rejected: 'সংশোধন প্রয়োজন',
+        suspended: 'অ্যাডমিন স্থগিত করেছেন',
+      },
+      listingRejected: 'ঠিক করে সেভ করলে আবার পর্যালোচনায় যাবে।',
       totalProducts: 'মোট পণ্য',
       totalStock: 'মোট পিস',
       outOfStockStat: 'স্টক ফুরিয়েছে',
@@ -2229,6 +2278,7 @@ const bn: Dictionary = {
     next: 'পরের',
     close: 'বন্ধ করুন',
     loading: 'লোড হচ্ছে…',
+    yes: 'হ্যাঁ',
   },
   mobileNav: {
     home: 'হোম',

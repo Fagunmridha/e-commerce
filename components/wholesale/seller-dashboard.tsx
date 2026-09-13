@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import {
   AlertTriangle,
@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { APPROVAL_CLASS } from '@/lib/admin/product-status'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import {
@@ -89,7 +90,31 @@ export function SellerDashboard({
   /** The listing the confirm dialog is asking about, if any. */
   const [pendingDelete, setPendingDelete] = useState<Product | null>(null)
   const [search, setSearch] = useState('')
-  const [category, setCategory] = useState('')
+
+  /**
+   * The category and catalogue filters live in the URL, not in `useState`.
+   *
+   * The sidebar's catalogue tree links here, and a click has to change what the
+   * table shows — which a sibling component's local state cannot reach. Putting
+   * them in the query string also makes a filtered view a link a seller can
+   * bookmark, and the back button undo a filter, both of which the select alone
+   * never did.
+   */
+  const params = useSearchParams()
+  const pathname = usePathname()
+  const category = params.get('category') ?? ''
+  const catalogue = params.get('catalogue') ?? ''
+
+  const setCategory = (slug: string) => {
+    const next = new URLSearchParams(params)
+    if (slug) next.set('category', slug)
+    else next.delete('category')
+    // The catalogue belonged to the category being left behind, exactly as on
+    // the product form — keeping it would filter to an empty table.
+    next.delete('catalogue')
+    const query = next.toString()
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
+  }
 
   const totalStock = products.reduce((sum, product) => sum + product.stock, 0)
   const outOfStock = products.filter((product) => product.stock <= 0).length
@@ -121,9 +146,10 @@ export function SellerDashboard({
     return products.filter(
       (product) =>
         (!category || product.category === category) &&
+        (!catalogue || product.catalogue === catalogue) &&
         (!term || pick(product.name).toLowerCase().includes(term)),
     )
-  }, [products, search, category, pick])
+  }, [products, search, category, catalogue, pick])
 
   async function onRemove(product: Product) {
     setPendingDelete(null)
@@ -321,6 +347,30 @@ export function SellerDashboard({
                             {product.sizes && product.sizes.length > 0 && (
                               <p className="mt-0.5 truncate text-xs text-muted-foreground">
                                 {product.sizes.join(' · ')}
+                              </p>
+                            )}
+                            {/* Under the name rather than in a column of its
+                                own: only a listing that is *not* live has
+                                anything to say here, and a column would spend
+                                width on "Live" repeated down the whole table.
+                                A rejection carries the admin's reason with it —
+                                a seller cannot fix what they cannot read. */}
+                            {product.approvalStatus !== 'approved' && (
+                              <p className="mt-1 flex flex-wrap items-center gap-1.5">
+                                <span
+                                  className={cn(
+                                    'rounded-sm px-1.5 py-0.5 text-xs',
+                                    APPROVAL_CLASS[product.approvalStatus],
+                                  )}
+                                >
+                                  {copy.listingStatus[product.approvalStatus]}
+                                </span>
+                                {product.rejectionReason && (
+                                  <span className="text-xs text-muted-foreground">
+                                    {product.rejectionReason} —{' '}
+                                    {copy.listingRejected}
+                                  </span>
+                                )}
                               </p>
                             )}
                           </div>

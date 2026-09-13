@@ -1,11 +1,17 @@
 'use server'
 
 import { revalidatePath, updateTag } from 'next/cache'
-import { eq } from 'drizzle-orm'
+import { and, eq, isNotNull } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { productImages, products, users } from '@/lib/db/schema'
 import { requireAdmin } from '@/lib/auth'
 import { resolveCatalogue } from '@/lib/catalogues'
+import {
+  attributeWrites,
+  definitionsForCategory,
+  getAllAttributeDefinitions,
+} from '@/lib/attributes'
+import { getAllCategories } from '@/lib/products'
 import {
   setAdvanceStatus,
   updateOrderStatus,
@@ -16,13 +22,14 @@ import {
   advanceVerdictSchema,
   orderStatusSchema,
   productSchema,
+  productVerdictSchema,
   roleSchema,
   userIdSchema,
   uuidSchema,
 } from '@/lib/validation/admin'
 import { parseOrThrow } from '@/lib/validation/shared'
 import type { Localized } from '@/lib/i18n'
-import type { CategorySlug, ProductColor } from '@/lib/types'
+import type { ApprovalStatus, CategorySlug, ProductColor } from '@/lib/types'
 
 /**
  * Server actions are public HTTP endpoints. `requireAdmin()` keeps strangers
@@ -68,6 +75,12 @@ export type ProductInput = {
   /** Extra gallery shots. `image` above stays the primary photo. */
   gallery?: string[] | null
   description?: Localized | null
+  /**
+   * Answers to the per-category fields from /admin/attributes. Which
+   * definitions may be answered depends on `category`, so the list is filtered
+   * server-side rather than trusted.
+   */
+  attributes?: { definitionId: string; value: string }[] | null
   /** Pieces available; on a pre-order row, the allocation still open. */
   stock: number
   /** Minimum pieces per order. Omit or 1 for no minimum. */
@@ -145,6 +158,28 @@ export async function upsertProduct(input: ProductInput): Promise<void> {
     await db.delete(productImages).where(eq(productImages.productId, data.id))
   }
 
+  /**
+   * The per-category fields from /admin/attributes.
+   *
+   * Resolved from the category the product is actually being filed under, never
+   * from the payload's own list — `attributeWrites` keeps only definitions that
+   * apply, so an answer posted against the wrong branch is dropped rather than
+   * stored. Unfiltered categories here on purpose: an admin editing a product in
+   * a category they have just switched off must still be able to fill its
+   * fields in.
+   */
+  const [definitions, categories] = await Promise.all([
+    getAllAttributeDefinitions(),
+    getAllCategories(),
+  ])
+  await db.batch(
+    attributeWrites(
+      data.id,
+      data.attributes,
+      definitionsForCategory(definitions, categories, data.category),
+    ),
+  )
+
   updateTag('catalogue')
   revalidatePath('/admin/products')
   revalidatePath('/admin/preorders')
@@ -158,6 +193,46 @@ export async function deleteProduct(id: string): Promise<void> {
   updateTag('catalogue')
   revalidatePath('/admin/products')
   revalidatePath('/shop')
+}
+
+/**
+ * The verdict on one marketplace listing.
+ *
+ * Scoped to `seller_id IS NOT NULL`, which is not decoration: house stock is
+ * the admin's own and has no queue to be in, and without the clause a stray id
+ * would let this screen suspend the store's own products through a workflow
+ * built for somebody else's.
+ *
+ * A reason is required to reject and discarded otherwise — a seller cannot act
+ * on "no", and a stale reason left sitting on an approved listing would read as
+ * a complaint about stock that is live.
+ */
+export async function reviewProduct(
+  id: string,
+  status: ApprovalStatus,
+  reason: string | null,
+): Promise<void> {
+  const me = await requireAdmin()
+  const data = parseOrThrow(productVerdictSchema, { id, status, reason })
+
+  const [updated] = await db
+    .update(products)
+    .set({
+      approvalStatus: data.status,
+      rejectionReason: data.status === 'rejected' ? data.reason : null,
+      reviewedAt: new Date(),
+      reviewedByUserId: me.id,
+    })
+    .where(and(eq(products.id, data.id), isNotNull(products.sellerId)))
+    .returning({ id: products.id })
+
+  if (!updated) throw new Error('That is not a marketplace listing')
+
+  updateTag('catalogue')
+  revalidatePath('/admin/products')
+  revalidatePath('/wholesale/market')
+  revalidatePath('/wholesale/dashboard')
+  revalidatePath(`/product/${data.id}`)
 }
 
 export async function setOrderStatus(

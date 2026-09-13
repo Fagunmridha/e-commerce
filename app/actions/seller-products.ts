@@ -1,12 +1,17 @@
 'use server'
 
 import { revalidatePath, updateTag } from 'next/cache'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { products } from '@/lib/db/schema'
 import { requireApprovedWholesaler } from '@/lib/wholesalers'
 import { resolveCatalogue } from '@/lib/catalogues'
-import { isInLine } from '@/lib/category-tree'
+import { isInAnyLine } from '@/lib/category-tree'
+import {
+  attributeWrites,
+  definitionsForCategory,
+  getAllAttributeDefinitions,
+} from '@/lib/attributes'
 import { getWholesaleCategories } from '@/lib/products'
 import { uniqueProductId } from '@/lib/seller-products'
 import { parseOrThrow } from '@/lib/validation/shared'
@@ -31,6 +36,33 @@ type Result = { ok: true } | { ok: false; error: string }
  * something the dashboard is trusted to have checked.
  */
 
+/**
+ * Writes a product's answers to the admin-defined fields for its category.
+ *
+ * The definitions are re-resolved here from the category the product is
+ * actually being filed under, never from anything the client sent — a seller
+ * who posts an answer to an Electronics field on a Men's Wear listing has it
+ * dropped by `attributeWrites`, which only keeps ids in this list.
+ *
+ * Shared by both branches of the upsert. A failure here is deliberately not
+ * fatal to the save: the listing itself is already written, and telling a
+ * seller their product did not save when it did is worse than a spec sheet that
+ * needs one more press of Save.
+ */
+async function saveAttributes(
+  productId: string,
+  categorySlug: string,
+  values: { definitionId: string; value: string }[],
+): Promise<void> {
+  const [definitions, categories] = await Promise.all([
+    getAllAttributeDefinitions(),
+    getWholesaleCategories(),
+  ])
+  const allowed = definitionsForCategory(definitions, categories, categorySlug)
+
+  await db.batch(attributeWrites(productId, values, allowed))
+}
+
 function refresh() {
   // Busts the cached catalogue queries so the market reflects the edit at once.
   updateTag('catalogue')
@@ -42,8 +74,9 @@ export async function upsertSellerProduct(
   input: SellerProductInput,
 ): Promise<Result> {
   let shop
+  let lines
   try {
-    ;({ shop } = await requireApprovedWholesaler())
+    ;({ shop, lines } = await requireApprovedWholesaler())
   } catch {
     return { ok: false, error: 'Your shop is not approved for the market.' }
   }
@@ -59,28 +92,29 @@ export async function upsertSellerProduct(
   }
 
   /**
-   * A shop lists inside the trade line it was approved for, and nowhere else.
+   * A shop lists inside the trade lines it was approved for, and nowhere else.
    * A cloth shop may file under Men's, Women's or Kids; it may not file under
-   * Electronics.
+   * Electronics unless an admin granted it that line too.
    *
    * The form only offers those categories, which is what an honest seller
    * sees — this is the copy that counts, because a server action is a public
    * endpoint and the form's `<select>` is a suggestion to anyone willing to
-   * skip it. Both sides read `categoriesInLine`, so neither can drift.
+   * skip it. Both sides read `categoriesInLines`, so neither can drift.
    *
-   * A shop approved before the column existed has no line. Rather than locking
-   * it out of its own dashboard it falls back to "any wholesale category" —
-   * still narrower than before, since a storefront-only category is refused
-   * either way. The migration guessed a line from what such a shop already
-   * listed, and an admin can set it from the review screen.
+   * A shop approved before lines existed has none at all, and
+   * `getApplicationLines` had nothing to fall back to either. Rather than
+   * locking it out of its own dashboard it falls back to "any wholesale
+   * category" — still narrower than no check, since a storefront-only category
+   * is refused either way, and an admin can grant it lines from the review
+   * screen.
    */
   const wholesale = await getWholesaleCategories()
 
-  if (shop.categorySlug) {
-    if (!isInLine(wholesale, shop.categorySlug, data.category)) {
+  if (lines.length > 0) {
+    if (!isInAnyLine(wholesale, lines, data.category)) {
       return {
         ok: false,
-        error: 'You can only list products in your shop’s trade line.',
+        error: 'You can only list products in a trade line you are approved for.',
       }
     }
   } else if (!wholesale.some((category) => category.slug === data.category)) {
@@ -110,20 +144,55 @@ export async function upsertSellerProduct(
   // `commission_pct` is load-bearing by its *absence* from `values` above:
   // Drizzle only writes the columns listed, so a seller editing their own
   // listing cannot touch the rate the store agreed with them. Do not "tidy"
-  // this into a spread of the whole row.
+  // this into a spread of the whole row. `approval_status` is the same kind of
+  // column — a seller may move it to `pending` and nowhere else, which is what
+  // the two branches below spell out.
 
   if (data.id) {
+    /**
+     * An edit keeps the listing's standing, with one exception: saving a
+     * *rejected* listing is the resubmission, so it goes back into the queue
+     * with the old reason cleared.
+     *
+     * Deliberately not "every edit re-enters review". A seller correcting a
+     * stock count would then take their own live product off the market until
+     * an admin looked at it, which turns the ordinary act of keeping a listing
+     * accurate into a reason not to. `suspended` is untouched either way — that
+     * is the admin's state, and a seller must not be able to save their way out
+     * of it.
+     *
+     * Written as CASE expressions rather than a read-then-write: on the right
+     * of a SET, a column is its pre-update value, so this decides and applies
+     * in one statement with no room for a race between the two.
+     */
+    const wasRejected = sql`${products.approvalStatus} = 'rejected'`
     const [updated] = await db
       .update(products)
-      .set(values)
+      .set({
+        ...values,
+        approvalStatus: sql`case when ${wasRejected} then 'pending' else ${products.approvalStatus} end`,
+        rejectionReason: sql`case when ${wasRejected} then null else ${products.rejectionReason} end`,
+        submittedAt: sql`case when ${wasRejected} then now() else ${products.submittedAt} end`,
+      })
       .where(and(eq(products.id, data.id), eq(products.sellerId, shop.id)))
       .returning({ id: products.id })
 
     if (!updated) return { ok: false, error: 'That listing is not yours.' }
+    await saveAttributes(data.id, data.category, data.attributes)
   } else {
-    await db
-      .insert(products)
-      .values({ ...values, id: await uniqueProductId(data.name), sellerId: shop.id })
+    const id = await uniqueProductId(data.name)
+    await db.insert(products).values({
+      ...values,
+      id,
+      sellerId: shop.id,
+      // The column defaults to `approved` for house stock and for every row
+      // that predates the queue; a seller's new listing is the one case that
+      // has to wait for a verdict, so it says so here rather than relying on a
+      // default that means the opposite.
+      approvalStatus: 'pending',
+      submittedAt: new Date(),
+    })
+    await saveAttributes(id, data.category, data.attributes)
   }
 
   refresh()

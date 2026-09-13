@@ -18,7 +18,7 @@ import { LoadingOverlay } from '@/components/loading-overlay'
 import { ImageUploader } from '@/components/admin/image-uploader'
 import { upsertCategory, deleteCategory } from '@/app/actions/categories'
 import type { AdminCategory } from '@/lib/categories'
-import type { CategoryScope } from '@/lib/types'
+import type { CategoryScope, TreeStatus } from '@/lib/types'
 
 const SCOPE_HINT: Record<CategoryScope, string> = {
   both: 'Shown in the shop and offered to wholesale shops.',
@@ -185,9 +185,15 @@ function CategoryRow({
         <p className="truncate text-sm font-medium text-foreground">
           {row.name.en}
           <span className="ml-2 text-muted-foreground">{row.name.bn}</span>
+          {row.status === 'inactive' && (
+            <span className="ml-2 rounded-sm bg-muted px-1.5 py-0.5 text-xs font-normal text-muted-foreground">
+              Inactive
+            </span>
+          )}
         </p>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          <code>{row.slug}</code> · {row.scope} · {row.productCount} product
+          <code>{row.slug}</code> · position {row.position} · {row.scope} ·{' '}
+          {row.productCount} product
           {row.productCount === 1 ? '' : 's'} · {row.catalogueCount} catalogue
           {row.catalogueCount === 1 ? '' : 's'} · {row.sellerCount} shop
           {row.sellerCount === 1 ? '' : 's'}
@@ -232,6 +238,8 @@ function CategoryForm({
     image: existing?.image ?? '',
     scope: existing?.scope ?? ('both' as CategoryScope),
     parentSlug: existing?.parentSlug ?? '',
+    position: (existing?.position ?? 0).toString(),
+    status: existing?.status ?? ('active' as TreeStatus),
   })
 
   const set = <K extends keyof typeof form>(
@@ -273,6 +281,8 @@ function CategoryForm({
         image: form.image,
         scope: form.scope,
         parentSlug: form.parentSlug || null,
+        position: Number(form.position) || 0,
+        status: form.status,
       })
       toast.success(existing ? 'Category saved' : 'Category created')
       onDone()
@@ -347,6 +357,39 @@ function CategoryForm({
             onChange={(e) => set('nameBn', e.target.value)}
             placeholder="ইলেকট্রনিক্স"
           />
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="category-position">Position</Label>
+          <Input
+            id="category-position"
+            type="number"
+            min={0}
+            value={form.position}
+            onChange={(e) => set('position', e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">
+            Order within its trade line — 0 shows first. Ties break on slug.
+          </p>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="category-status">Status</Label>
+          <select
+            id="category-status"
+            value={form.status}
+            onChange={(e) => set('status', e.target.value as TreeStatus)}
+            className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+          >
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+          <p className="text-xs text-muted-foreground">
+            {form.status === 'active'
+              ? 'Offered wherever a category is picked.'
+              : 'Hidden from the shop and from every product form. Nothing filed here is moved or deleted.'}
+          </p>
         </div>
       </div>
 

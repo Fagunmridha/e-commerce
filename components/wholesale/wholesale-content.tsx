@@ -7,7 +7,9 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useLanguage } from '@/components/language-provider'
 import { WholesaleForm } from '@/components/wholesale/wholesale-form'
+import { TradeLinePicker } from '@/components/wholesale/trade-line-picker'
 import type { WholesaleApplicationView } from '@/components/wholesale/types'
+import type { Category } from '@/lib/types'
 
 /**
  * The application screen: where an applicant stands, and the form.
@@ -20,14 +22,29 @@ export function WholesaleContent({
   application,
   defaultName,
   defaultEmail,
+  lines,
 }: {
   application: WholesaleApplicationView | null
   defaultName: string
   defaultEmail: string
+  /** Every trade line open to trade, for the step before the form. */
+  lines: Category[]
 }) {
-  const { t } = useLanguage()
+  const { t, pick } = useLanguage()
   const copy = t.wholesale
   const [editing, setEditing] = useState(false)
+
+  /**
+   * The trade line, chosen on a screen of its own before the form.
+   *
+   * It starts as whatever the applicant picked last time, so a resubmission
+   * goes straight to the form rather than making them answer a question they
+   * have already answered — and `pickingLine` is what the "Change" link flips
+   * back on.
+   */
+  const [line, setLine] = useState(application?.categorySlug ?? '')
+  const [pickingLine, setPickingLine] = useState(!application?.categorySlug)
+  const lineName = lines.find((entry) => entry.slug === line)
 
   // Approved and suspended accounts have nothing to edit — the form is only
   // reachable while the application is new, queued or turned down.
@@ -62,14 +79,45 @@ export function WholesaleContent({
         </div>
       )}
 
-      {showForm && (
-        <WholesaleForm
-          application={application}
-          defaultName={defaultName}
-          defaultEmail={defaultEmail}
-          onCancel={editing ? () => setEditing(false) : undefined}
-        />
-      )}
+      {showForm &&
+        (pickingLine ? (
+          <TradeLinePicker
+            lines={lines}
+            value={line}
+            onChange={setLine}
+            onContinue={() => setPickingLine(false)}
+          />
+        ) : (
+          <>
+            {/* What they picked, and the way back to change it. The form below
+                never asks again — the line is settled by the time it renders,
+                which is the whole point of splitting the two screens. */}
+            <div className="mb-6 flex flex-wrap items-center gap-3 rounded-lg border border-border px-4 py-3">
+              <span className="text-xs text-muted-foreground">
+                {copy.linePicker.chosen}
+              </span>
+              <span className="text-sm font-semibold text-foreground">
+                {lineName ? pick(lineName.name) : line}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="ml-auto"
+                onClick={() => setPickingLine(true)}
+              >
+                {copy.linePicker.change}
+              </Button>
+            </div>
+
+            <WholesaleForm
+              application={application}
+              defaultName={defaultName}
+              defaultEmail={defaultEmail}
+              categorySlug={line}
+              onCancel={editing ? () => setEditing(false) : undefined}
+            />
+          </>
+        ))}
     </div>
   )
 }

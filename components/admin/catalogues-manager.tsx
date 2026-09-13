@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/card'
 import { LoadingOverlay } from '@/components/loading-overlay'
 import { upsertCatalogue, deleteCatalogue } from '@/app/actions/catalogues'
-import type { Catalogue, Category } from '@/lib/types'
+import type { Catalogue, Category, TreeStatus } from '@/lib/types'
 
 type Row = Catalogue & { productCount: number }
 
@@ -114,6 +114,11 @@ export function CataloguesManager({
                         <span className="ml-2 text-muted-foreground">
                           {row.name.bn}
                         </span>
+                        {row.status === 'inactive' && (
+                          <span className="ml-2 rounded-sm bg-muted px-1.5 py-0.5 text-xs font-normal text-muted-foreground">
+                            Inactive
+                          </span>
+                        )}
                       </p>
                       <p className="mt-0.5 text-xs text-muted-foreground">
                         <code>{row.slug}</code> · position {row.position} ·{' '}
@@ -166,9 +171,10 @@ function CatalogueForm({
     nameEn: existing?.name.en ?? '',
     nameBn: existing?.name.bn ?? '',
     position: (existing?.position ?? 0).toString(),
+    status: existing?.status ?? ('active' as TreeStatus),
   })
 
-  const set = (key: keyof typeof form, value: string) =>
+  const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
     setForm((current) => ({ ...current, [key]: value }))
 
   async function onSubmit(event: React.FormEvent) {
@@ -183,6 +189,7 @@ function CatalogueForm({
         // empty string there renders as a nameless option.
         name: { en: form.nameEn.trim(), bn: form.nameBn.trim() || form.nameEn.trim() },
         position: Number(form.position) || 0,
+        status: form.status,
       })
       toast.success(existing ? 'Catalogue saved' : 'Catalogue created')
       onDone()
@@ -232,7 +239,7 @@ function CatalogueForm({
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-1.5">
           <Label htmlFor="catalogue-name-en">Name (English)</Label>
           <Input
@@ -261,7 +268,26 @@ function CatalogueForm({
             onChange={(e) => set('position', e.target.value)}
           />
         </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="catalogue-status">Status</Label>
+          <select
+            id="catalogue-status"
+            value={form.status}
+            onChange={(e) => set('status', e.target.value as TreeStatus)}
+            className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+          >
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
       </div>
+
+      {form.status === 'inactive' && (
+        <p className="text-xs text-muted-foreground">
+          Hidden from every catalogue dropdown and filter. Products filed here
+          keep this catalogue and show under “All” until it is switched back on.
+        </p>
+      )}
 
       <div className="flex gap-3">
         <Button type="submit" size="sm">

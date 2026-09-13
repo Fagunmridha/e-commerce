@@ -3,7 +3,12 @@
 import { revalidatePath } from 'next/cache'
 import { and, eq, isNull } from 'drizzle-orm'
 import { db } from '@/lib/db'
-import { users, wholesalerApplications, type WholesaleRole } from '@/lib/db/schema'
+import {
+  users,
+  wholesalerApplications,
+  wholesalerTradeLines,
+  type WholesaleRole,
+} from '@/lib/db/schema'
 import { getCurrentUser } from '@/lib/auth'
 import { getWholesaleLines } from '@/lib/products'
 import { parseOrThrow } from '@/lib/validation/shared'
@@ -109,7 +114,7 @@ export async function submitWholesaleApplication(
   // storefront-only "kids" aisle, or into a line that does not exist.
   const lines = await getWholesaleLines()
   if (!lines.some((line) => line.slug === data.categorySlug)) {
-    return { ok: false, error: 'Pick a category from the list.' }
+    return { ok: false, error: 'Pick a trade line from the list.' }
   }
 
   const [existing] = await db
@@ -165,6 +170,39 @@ export async function submitWholesaleApplication(
     .returning({ id: wholesalerApplications.id })
 
   if (!application) return { ok: false, error: 'Could not save your application.' }
+
+  /**
+   * Record the line this submission asked for.
+   *
+   * A shop deals in one line, so this is one row — but it lives in
+   * `wholesaler_trade_lines` rather than only on `category_slug`, because the
+   * *verdict* belongs to the pair: `requested` is what the applicant picked,
+   * `approved` is what an admin granted, and the two are not the same fact.
+   *
+   * Delete-then-insert, scoped to `requested`: a resubmission that switches
+   * line has to drop the old request, while an admin's existing `approved` grant
+   * survives — which is what `onConflictDoNothing` then leaves alone.
+   *
+   * Neon's HTTP driver has no interactive transaction, so this is a `batch`:
+   * one round trip, and the delete cannot land without the insert behind it.
+   */
+  await db.batch([
+    db
+      .delete(wholesalerTradeLines)
+      .where(
+        and(
+          eq(wholesalerTradeLines.applicationId, application.id),
+          eq(wholesalerTradeLines.status, 'requested'),
+        ),
+      ),
+    db
+      .insert(wholesalerTradeLines)
+      .values({
+        applicationId: application.id,
+        categorySlug: data.categorySlug,
+      })
+      .onConflictDoNothing(),
+  ])
 
   // Submitting the form *is* choosing the seller side, for anyone who reached
   // it without going through the chooser first. Guarded on null above, so this

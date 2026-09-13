@@ -89,8 +89,15 @@ export function WholesaleForm({
   application,
   defaultName,
   defaultEmail,
+  categorySlug,
   onCancel,
 }: {
+  /**
+   * The trade line, already chosen on the screen before this one. Carried in
+   * rather than asked for again: it is the decision the whole application
+   * hangs off, and a field here would let the two answers disagree.
+   */
+  categorySlug: string
   application: WholesaleApplicationView | null
   defaultName: string
   defaultEmail: string
@@ -112,7 +119,8 @@ export function WholesaleForm({
     defaultValues: {
       shopName: application?.shopName ?? '',
       businessType: application?.businessType ?? 'retail_shop',
-      categorySlug: application?.categorySlug ?? '',
+      // Set by the picker one screen back, not by any field in here.
+      categorySlug,
       taxToken: application?.taxToken ?? '',
       binNumber: application?.binNumber ?? '',
       tradeLicenseNo: application?.tradeLicenseNo ?? '',
@@ -209,35 +217,6 @@ export function WholesaleForm({
                       ))}
                     </select>
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="categorySlug"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{copy.category}</FormLabel>
-                  <FormControl>
-                    <select
-                      {...field}
-                      className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                    >
-                      {/* Disabled placeholder rather than a preselected first
-                          option: an untouched form must fail validation, not
-                          quietly book the shop into whatever sorted first. */}
-                      <option value="" disabled>
-                        {copy.categoryPlaceholder}
-                      </option>
-                      {lines.map((line) => (
-                        <option key={line.slug} value={line.slug}>
-                          {pick(line.name)}
-                        </option>
-                      ))}
-                    </select>
-                  </FormControl>
-                  <FormDescription>{copy.categoryHint}</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

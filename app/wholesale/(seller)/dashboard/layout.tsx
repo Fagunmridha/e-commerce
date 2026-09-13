@@ -3,7 +3,7 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { SellerSidebar } from '@/components/wholesale/seller-sidebar'
 import { SellerHeader } from '@/components/wholesale/seller-header'
-import { getViewerShop } from '@/lib/wholesalers'
+import { getApplicationLines, getViewerShop } from '@/lib/wholesalers'
 
 /**
  * The seller panel's own chrome — the same sidebar shell /admin uses, so a shop
@@ -24,10 +24,15 @@ export default async function SellerDashboardLayout({
   const shop = await getViewerShop()
   if (!shop) redirect('/wholesale/apply')
 
+  // The sidebar's catalogue tree is this shop's permissions drawn out, so the
+  // grants are read here rather than inside a client component that would have
+  // no way to narrow them.
+  const lines = await getApplicationLines(shop)
+
   return (
     <TooltipProvider delayDuration={0}>
       <SidebarProvider>
-        <SellerSidebar shopName={shop.shopName} />
+        <SellerSidebar shopName={shop.shopName} sellerLines={lines.approved} />
         <SidebarInset className="min-w-0">
           <SellerHeader />
           {/* Centred on the same grid as /admin — see that layout's note. */}

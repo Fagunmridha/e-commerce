@@ -176,6 +176,34 @@
       "when": 1789065500361,
       "tag": "0024_even_vector",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1789201343787,
+      "tag": "0025_unique_kingpin",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1789202271096,
+      "tag": "0026_robust_katie_power",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1789203768657,
+      "tag": "0027_loose_silver_samurai",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1789205283994,
+      "tag": "0028_rainy_jackal",
+      "breakpoints": true
     }
   ]
 }

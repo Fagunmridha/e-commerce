@@ -1,15 +1,17 @@
 import 'server-only'
 import { cache } from 'react'
-import { and, count, desc, eq, inArray } from 'drizzle-orm'
+import { and, asc, desc, eq, inArray } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
 import {
   users,
   wholesalerApplications,
+  wholesalerTradeLines,
   type UserRow,
   type WholesaleRole,
   type WholesalerApplicationRow,
 } from '@/lib/db/schema'
+import type { CategorySlug } from '@/lib/types'
 
 /**
  * Which side of the wholesale programme the viewer joined, or null if they
@@ -161,13 +163,57 @@ export const getViewerPayoutShop = cache(
 )
 
 /**
+ * One shop's trade lines, as the pair the review screen draws: what was asked
+ * for, and what was granted. `approved` is always a subset of `requested` in
+ * practice — an admin grants from the list — but they are returned separately
+ * rather than as a flag per row, because every caller wants one or the other
+ * whole.
+ *
+ * `approved` falls back to the application's own `category_slug` when the join
+ * table is empty. That is the shop approved before the table existed, and
+ * without the fallback it would lose its line the moment this shipped.
+ */
+export async function getApplicationLines(
+  application: Pick<WholesalerApplicationRow, 'id' | 'categorySlug'>,
+): Promise<{ requested: CategorySlug[]; approved: CategorySlug[] }> {
+  const rows = await db
+    .select({
+      categorySlug: wholesalerTradeLines.categorySlug,
+      status: wholesalerTradeLines.status,
+    })
+    .from(wholesalerTradeLines)
+    .where(eq(wholesalerTradeLines.applicationId, application.id))
+    .orderBy(asc(wholesalerTradeLines.categorySlug))
+
+  const approved = rows
+    .filter((row) => row.status === 'approved')
+    .map((row) => row.categorySlug)
+
+  return {
+    requested: rows.map((row) => row.categorySlug),
+    approved:
+      approved.length > 0
+        ? approved
+        : application.categorySlug
+          ? [application.categorySlug]
+          : [],
+  }
+}
+
+/**
  * Guards the seller server actions — the mirror of `requireAdmin()`. Throws
  * rather than returning null because the callers are mutations, and a silent
  * null there would be a hole rather than a redirect.
+ *
+ * `lines` comes back with the shop because every caller that has one needs the
+ * other: there is no seller mutation that may skip the "is this inside a line
+ * you were approved for" question, and fetching it separately is how one
+ * eventually would.
  */
 export async function requireApprovedWholesaler(): Promise<{
   user: UserRow
   shop: WholesalerApplicationRow
+  lines: CategorySlug[]
 }> {
   const user = await getCurrentUser()
   if (!user) throw new Error('Not authorized')
@@ -183,15 +229,7 @@ export async function requireApprovedWholesaler(): Promise<{
     )
 
   if (!shop) throw new Error('Not authorized')
-  return { user, shop }
-}
 
-/** Feeds the admin header bell, next to the pending-order count. */
-export async function getPendingApplicationCount(): Promise<number> {
-  const [row] = await db
-    .select({ n: count() })
-    .from(wholesalerApplications)
-    .where(eq(wholesalerApplications.status, 'pending'))
-
-  return row?.n ?? 0
+  const { approved } = await getApplicationLines(shop)
+  return { user, shop, lines: approved }
 }
