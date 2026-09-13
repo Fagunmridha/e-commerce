@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { PageHeader } from '@/components/page-header'
 import { Redirecting } from '@/components/redirecting'
 import { WholesaleJoin } from '@/components/wholesale/wholesale-join'
 import { WholesalePitch } from '@/components/wholesale/wholesale-pitch'
@@ -52,12 +51,10 @@ export default async function WholesalePage({
 
   if (user?.wholesaleRole === 'seller') {
     const application = await getApplicationForUser(user.id)
-    return (
-      <>
-        <PageHeader pageKey="wholesale" />
-        <WholesalePitch status={application?.status ?? null} />
-      </>
-    )
+    // No `PageHeader`, for the same reason the join branch below has none:
+    // `WholesalePitch` opens with its own hero, and the band above it was only
+    // a second title over the first.
+    return <WholesalePitch status={application?.status ?? null} />
   }
 
   const [products, categories, catalogues] = await Promise.all([

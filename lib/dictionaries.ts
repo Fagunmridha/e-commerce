@@ -739,6 +739,36 @@ const en = {
       cancel: 'Cancel',
       openingDashboard: 'Opening your dashboard…',
     },
+    /**
+     * The seller's own landing page — what they see at /wholesale once they
+     * have picked the selling side. It carries its own hero, so the page drops
+     * `PageHeader` on this branch exactly as the join screen does.
+     */
+    pitch: {
+      stepsEyebrow: 'How it works',
+      stepsTitle: 'From application to your first sale',
+      steps: [
+        {
+          title: 'Pick your trade line',
+          body: 'Cloth, Electronics, Cosmetics — whichever your shop actually deals in. It sets what you may list.',
+        },
+        {
+          title: 'Fill in the application',
+          body: 'Shop name, contact and address. A trade licence or shop photo helps, but nothing is compulsory.',
+        },
+        {
+          title: 'We review it',
+          body: 'Usually within two working days. We call the number you give us if anything needs checking.',
+        },
+        {
+          title: 'List your stock',
+          body: 'Your own dashboard opens. Set your price and minimum order per item, and it goes up for review.',
+        },
+      ],
+      benefitsEyebrow: 'Why sell here',
+      closingTitle: 'Ready to open your shop?',
+      closingBody: 'The application takes a few minutes, and you can come back to it.',
+    },
     /** The step between choosing the seller side and the application form. */
     linePicker: {
       title: 'What do you trade in?',
@@ -1937,6 +1967,31 @@ const bn: Dictionary = {
       edit: 'সম্পাদনা করে আবার জমা দিন',
       cancel: 'বাতিল',
       openingDashboard: 'আপনার ড্যাশবোর্ড খোলা হচ্ছে…',
+    },
+    pitch: {
+      stepsEyebrow: 'কীভাবে কাজ করে',
+      stepsTitle: 'আবেদন থেকে প্রথম বিক্রি পর্যন্ত',
+      steps: [
+        {
+          title: 'ট্রেড লাইন বাছুন',
+          body: 'কাপড়, ইলেকট্রনিক্স, কসমেটিকস — আপনার দোকান আসলে যেটার ব্যবসা করে। এটাই ঠিক করে আপনি কী কী তুলতে পারবেন।',
+        },
+        {
+          title: 'আবেদন ফর্ম পূরণ করুন',
+          body: 'দোকানের নাম, যোগাযোগ আর ঠিকানা। ট্রেড লাইসেন্স বা দোকানের ছবি থাকলে সুবিধা, তবে কোনোটাই বাধ্যতামূলক নয়।',
+        },
+        {
+          title: 'আমরা যাচাই করি',
+          body: 'সাধারণত দুই কর্মদিবসের মধ্যে। কিছু দেখার থাকলে আপনার দেওয়া নম্বরে ফোন করি।',
+        },
+        {
+          title: 'পণ্য তুলুন',
+          body: 'আপনার নিজের ড্যাশবোর্ড খুলে যাবে। প্রতিটি পণ্যের দাম আর সর্বনিম্ন অর্ডার আপনি ঠিক করবেন, তারপর সেটি পর্যালোচনায় যাবে।',
+        },
+      ],
+      benefitsEyebrow: 'কেন এখানে বেচবেন',
+      closingTitle: 'দোকান খুলতে প্রস্তুত?',
+      closingBody: 'আবেদনে কয়েক মিনিট লাগে, আর মাঝপথে থেমে পরে আবার ফিরে আসা যায়।',
     },
     linePicker: {
       title: 'আপনি কীসের ব্যবসা করেন?',
