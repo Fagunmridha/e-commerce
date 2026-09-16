@@ -1,5 +1,5 @@
 import 'dotenv/config'
-import './ipv4'
+import './network'
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { neon } from '@neondatabase/serverless'

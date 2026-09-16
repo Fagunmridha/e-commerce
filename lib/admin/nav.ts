@@ -118,11 +118,24 @@ export const ADMIN_NAV: AdminNavGroup[] = [
         ],
       },
       {
-        href: '/admin/wholesalers',
+        href: '/admin/wholesale',
         label: 'Wholesalers',
         icon: Store,
         children: [
+          { href: '/admin/wholesale', label: 'Dashboard' },
+          {
+            href: '/admin/wholesale/catalog',
+            label: 'Manage catalog',
+          },
           { href: '/admin/wholesalers', label: 'All applications' },
+          {
+            href: '/admin/wholesalers?status=approved',
+            label: 'All sellers',
+          },
+          {
+            href: '/admin/products/review',
+            label: 'Product approvals',
+          },
         ],
       },
       // Sales, next to Wholesalers: a settlement is what the store owes one of

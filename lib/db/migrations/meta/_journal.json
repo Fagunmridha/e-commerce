@@ -204,6 +204,13 @@
       "when": 1789205283994,
       "tag": "0028_rainy_jackal",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1789500683595,
+      "tag": "0029_mushy_yellow_claw",
+      "breakpoints": true
     }
   ]
 }

@@ -107,14 +107,17 @@ export async function submitWholesaleApplication(
     }
   }
 
-  // The schema can only say the field was filled in. Whether that slug exists,
+  // The schema can only say the field was filled in. Whether each slug exists,
   // and whether it is a trade line rather than a category under one, are
   // database questions — and this action is a public endpoint, so a
   // hand-rolled request must not be able to book a shop into the
   // storefront-only "kids" aisle, or into a line that does not exist.
+  // Every slug is checked, not just the first: a request that smuggles one bad
+  // line in behind three good ones is exactly the shape this has to refuse.
   const lines = await getWholesaleLines()
-  if (!lines.some((line) => line.slug === data.categorySlug)) {
-    return { ok: false, error: 'Pick a trade line from the list.' }
+  const open = new Set(lines.map((line) => line.slug))
+  if (!data.categorySlugs.every((slug) => open.has(slug))) {
+    return { ok: false, error: 'Pick your trade lines from the list.' }
   }
 
   const [existing] = await db
@@ -136,7 +139,10 @@ export async function submitWholesaleApplication(
     userId: user.id,
     shopName: data.shopName,
     businessType: data.businessType,
-    categorySlug: data.categorySlug,
+    // The primary line — the first one picked — kept beside the grants table
+    // for the screens with room for only one. `setApplicationLines` re-stamps
+    // it to the first *approved* line once an admin decides.
+    categorySlug: data.categorySlugs[0],
     taxToken: data.taxToken,
     binNumber: data.binNumber,
     tradeLicenseNo: data.tradeLicenseNo,
@@ -172,19 +178,19 @@ export async function submitWholesaleApplication(
   if (!application) return { ok: false, error: 'Could not save your application.' }
 
   /**
-   * Record the line this submission asked for.
+   * Rewrite the requested lines to exactly what this submission asked for.
    *
-   * A shop deals in one line, so this is one row — but it lives in
-   * `wholesaler_trade_lines` rather than only on `category_slug`, because the
-   * *verdict* belongs to the pair: `requested` is what the applicant picked,
-   * `approved` is what an admin granted, and the two are not the same fact.
+   * One row per line in `wholesaler_trade_lines`, because the verdict belongs
+   * to the pair: `requested` is what the applicant picked, `approved` is what an
+   * admin granted, and an admin grants Clothing while refusing Cosmetics on the
+   * same application.
    *
-   * Delete-then-insert, scoped to `requested`: a resubmission that switches
-   * line has to drop the old request, while an admin's existing `approved` grant
-   * survives — which is what `onConflictDoNothing` then leaves alone.
+   * Delete-then-insert, scoped to `requested`: a line dropped from the form has
+   * to disappear, while an admin's existing `approved` grant survives a
+   * resubmission — which is what `onConflictDoNothing` then leaves alone.
    *
    * Neon's HTTP driver has no interactive transaction, so this is a `batch`:
-   * one round trip, and the delete cannot land without the insert behind it.
+   * one round trip, and the delete cannot land without the inserts behind it.
    */
   await db.batch([
     db
@@ -197,10 +203,12 @@ export async function submitWholesaleApplication(
       ),
     db
       .insert(wholesalerTradeLines)
-      .values({
-        applicationId: application.id,
-        categorySlug: data.categorySlug,
-      })
+      .values(
+        data.categorySlugs.map((slug) => ({
+          applicationId: application.id,
+          categorySlug: slug,
+        })),
+      )
       .onConflictDoNothing(),
   ])
 

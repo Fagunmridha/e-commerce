@@ -4,7 +4,7 @@ import { Redirecting } from '@/components/redirecting'
 import { WholesaleContent } from '@/components/wholesale/wholesale-content'
 import type { WholesaleApplicationView } from '@/components/wholesale/types'
 import { getCurrentUser } from '@/lib/auth'
-import { getApplicationForUser } from '@/lib/wholesalers'
+import { getApplicationForUser, getApplicationLines } from '@/lib/wholesalers'
 import { getWholesaleLines } from '@/lib/products'
 import { pageMetadata } from '@/lib/metadata'
 import { getDictionary } from '@/lib/dictionaries'
@@ -44,6 +44,9 @@ export default async function WholesaleApplyPage() {
     // open to trade — the same list `submitWholesaleApplication` checks against.
     getWholesaleLines(),
   ])
+  // What they asked for last time, so a resubmission re-ticks their own answer.
+  // `approved` is the admin's business; this page never shows it.
+  const requested = row ? (await getApplicationLines(row)).requested : []
 
   // An approved shop has nothing left to apply for; their work is in the
   // dashboard. Details are changed by an admin, not by resubmitting.
@@ -66,7 +69,11 @@ export default async function WholesaleApplyPage() {
         status: row.status,
         shopName: row.shopName,
         businessType: row.businessType,
-        categorySlug: row.categorySlug,
+        categorySlugs: requested.length
+          ? requested
+          : row.categorySlug
+            ? [row.categorySlug]
+            : [],
         taxToken: row.taxToken,
         binNumber: row.binNumber,
         tradeLicenseNo: row.tradeLicenseNo,

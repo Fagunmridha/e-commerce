@@ -1,9 +1,9 @@
 'use server'
 
 import { revalidatePath, updateTag } from 'next/cache'
-import { eq } from 'drizzle-orm'
+import { count, eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
-import { catalogues } from '@/lib/db/schema'
+import { catalogues, products } from '@/lib/db/schema'
 import { isUniqueViolation } from '@/lib/db/errors'
 import { requireAdmin } from '@/lib/auth'
 import { catalogueSchema, type CatalogueInput } from '@/lib/validation/admin'
@@ -31,6 +31,23 @@ function refresh() {
 export async function upsertCatalogue(input: CatalogueInput): Promise<void> {
   await requireAdmin()
   const data = parseOrThrow(catalogueSchema, input)
+
+  // Moving a catalogue to another category would leave every product in it
+  // filed under a category its catalogue no longer belongs to — Saree under
+  // Men's Wear. The composite foreign key refuses that outright; this says why
+  // before the database has to.
+  const [current] = await db
+    .select({ categorySlug: catalogues.categorySlug })
+    .from(catalogues)
+    .where(eq(catalogues.slug, data.slug))
+  if (current && current.categorySlug !== data.categorySlug) {
+    const held = await productsIn(data.slug)
+    if (held > 0) {
+      throw new Error(
+        `This catalogue contains ${held} product(s), so it cannot move to another category. Move the products first, or create a new catalogue there.`,
+      )
+    }
+  }
 
   const values = {
     slug: data.slug,
@@ -61,13 +78,48 @@ export async function upsertCatalogue(input: CatalogueInput): Promise<void> {
   refresh()
 }
 
+/** How many products are filed under a catalogue — the thing a delete or move would strand. */
+async function productsIn(slug: string): Promise<number> {
+  const [row] = await db
+    .select({ n: count() })
+    .from(products)
+    .where(eq(products.catalogueSlug, slug))
+  return row?.n ?? 0
+}
+
 /**
- * Deletes a catalogue. Products filed under it are *not* deleted — the foreign
- * key is `ON DELETE SET NULL`, so they fall back to appearing under "All" in
- * their category. Removing a way of grouping stock must never remove the stock.
+ * Deletes a catalogue — only an empty one.
+ *
+ * This used to be allowed with products inside, and quietly unfiled them to
+ * "All". That is recoverable only if someone remembers which hundred products
+ * were Jeans; nobody does. So a catalogue that holds anything is refused, with
+ * the two honest ways forward named: move the products, or switch the
+ * catalogue to Inactive, which hides it from every picker and loses nothing.
+ *
+ * The count is a courtesy, not the guard. There is no transaction over Neon's
+ * HTTP driver, so a product filed between this read and the delete would slip
+ * past it; the composite foreign key on `products` is RESTRICT and refuses the
+ * delete itself, and the catch below turns that into the same sentence.
  */
 export async function deleteCatalogue(slug: string): Promise<void> {
   await requireAdmin()
-  await db.delete(catalogues).where(eq(catalogues.slug, slug))
+
+  const held = await productsIn(slug)
+  if (held > 0) {
+    throw new Error(
+      `This catalogue contains ${held} product(s). Move or reassign the products before deleting — or set it to Inactive to hide it without losing anything.`,
+    )
+  }
+
+  try {
+    await db.delete(catalogues).where(eq(catalogues.slug, slug))
+  } catch (error) {
+    if (/foreign key|violates/i.test(error instanceof Error ? error.message : '')) {
+      throw new Error(
+        'A product was filed under this catalogue just now — reload and try again.',
+      )
+    }
+    throw error
+  }
   refresh()
 }

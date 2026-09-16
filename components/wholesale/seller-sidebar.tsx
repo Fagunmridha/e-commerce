@@ -114,7 +114,14 @@ function CatalogueNav({ sellerLines }: { sellerLines: CategorySlug[] }) {
 
   const tree = useMemo(
     () =>
-      sellerLines.map((slug) => {
+      sellerLines
+        // A granted line an admin has since switched off, or closed to trade,
+        // is not in the active list — and a heading with nothing under it,
+        // labelled with a raw slug, is worse than no heading.
+        .filter((slug) =>
+          wholesaleCategories.some((category) => category.slug === slug),
+        )
+        .map((slug) => {
         const line = wholesaleCategories.find(
           (category) => category.slug === slug,
         )

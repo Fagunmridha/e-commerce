@@ -127,7 +127,7 @@ export async function deleteCategory(slug: string): Promise<void> {
 
   if ((row?.n ?? 0) > 0) {
     throw new Error(
-      `${row.n} product(s) are still filed under this category. Move or delete them first.`,
+      `This category contains ${row.n} product(s). Move or reassign the products before deleting — or set it to Inactive to hide it without losing anything.`,
     )
   }
 

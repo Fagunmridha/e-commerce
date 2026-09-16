@@ -44,3 +44,17 @@ export function getShippingCost(subtotal: number, zone: DeliveryZone): number {
 export function formatPrice(amount: number): string {
   return `৳${Math.round(amount).toLocaleString('en-IN')}`
 }
+
+/**
+ * How much off, as a whole percent — the `-20%` chip on a card.
+ *
+ * Derived from the pair of prices already on the row rather than stored, so it
+ * can never disagree with the struck-through figure printed beside it. Returns
+ * 0 whenever there is nothing honest to claim: no old price, an old price at or
+ * below the current one (a *rise*, which must not print as a discount), or a
+ * difference that rounds away to nothing.
+ */
+export function discountPercent(price: number, oldPrice?: number): number {
+  if (!oldPrice || oldPrice <= price) return 0
+  return Math.round(((oldPrice - price) / oldPrice) * 100)
+}

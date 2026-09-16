@@ -2,6 +2,7 @@ import {
   boolean,
   date,
   doublePrecision,
+  foreignKey,
   index,
   integer,
   jsonb,
@@ -154,6 +155,15 @@ export const catalogues = pgTable('catalogues', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 }, (table) => [
   index('catalogues_category_slug_idx').on(table.categorySlug),
+  /**
+   * The target of `products_category_catalogue_fk`. `slug` is already the
+   * primary key, so this pair is unique by construction — it exists only so a
+   * foreign key has a (category, catalogue) pair to point at.
+   */
+  uniqueIndex('catalogues_category_slug_pair_idx').on(
+    table.categorySlug,
+    table.slug,
+  ),
   /** As on `categories` — no duplicate English names under one category. */
   uniqueIndex('catalogues_category_name_idx').on(
     table.categorySlug,
@@ -174,16 +184,18 @@ export const products = pgTable('products', {
   /**
    * Which catalogue within `category` this sits in — "jeans" under men's.
    *
-   * Nullable, and deliberately not validated against the parent category in the
-   * database: every product that existed before catalogues did has none, and a
-   * grid that only showed categorised stock would have gone empty overnight. An
-   * uncatalogued product still appears under "All" and disappears the moment a
-   * catalogue filter is applied, which is the honest behaviour. The
-   * category/catalogue pairing is enforced on the admin form instead.
+   * Nullable: a product with no catalogue shows under "All". When set, it is
+   * held to its category by `products_category_catalogue_fk` below — a
+   * *composite* key on (category, catalogue_slug) → catalogues(category_slug,
+   * slug). A single-column key could only say "this catalogue exists"; the pair
+   * says "this catalogue exists *under this category*", which is what makes
+   * Saree-under-Men's-Wear impossible at the database, whatever the code does.
+   *
+   * RESTRICT both ways. Deleting a catalogue that still holds products is
+   * refused (it used to SET NULL and quietly unfile them), and so is moving a
+   * catalogue to another category while products point at it.
    */
-  catalogueSlug: text('catalogue_slug').references(() => catalogues.slug, {
-    onDelete: 'set null',
-  }),
+  catalogueSlug: text('catalogue_slug'),
   badge: text('badge', { enum: ['new', 'sale'] }),
   sizes: text('sizes').array(),
   /**
@@ -298,6 +310,13 @@ export const products = pgTable('products', {
   index('products_seller_id_idx').on(table.sellerId),
   index('products_category_idx').on(table.category),
   index('products_catalogue_slug_idx').on(table.catalogueSlug),
+  foreignKey({
+    name: 'products_category_catalogue_fk',
+    columns: [table.category, table.catalogueSlug],
+    foreignColumns: [catalogues.categorySlug, catalogues.slug],
+  })
+    .onDelete('restrict')
+    .onUpdate('restrict'),
   index('products_created_at_idx').on(table.createdAt),
   // The admin's review queue is "marketplace listings awaiting a verdict", and
   // every marketplace read now filters on this column as well as the join.

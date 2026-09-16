@@ -5,14 +5,14 @@ import { and, eq, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { products } from '@/lib/db/schema'
 import { requireApprovedWholesaler } from '@/lib/wholesalers'
-import { resolveCatalogue } from '@/lib/catalogues'
-import { isInAnyLine } from '@/lib/category-tree'
+import { checkCatalogue } from '@/lib/catalogues'
+import { categoriesInLine } from '@/lib/category-tree'
 import {
   attributeWrites,
   definitionsForCategory,
   getAllAttributeDefinitions,
 } from '@/lib/attributes'
-import { getWholesaleCategories } from '@/lib/products'
+import { getAllCategories, getWholesaleCategories } from '@/lib/products'
 import { uniqueProductId } from '@/lib/seller-products'
 import { parseOrThrow } from '@/lib/validation/shared'
 import {
@@ -92,87 +92,145 @@ export async function upsertSellerProduct(
   }
 
   /**
-   * A shop lists inside the trade lines it was approved for, and nowhere else.
-   * A cloth shop may file under Men's, Women's or Kids; it may not file under
-   * Electronics unless an admin granted it that line too.
+   * The permission chain, checked here and nowhere weaker:
    *
-   * The form only offers those categories, which is what an honest seller
-   * sees — this is the copy that counts, because a server action is a public
-   * endpoint and the form's `<select>` is a suggestion to anyone willing to
-   * skip it. Both sides read `categoriesInLines`, so neither can drift.
+   *   shop approved?  →  trade line granted & open?  →  category under that
+   *   line?  →  catalogue under that category & open?  →  allow.
    *
-   * A shop approved before lines existed has none at all, and
-   * `getApplicationLines` had nothing to fall back to either. Rather than
-   * locking it out of its own dashboard it falls back to "any wholesale
-   * category" — still narrower than no check, since a storefront-only category
-   * is refused either way, and an admin can grant it lines from the review
-   * screen.
+   * The form only ever offers paths that pass, which is what an honest seller
+   * sees. This is the copy that counts: a server action is a public endpoint,
+   * and "tradeLine = electronics, category = women, catalogue = saree" posted
+   * by hand is refused at the first link that does not hold — never repaired
+   * into something half-valid and saved.
+   *
+   * A shop with no granted line may list nothing. There used to be a fallback
+   * to "any wholesale category" for shops approved before lines existed; it
+   * was a migration crutch, and it is exactly the hole the chain exists to
+   * close. Such a shop sees a notice on its dashboard until an admin grants it.
    */
-  const wholesale = await getWholesaleCategories()
-
-  if (lines.length > 0) {
-    if (!isInAnyLine(wholesale, lines, data.category)) {
-      return {
-        ok: false,
-        error: 'You can only list products in a trade line you are approved for.',
-      }
+  if (lines.length === 0) {
+    return {
+      ok: false,
+      error: 'No trade line has been approved for your shop yet.',
     }
-  } else if (!wholesale.some((category) => category.slug === data.category)) {
-    return { ok: false, error: 'Pick a category from the list.' }
   }
+
+  const [openTrade, allCategories] = await Promise.all([
+    // Active and open to trade — what a *new* filing may use.
+    getWholesaleCategories(),
+    // Every row, so an edit can keep a category an admin has since switched off.
+    getAllCategories(),
+  ])
+
+  // Link 2 — the line is one this shop was granted, and is still open.
+  if (!lines.includes(data.tradeLine)) {
+    return { ok: false, error: 'Your shop is not approved for that trade line.' }
+  }
+  if (!openTrade.some((category) => category.slug === data.tradeLine)) {
+    return { ok: false, error: 'That trade line is closed to new listings.' }
+  }
+
+  // An edit that keeps the category it already had may keep it even if an
+  // admin has since switched it off: "inactive" stops new filings, it must not
+  // strand a live listing so its seller cannot correct the stock count.
+  let existing: { category: string; catalogueSlug: string | null } | undefined
+  if (data.id) {
+    ;[existing] = await db
+      .select({
+        category: products.category,
+        catalogueSlug: products.catalogueSlug,
+      })
+      .from(products)
+      .where(and(eq(products.id, data.id), eq(products.sellerId, shop.id)))
+    if (!existing) return { ok: false, error: 'That listing is not yours.' }
+  }
+  const keepingCategory = existing?.category === data.category
+
+  // Link 3 — the category sits under that line. Checked against the trade-open
+  // list either way; only the *status* filter is relaxed for a kept category.
+  const tradeScoped = allCategories.filter(
+    (category) => category.scope === 'wholesale' || category.scope === 'both',
+  )
+  const pool = keepingCategory
+    ? tradeScoped.filter(
+        (category) => category.status === 'active' || category.slug === data.category,
+      )
+    : openTrade
+  if (
+    !categoriesInLine(pool, data.tradeLine).some(
+      (category) => category.slug === data.category,
+    )
+  ) {
+    return {
+      ok: false,
+      error: 'That category does not belong to the chosen trade line.',
+    }
+  }
+
+  // Link 4 — the catalogue sits under that category, and is open.
+  const catalogueCheck = await checkCatalogue(data.category, data.catalogue, {
+    allowInactive:
+      keepingCategory && existing?.catalogueSlug === data.catalogue,
+  })
+  if (!catalogueCheck.ok) return catalogueCheck
 
   const values = {
     // The seller types one name; both languages get it rather than shipping an
     // empty Bangla string into a jsonb column the UI reads blindly.
     name: { en: data.name, bn: data.name },
     price: data.price,
+    // The MRP. A card strikes it through beside the wholesale price and states
+    // the percentage below it — see `discountPercent` in lib/currency.ts.
+    oldPrice: data.mrp,
     image: data.image,
     category: data.category,
-    catalogueSlug: await resolveCatalogue(data.category, data.catalogue),
+    catalogueSlug: catalogueCheck.slug,
     sizes: data.sizes,
+    colors: data.colors
+      ? data.colors.map((colour) => ({ name: { en: colour, bn: colour } }))
+      : null,
     description: data.description
       ? { en: data.description, bn: data.description }
       : null,
     stock: data.stock,
     moq: data.moq,
-    // Never settable by a seller: a marketplace listing cannot carry a sale
-    // badge or a struck-through price, which are the store's own promotions.
-    oldPrice: null,
+    // Never settable by a seller: the "sale"/"new" badge is the store's own
+    // promotion, not a fact about the goods.
     badge: null,
-    colors: null,
   }
   // `commission_pct` is load-bearing by its *absence* from `values` above:
   // Drizzle only writes the columns listed, so a seller editing their own
   // listing cannot touch the rate the store agreed with them. Do not "tidy"
   // this into a spread of the whole row. `approval_status` is the same kind of
-  // column — a seller may move it to `pending` and nowhere else, which is what
-  // the two branches below spell out.
+  // column — a seller may move it to `draft` or `pending` and nowhere else,
+  // which is what the two branches below spell out.
 
   if (data.id) {
     /**
-     * An edit keeps the listing's standing, with one exception: saving a
-     * *rejected* listing is the resubmission, so it goes back into the queue
-     * with the old reason cleared.
+     * An edit keeps the listing's standing, with one exception: submitting a
+     * *draft* or a *rejected* listing sends it into the queue, with any old
+     * reason cleared. Saving without submitting leaves a draft a draft.
      *
      * Deliberately not "every edit re-enters review". A seller correcting a
      * stock count would then take their own live product off the market until
-     * an admin looked at it, which turns the ordinary act of keeping a listing
-     * accurate into a reason not to. `suspended` is untouched either way — that
-     * is the admin's state, and a seller must not be able to save their way out
-     * of it.
+     * an admin looked at it, which turns keeping a listing accurate into a
+     * reason not to. `suspended` is untouched either way — that is the admin's
+     * state, and a seller must not be able to save their way out of it.
      *
-     * Written as CASE expressions rather than a read-then-write: on the right
-     * of a SET, a column is its pre-update value, so this decides and applies
-     * in one statement with no room for a race between the two.
+     * CASE expressions rather than read-then-write: on the right of a SET a
+     * column is its pre-update value, so this decides and applies in one
+     * statement with no room for a race between the two.
      */
-    const wasRejected = sql`${products.approvalStatus} = 'rejected'`
+    const toReview = data.submit
+      ? sql`${products.approvalStatus} in ('draft', 'rejected')`
+      : sql`false`
     const [updated] = await db
       .update(products)
       .set({
         ...values,
-        approvalStatus: sql`case when ${wasRejected} then 'pending' else ${products.approvalStatus} end`,
-        rejectionReason: sql`case when ${wasRejected} then null else ${products.rejectionReason} end`,
-        submittedAt: sql`case when ${wasRejected} then now() else ${products.submittedAt} end`,
+        approvalStatus: sql`case when ${toReview} then 'pending' else ${products.approvalStatus} end`,
+        rejectionReason: sql`case when ${toReview} then null else ${products.rejectionReason} end`,
+        submittedAt: sql`case when ${toReview} then now() else ${products.submittedAt} end`,
       })
       .where(and(eq(products.id, data.id), eq(products.sellerId, shop.id)))
       .returning({ id: products.id })
@@ -186,11 +244,11 @@ export async function upsertSellerProduct(
       id,
       sellerId: shop.id,
       // The column defaults to `approved` for house stock and for every row
-      // that predates the queue; a seller's new listing is the one case that
-      // has to wait for a verdict, so it says so here rather than relying on a
-      // default that means the opposite.
-      approvalStatus: 'pending',
-      submittedAt: new Date(),
+      // that predates the queue; a seller's listing is the one case that has
+      // to wait, so it says so here rather than relying on a default that
+      // means the opposite.
+      approvalStatus: data.submit ? 'pending' : 'draft',
+      submittedAt: data.submit ? new Date() : null,
     })
     await saveAttributes(id, data.category, data.attributes)
   }

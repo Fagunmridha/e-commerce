@@ -9,11 +9,13 @@ import type { Catalogue, Category, Product } from '@/lib/types'
 /** The catalogue filter for stock in a category that has none set. */
 export const UNSORTED = '__unsorted__'
 
-type Branch = { value: string; label: string }
-type Node = { slug: string; label: string; branches: Branch[] }
+type Branch = { value: string; label: string; count: number }
+type Node = { slug: string; label: string; branches: Branch[]; count: number }
 type Group = {
   slug: string
   label: string
+  /** Listings behind this row — the number beside the name. */
+  count: number
   /** The categories under this trade line. Empty when the line has none. */
   categories: Node[]
   /** Catalogues hanging off the line itself — only when it has no categories. */
@@ -36,6 +38,21 @@ type Group = {
  * Every level is narrowed to what has stock behind it, the rule the shared
  * `CatalogueFilter` keeps for its dropdowns: no row here can empty the grid.
  */
+/**
+ * How many listings sit behind a row.
+ *
+ * `tabular-nums` so a column of them does not jitter as the filter changes the
+ * widths, and `shrink-0` so the count never gets squeezed out by a long name —
+ * it is the name that truncates.
+ */
+function Count({ n }: { n: number }) {
+  return (
+    <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+      ({n})
+    </span>
+  )
+}
+
 export function CatalogueTree({
   categories,
   catalogues,
@@ -67,15 +84,28 @@ export function CatalogueTree({
             entry.categorySlug === slug &&
             inCategory.some((product) => product.catalogue === entry.slug),
         )
-        .map((entry) => ({ value: entry.slug, label: pick(entry.name) }))
+        .map((entry) => ({
+          value: entry.slug,
+          label: pick(entry.name),
+          count: inCategory.filter((product) => product.catalogue === entry.slug)
+            .length,
+        }))
 
-      return inCategory.some((product) => !product.catalogue)
-        ? [...found, { value: UNSORTED, label: copy.otherCatalogue }]
+      const loose = inCategory.filter((product) => !product.catalogue)
+      return loose.length > 0
+        ? [
+            ...found,
+            {
+              value: UNSORTED,
+              label: copy.otherCatalogue,
+              count: loose.length,
+            },
+          ]
         : found
     }
 
-    const hasStock = (slug: string) =>
-      products.some((product) => product.category === slug)
+    const countIn = (slug: string) =>
+      products.filter((product) => product.category === slug).length
 
     const lines = categories.filter((item) => item.parentSlug === null)
 
@@ -83,16 +113,22 @@ export function CatalogueTree({
       .map((line) => {
         const children = categories
           .filter((item) => item.parentSlug === line.slug)
-          .filter((item) => hasStock(item.slug))
           .map((item) => ({
             slug: item.slug,
             label: pick(item.name),
+            count: countIn(item.slug),
             branches: branchesFor(item.slug),
           }))
+          .filter((item) => item.count > 0)
 
         return {
           slug: line.slug,
           label: pick(line.name),
+          // A line's own total is its children's, plus anything filed straight
+          // on it — which is what a childless line holds.
+          count:
+            children.reduce((sum, child) => sum + child.count, 0) ||
+            countIn(line.slug),
           categories: children,
           // Only when the line holds stock itself, which is the case for a
           // line nothing hangs under.
@@ -144,6 +180,7 @@ export function CatalogueTree({
               <span className="min-w-0 flex-1 truncate text-sm font-bold text-foreground uppercase">
                 {group.label}
               </span>
+              <Count n={group.count} />
               <ChevronDown
                 aria-hidden="true"
                 className={cn(
@@ -182,7 +219,10 @@ export function CatalogueTree({
                           : 'font-medium text-foreground hover:text-primary',
                       )}
                     >
-                      <span className="min-w-0 truncate">{node.label}</span>
+                      <span className="min-w-0 flex-1 truncate">
+                        {node.label}
+                      </span>
+                      <Count n={node.count} />
                     </button>
 
                     {node.branches.length > 0 && (
@@ -242,7 +282,8 @@ function BranchList({
               )}
             >
               <ArrowRight className="size-3 shrink-0" aria-hidden="true" />
-              <span className="min-w-0 truncate">{branch.label}</span>
+              <span className="min-w-0 flex-1 truncate">{branch.label}</span>
+              <Count n={branch.count} />
             </button>
           </li>
         )

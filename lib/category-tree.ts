@@ -15,11 +15,21 @@ import type { Category, CategorySlug } from '@/lib/types'
  * with no sub-categories set up lists straight under Electronics. That falls
  * out of the same rule rather than needing a branch of its own, which is why
  * the fallback is here and not in every caller.
+ *
+ * **The line itself has to be in `all`**, or it has no destinations at all.
+ * Callers pass the *active, trade-open* list, so a line an admin switched off —
+ * or moved to shop-only — drops out of it; without this check its children,
+ * still active themselves, were found by `parentSlug` anyway and a shop
+ * approved for a disabled line kept listing under it. Checking here rather than
+ * in each caller is what closes it for the form, the server action and the
+ * sidebar in one place.
  */
 export function categoriesInLine(
   all: Category[],
   line: CategorySlug,
 ): Category[] {
+  if (!all.some((category) => category.slug === line)) return []
+
   const children = all.filter((category) => category.parentSlug === line)
   return children.length > 0
     ? children

@@ -5,7 +5,7 @@ import { and, eq, isNotNull } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { productImages, products, users } from '@/lib/db/schema'
 import { requireAdmin } from '@/lib/auth'
-import { resolveCatalogue } from '@/lib/catalogues'
+import { checkCatalogue } from '@/lib/catalogues'
 import {
   attributeWrites,
   definitionsForCategory,
@@ -64,7 +64,7 @@ export type ProductInput = {
   category: CategorySlug
   /**
    * The catalogue within `category`, or null for stock the admin has not
-   * sorted. Dropped to null server-side if it does not belong to `category`.
+   * sorted. Refused server-side if it does not belong to `category`.
    */
   catalogue?: string | null
   badge?: 'new' | 'sale' | null
@@ -107,6 +107,18 @@ export async function upsertProduct(input: ProductInput): Promise<void> {
   await requireAdmin()
   const data = parseOrThrow(productSchema, input)
 
+  // Refused, not repaired — the same check the seller path runs. The admin may
+  // keep a catalogue they have switched off (they switched it off; they may
+  // still be filing the last of its stock), but never one from another
+  // category: that pairing is also a foreign key, and a mismatch here would
+  // only reach the database to be rejected there with a worse message.
+  const catalogueCheck = await checkCatalogue(
+    data.category as CategorySlug,
+    data.catalogue,
+    { allowInactive: true },
+  )
+  if (!catalogueCheck.ok) throw new Error(catalogueCheck.error)
+
   const values = {
     id: data.id,
     name: data.name,
@@ -114,10 +126,7 @@ export async function upsertProduct(input: ProductInput): Promise<void> {
     oldPrice: data.oldPrice,
     image: data.image,
     category: data.category as CategorySlug,
-    catalogueSlug: await resolveCatalogue(
-      data.category as CategorySlug,
-      data.catalogue,
-    ),
+    catalogueSlug: catalogueCheck.slug,
     badge: data.badge,
     sizes: data.sizes,
     colors: data.colors,

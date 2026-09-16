@@ -6,8 +6,6 @@ import {
   Search,
   X,
   SlidersHorizontal,
-  Grid3X3,
-  List,
   RotateCcw,
   Check,
   ChevronDown,
@@ -18,6 +16,9 @@ import { ProductListCard } from '@/components/product-list-card'
 import { Reveal } from '@/components/reveal'
 import { useLanguage } from '@/components/language-provider'
 import { useCatalogue } from '@/components/catalogue-provider'
+import { SortSelect } from '@/components/browse/sort-select'
+import { ViewToggle } from '@/components/browse/view-toggle'
+import { FilterChips, type FilterChip } from '@/components/browse/filter-chips'
 import { cn } from '@/lib/utils'
 import type { CategorySlug } from '@/lib/types'
 
@@ -281,6 +282,47 @@ export function ShopBrowser({ initialFilter = 'all' }: { initialFilter?: Filter 
     { value: 'price-desc', label: t.shop.sortPriceDesc },
   ]
 
+  /**
+   * Every filter currently narrowing the grid, as the chip row reads them out.
+   *
+   * Built here rather than inside `FilterChips` because which filters this page
+   * has — and how each reads back as a sentence — is the page's business; the
+   * component owns only how a chip looks and where "clear all" sits.
+   */
+  const filterChips: FilterChip[] = [
+    filter !== 'all' && {
+      key: 'category',
+      label: `${t.catalogue.category}: ${categoryOptions.find((c) => c.value === filter)?.label ?? filter}`,
+      onClear: () => handleCategoryChange('all'),
+    },
+    catalogue && {
+      key: 'catalogue',
+      // A slug from the URL that matches nothing still deserves a chip — it is
+      // the only way to clear it.
+      label: `${t.catalogue.catalogue}: ${catalogues.find((c) => c.slug === catalogue)?.name ? pick(catalogues.find((c) => c.slug === catalogue)!.name) : catalogue}`,
+      onClear: () => handleCatalogueChange(''),
+    },
+    searchQuery.trim() && {
+      key: 'search',
+      label: `${t.shop.searchPlaceholder}: “${searchQuery}”`,
+      onClear: handleClearSearch,
+    },
+    (minPrice !== '' || maxPrice !== '') && {
+      key: 'price',
+      label: `${t.shop.priceRange}: ${minPrice ? formatPrice(Number(minPrice)) : formatPrice(0)} – ${maxPrice ? formatPrice(Number(maxPrice)) : '∞'}`,
+      onClear: () => {
+        setMinPrice('')
+        setMaxPrice('')
+        updateQueryParams({ minPrice: null, maxPrice: null })
+      },
+    },
+    inStockOnly && {
+      key: 'stock',
+      label: t.shop.inStockOnly,
+      onClear: () => handleToggleInStock(false),
+    },
+  ].filter(Boolean) as FilterChip[]
+
   return (
     <div className="py-8">
       {/* Top Search & Filter Bar */}
@@ -344,144 +386,18 @@ export function ShopBrowser({ initialFilter = 'all' }: { initialFilter?: Filter 
               )}
             </button>
 
-            {/* Sort Dropdown */}
-            <div className="flex items-center gap-2">
-              <label htmlFor="shop-sort" className="shrink-0 text-xs text-muted-foreground font-medium hidden sm:inline">
-                {t.shop.sortBy}:
-              </label>
-              <select
-                id="shop-sort"
-                value={sort}
-                onChange={(e) => handleSortChange(e.target.value as SortKey)}
-                className="h-10 rounded-xl border border-border bg-background px-3 text-xs font-medium outline-none focus:ring-2 focus:ring-ring/20"
-              >
-                {sortOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <SortSelect
+              id="shop-sort"
+              value={sort}
+              options={sortOptions}
+              onChange={handleSortChange}
+            />
 
-            {/* View Mode Switcher (Grid / List) */}
-            <div className="flex items-center rounded-xl border border-border bg-background p-1">
-              <button
-                type="button"
-                onClick={() => handleViewModeChange('grid')}
-                aria-label={t.shop.viewGrid}
-                className={cn(
-                  'flex size-8 items-center justify-center rounded-lg transition-colors',
-                  viewMode === 'grid'
-                    ? 'bg-foreground text-background'
-                    : 'text-muted-foreground hover:text-foreground',
-                )}
-              >
-                <Grid3X3 className="size-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => handleViewModeChange('list')}
-                aria-label={t.shop.viewList}
-                className={cn(
-                  'flex size-8 items-center justify-center rounded-lg transition-colors',
-                  viewMode === 'list'
-                    ? 'bg-foreground text-background'
-                    : 'text-muted-foreground hover:text-foreground',
-                )}
-              >
-                <List className="size-4" />
-              </button>
-            </div>
+            <ViewToggle value={viewMode} onChange={handleViewModeChange} />
           </div>
         </div>
 
-        {/* Active Filter Chips */}
-        {activeFiltersCount > 0 && (
-          <div className="mb-6 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-muted/40 p-3">
-            <span className="text-xs font-bold text-muted-foreground">
-              {t.shop.activeFilters}:
-            </span>
-
-            {filter !== 'all' && (
-              <button
-                type="button"
-                onClick={() => handleCategoryChange('all')}
-                className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-1 text-xs font-medium border border-border shadow-xs hover:border-foreground/40"
-              >
-                <span>Category: {categoryOptions.find((c) => c.value === filter)?.label}</span>
-                <X className="size-3 text-muted-foreground hover:text-foreground" />
-              </button>
-            )}
-
-            {catalogue && (
-              <button
-                type="button"
-                onClick={() => handleCatalogueChange('')}
-                className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-1 text-xs font-medium border border-border shadow-xs hover:border-foreground/40"
-              >
-                <span>
-                  {t.catalogue.catalogue}:{' '}
-                  {(() => {
-                    const match = catalogues.find((c) => c.slug === catalogue)
-                    // A slug from the URL that matches nothing still deserves a
-                    // chip — it is the only way to clear it.
-                    return match ? pick(match.name) : catalogue
-                  })()}
-                </span>
-                <X className="size-3 text-muted-foreground hover:text-foreground" />
-              </button>
-            )}
-
-            {searchQuery.trim() && (
-              <button
-                type="button"
-                onClick={handleClearSearch}
-                className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-1 text-xs font-medium border border-border shadow-xs hover:border-foreground/40"
-              >
-                <span>Search: &quot;{searchQuery}&quot;</span>
-                <X className="size-3 text-muted-foreground hover:text-foreground" />
-              </button>
-            )}
-
-            {(minPrice !== '' || maxPrice !== '') && (
-              <button
-                type="button"
-                onClick={() => {
-                  setMinPrice('')
-                  setMaxPrice('')
-                  updateQueryParams({ minPrice: null, maxPrice: null })
-                }}
-                className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-1 text-xs font-medium border border-border shadow-xs hover:border-foreground/40"
-              >
-                <span>
-                  Price: {minPrice ? formatPrice(Number(minPrice)) : '৳0'} -{' '}
-                  {maxPrice ? formatPrice(Number(maxPrice)) : '∞'}
-                </span>
-                <X className="size-3 text-muted-foreground hover:text-foreground" />
-              </button>
-            )}
-
-            {inStockOnly && (
-              <button
-                type="button"
-                onClick={() => handleToggleInStock(false)}
-                className="flex items-center gap-1.5 rounded-lg bg-background px-2.5 py-1 text-xs font-medium border border-border shadow-xs hover:border-foreground/40"
-              >
-                <span>{t.shop.inStockOnly}</span>
-                <X className="size-3 text-muted-foreground hover:text-foreground" />
-              </button>
-            )}
-
-            <button
-              type="button"
-              onClick={handleClearAllFilters}
-              className="ml-auto text-xs font-semibold text-primary hover:underline flex items-center gap-1"
-            >
-              <RotateCcw className="size-3" />
-              <span>{t.shop.clearAll}</span>
-            </button>
-          </div>
-        )}
+        <FilterChips chips={filterChips} onClearAll={handleClearAllFilters} />
 
         {/* Main Content Layout (Sidebar + Product Grid) */}
         <div className="flex flex-col md:flex-row gap-8">

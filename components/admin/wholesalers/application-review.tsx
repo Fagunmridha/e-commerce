@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { LoadingOverlay } from '@/components/loading-overlay'
 import {
@@ -53,17 +54,26 @@ export function ApplicationReview({
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [note, setNote] = useState(application.reviewNote ?? '')
-  // A shop trades in one line. `setApplicationLines` still takes a list — the
-  // join table is keyed per line and the verdict is per pair — so this sends a
-  // list of one rather than a second action that means almost the same thing.
-  const [granted, setGranted] = useState(application.approvedLines[0] ?? '')
-  const dirty = granted !== (application.approvedLines[0] ?? '')
+  // The verdict is per line: Clothing granted and Cosmetics refused on the same
+  // application is the ordinary case. Unticking a line revokes it, and the
+  // request itself stays on record — see `setApplicationLines`.
+  const [granted, setGranted] = useState<string[]>(application.approvedLines)
+  const toggleLine = (slug: string) =>
+    setGranted((current) =>
+      current.includes(slug)
+        ? current.filter((value) => value !== slug)
+        : [...current, slug],
+    )
+  // Order-insensitive: ticking a line and unticking it again is not a change.
+  const dirty =
+    granted.length !== application.approvedLines.length ||
+    granted.some((slug) => !application.approvedLines.includes(slug))
 
   const saveLines = () =>
     startTransition(async () => {
       try {
-        await setApplicationLines(application.id, granted ? [granted] : [])
-        toast.success('Trade line updated')
+        await setApplicationLines(application.id, granted)
+        toast.success('Trade lines updated')
         router.refresh()
       } catch (error) {
         toast.error(
@@ -250,43 +260,58 @@ export function ApplicationReview({
           />
         </div>
 
-        {/* An approved seller never sees the application form again, so this
-            is the only place a wrong or missing trade line can be corrected —
-            and the only way a shop approved before lines existed gets one. */}
+        {/* An approved seller never sees the application form again, so this is
+            the only place a shop's lines are granted or revoked — and the only
+            way a shop approved before lines existed gets any. */}
         <div className="mt-4 space-y-1.5">
-          <Label htmlFor="trade-line">Trade line</Label>
-          <div className="flex flex-wrap gap-3">
-            <select
-              id="trade-line"
-              value={granted}
-              onChange={(event) => setGranted(event.target.value)}
-              className="h-9 min-w-48 rounded-md border border-border bg-background px-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
-            >
-              <option value="">Not set</option>
-              {application.lines.map((option) => (
-                <option key={option.slug} value={option.slug}>
-                  {option.name}
-                  {/* What the applicant asked for, marked in the list itself:
-                      the admin's job here is usually to confirm it, and a
-                      second row saying so would only be read once. */}
-                  {application.requestedLines.includes(option.slug)
-                    ? ' — asked for'
-                    : ''}
-                </option>
-              ))}
-            </select>
+          <Label>Trade lines</Label>
+          <div className="grid gap-2 rounded-md border border-border p-3 sm:grid-cols-2">
+            {application.lines.map((option) => {
+              const asked = application.requestedLines.includes(option.slug)
+              const ticked = granted.includes(option.slug)
+              return (
+                <label
+                  key={option.slug}
+                  className="flex cursor-pointer items-center gap-2 text-sm"
+                >
+                  <Checkbox
+                    checked={ticked}
+                    onCheckedChange={() => toggleLine(option.slug)}
+                  />
+                  <span className={ticked ? 'font-medium' : undefined}>
+                    {option.name}
+                  </span>
+                  {/* Asked for and not granted is the case worth seeing at a
+                      glance — it is a decision still to make, or one made. */}
+                  {asked && (
+                    <span
+                      className={
+                        ticked
+                          ? 'text-xs text-emerald-700'
+                          : 'text-xs text-amber-700'
+                      }
+                    >
+                      {ticked ? 'approved' : 'asked for'}
+                    </span>
+                  )}
+                </label>
+              )
+            })}
+          </div>
+          <div className="flex flex-wrap gap-3 pt-1">
             <Button
               variant="outline"
               disabled={pending || !dirty}
               onClick={saveLines}
             >
-              Save line
+              Save lines
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Bounds what this shop may list. Changing it keeps the original
-            request on record. Existing listings stay where they are until the
-            seller next edits them.
+            The shop may list only under ticked lines — its dashboard and sidebar
+            show nothing else. Unticking revokes a line but keeps the request on
+            record. Existing listings stay where they are until the seller next
+            edits them.
           </p>
         </div>
 

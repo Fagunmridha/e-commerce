@@ -35,16 +35,22 @@ export function WholesaleContent({
   const [editing, setEditing] = useState(false)
 
   /**
-   * The trade line, chosen on a screen of its own before the form.
+   * The trade lines, ticked on a screen of their own before the form.
    *
-   * It starts as whatever the applicant picked last time, so a resubmission
+   * They start as whatever the applicant asked for last time, so a resubmission
    * goes straight to the form rather than making them answer a question they
    * have already answered — and `pickingLine` is what the "Change" link flips
    * back on.
    */
-  const [line, setLine] = useState(application?.categorySlug ?? '')
-  const [pickingLine, setPickingLine] = useState(!application?.categorySlug)
-  const lineName = lines.find((entry) => entry.slug === line)
+  const [picked, setPicked] = useState<string[]>(
+    application?.categorySlugs ?? [],
+  )
+  const [pickingLine, setPickingLine] = useState(
+    !application?.categorySlugs.length,
+  )
+  const pickedNames = lines
+    .filter((entry) => picked.includes(entry.slug))
+    .map((entry) => pick(entry.name))
 
   // Approved and suspended accounts have nothing to edit — the form is only
   // reachable while the application is new, queued or turned down.
@@ -112,8 +118,8 @@ export function WholesaleContent({
           (pickingLine ? (
             <TradeLinePicker
               lines={lines}
-              value={line}
-              onChange={setLine}
+              value={picked}
+              onChange={setPicked}
               onContinue={() => setPickingLine(false)}
             />
           ) : (
@@ -126,7 +132,7 @@ export function WholesaleContent({
                   {copy.linePicker.chosen}
                 </span>
                 <span className="text-sm font-semibold text-foreground">
-                  {lineName ? pick(lineName.name) : line}
+                  {pickedNames.join(', ')}
                 </span>
                 <Button
                   variant="ghost"
@@ -142,7 +148,7 @@ export function WholesaleContent({
                 application={application}
                 defaultName={defaultName}
                 defaultEmail={defaultEmail}
-                categorySlug={line}
+                categorySlugs={picked}
                 onCancel={editing ? () => setEditing(false) : undefined}
               />
             </>

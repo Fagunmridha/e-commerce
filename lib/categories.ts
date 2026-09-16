@@ -6,7 +6,7 @@ import {
   catalogues,
   categories,
   products,
-  wholesalerApplications,
+  wholesalerTradeLines,
 } from '@/lib/db/schema'
 import type { Category, CategorySlug } from '@/lib/types'
 
@@ -31,7 +31,7 @@ export type AdminCategory = Category & {
   childCount: number
   /** Deleted along with the category — that foreign key cascades. */
   catalogueCount: number
-  /** Dropped to null on delete — that foreign key sets null. */
+  /** Shops granted this line — their grant is removed with it on delete. */
   sellerCount: number
 }
 
@@ -75,10 +75,17 @@ export async function getAdminCategories(): Promise<AdminCategory[]> {
         .select({ n: count() })
         .from(catalogues)
         .where(eq(catalogues.categorySlug, categories.slug))})`,
+      // Grants, not the old one-line column: a shop may hold several lines now,
+      // and the grants table is what deleting a line cascades away.
       sellerCount: sql<string>`(${db
         .select({ n: count() })
-        .from(wholesalerApplications)
-        .where(eq(wholesalerApplications.categorySlug, categories.slug))})`,
+        .from(wholesalerTradeLines)
+        .where(
+          and(
+            eq(wholesalerTradeLines.categorySlug, categories.slug),
+            eq(wholesalerTradeLines.status, 'approved'),
+          ),
+        )})`,
       /** House shelf stock only — what the storefront tile shows. */
       itemCount: sql<string>`(${db
         .select({ n: count() })

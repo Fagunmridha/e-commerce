@@ -14,8 +14,8 @@ import { useLanguage } from '@/components/language-provider'
 import { useCatalogue } from '@/components/catalogue-provider'
 import { upsertSellerProduct } from '@/app/actions/seller-products'
 import { splitCommission } from '@/lib/commission'
-import { formatPrice } from '@/lib/currency'
-import { categoriesInLine, categoriesInLines } from '@/lib/category-tree'
+import { discountPercent, formatPrice } from '@/lib/currency'
+import { categoriesInLine } from '@/lib/category-tree'
 import {
   definitionsForCategory,
   firstMissing,
@@ -59,58 +59,94 @@ export function SellerProductForm({
   const { wholesaleCategories, catalogues } = useCatalogue()
   const copy = t.wholesale.dashboard
 
-  // Where this shop may file a listing, across every line it was approved for.
-  // A line with no sub-categories is its own only destination, which
-  // `categoriesInLines` already answers — see lib/category-tree.ts, the same
-  // module the server action checks against.
-  const categories =
-    sellerLines.length > 0
-      ? categoriesInLines(wholesaleCategories, sellerLines)
-      : wholesaleCategories
-
   /**
-   * The same list, split by trade line, for a shop approved for more than one.
+   * The line this product sits in, found from its own category on an edit.
    *
-   * An `<optgroup>` rather than a second "pick a line" select above this one:
-   * it puts the line in front of the seller — the thing requirement-17 calls
-   * step 1 — without a second piece of state that can disagree with the first,
-   * and without changing the shape of the form for the ordinary one-line shop.
-   *
-   * A childless line is its own category, so it labels its own group.
+   * Scanned over the shop's granted lines only: a listing filed under a line
+   * that has since been revoked has no line to start from, and falls to the
+   * first granted one — the server refuses to save it back where it was, which
+   * is the point of revoking.
    */
-  const grouped = sellerLines.map((slug) => {
-    const line = wholesaleCategories.find((category) => category.slug === slug)
-    return {
-      slug,
-      label: line ? pick(line.name) : slug,
-      categories: categoriesInLine(wholesaleCategories, slug),
-    }
-  })
+  const initialLine =
+    (product &&
+      sellerLines.find((line) =>
+        categoriesInLine(wholesaleCategories, line).some(
+          (category) => category.slug === product.category,
+        ),
+      )) ??
+    sellerLines[0] ??
+    ''
 
   const [pending, setPending] = useState(false)
 
   const [form, setForm] = useState({
     // The seller types one name, so the English side is the one to read back.
     name: product?.name.en ?? '',
+    tradeLine: initialLine,
     price: product?.price?.toString() ?? '',
+    // Stored as `oldPrice`; for a marketplace listing that is the MRP.
+    mrp: product?.oldPrice?.toString() ?? '',
     image: product?.image ?? '',
-    // The shop's line wins over the product's own category, so a listing
-    // filed before the line was set corrects itself the next time it is saved.
-    category:
-      product?.category && categories.some((c) => c.slug === product.category)
-        ? product.category
-        : (categories[0]?.slug ?? ''),
+    category: product?.category ?? '',
     catalogue: product?.catalogue ?? '',
     stock: product?.stock?.toString() ?? '',
     // `moq` is undefined on the type when it is 1 (see lib/products.ts), and the
     // field should read "1" rather than blank.
     moq: (product?.moq ?? 1).toString(),
     sizes: product?.sizes?.join(', ') ?? '',
+    colors: product?.colors?.map((colour) => colour.name.en).join(', ') ?? '',
     description: product?.description?.en ?? '',
   })
 
   const set = (key: keyof typeof form, value: string) =>
     setForm((current) => ({ ...current, [key]: value }))
+
+  /**
+   * Step two's options: the categories of the line picked in step one. The
+   * same `categoriesInLine` the server action checks against, so the form can
+   * only ever offer a path the server will accept.
+   */
+  const lineCategories = categoriesInLine(wholesaleCategories, form.tradeLine)
+
+  /**
+   * A category the admin has switched off drops out of the list above, but a
+   * listing already filed there may keep it — the server allows that on an
+   * edit. Carried as its own option so the value stays visible instead of the
+   * select silently showing the first row while holding another.
+   */
+  const keptCategory =
+    product && form.category === product.category &&
+    !lineCategories.some((category) => category.slug === form.category)
+  const category = lineCategories.some((c) => c.slug === form.category) || keptCategory
+    ? form.category
+    : (lineCategories[0]?.slug ?? '')
+
+  const lineCatalogues = catalogues.filter(
+    (item) => item.categorySlug === category,
+  )
+  const keptCatalogue =
+    product && form.catalogue && form.catalogue === product.catalogue &&
+    !lineCatalogues.some((item) => item.slug === form.catalogue)
+
+  const chooseLine = (slug: string) =>
+    setForm((current) => ({
+      ...current,
+      tradeLine: slug,
+      // Both lower levels belonged to the line being left.
+      category: categoriesInLine(wholesaleCategories, slug)[0]?.slug ?? '',
+      catalogue: '',
+    }))
+
+  const lineName = (slug: string) => {
+    const line = wholesaleCategories.find((entry) => entry.slug === slug)
+    return line ? pick(line.name) : slug
+  }
+
+  /** Draft is offered only where it means something: a listing not yet live. */
+  const canDraft =
+    !product ||
+    product.approvalStatus === 'draft' ||
+    product.approvalStatus === 'rejected'
 
   /**
    * The admin-defined fields for the category currently picked, and this
@@ -124,21 +160,21 @@ export function SellerProductForm({
   const fields = definitionsForCategory(
     definitions,
     wholesaleCategories,
-    form.category,
+    category,
   )
   const [attributes, setAttributes] = useState(() => toValueMap(attributeValues))
   const setAttribute = (definitionId: string, value: string) =>
     setAttributes((current) => ({ ...current, [definitionId]: value }))
 
-  async function onSubmit(event: React.FormEvent) {
-    event.preventDefault()
-
+  async function save(submit: boolean) {
     if (!form.name.trim() || !form.image.trim() || !form.price.trim()) {
       toast.error(copy.failed, { description: copy.required })
       return
     }
 
-    const missing = firstMissing(fields, attributes)
+    // A draft may be incomplete — that is what a draft is for. Required
+    // product fields are enforced only on the way into review.
+    const missing = submit ? firstMissing(fields, attributes) : null
     if (missing) {
       toast.error(copy.failed, { description: pick(missing.label) })
       return
@@ -149,9 +185,15 @@ export function SellerProductForm({
       id: product?.id ?? null,
       name: form.name.trim(),
       image: form.image.trim(),
-      category: form.category,
+      tradeLine: form.tradeLine,
+      category,
       catalogue: form.catalogue || null,
       price: Number(form.price) || 0,
+      mrp: form.mrp.trim() ? Number(form.mrp) : null,
+      colors: form.colors
+        ? form.colors.split(',').map((colour) => colour.trim()).filter(Boolean)
+        : null,
+      submit,
       stock: Number(form.stock) || 0,
       moq: Number(form.moq) || 1,
       sizes: form.sizes
@@ -175,10 +217,109 @@ export function SellerProductForm({
     router.refresh()
   }
 
+  async function onSubmit(event: React.FormEvent) {
+    event.preventDefault()
+    await save(true)
+  }
+
+  // No granted line means nowhere to list. Saying so beats a form whose every
+  // save the server would refuse.
+  if (sellerLines.length === 0) {
+    return (
+      <Card className="max-w-3xl">
+        <CardHeader>
+          <CardTitle>{copy.noLinesTitle}</CardTitle>
+          <CardDescription>{copy.noLinesBody}</CardDescription>
+        </CardHeader>
+      </Card>
+    )
+  }
+
   return (
     <form onSubmit={onSubmit} className="max-w-3xl space-y-6">
       <LoadingOverlay show={pending} label={copy.saving} />
       
+      {/* Where the listing goes, as the three steps it is: line, category,
+          catalogue. Each select offers only what the one before it allows, and
+          a level with a single possible answer is stated rather than offered —
+          a select holding one option reads as a list that failed to load. */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{copy.whereTitle}</CardTitle>
+          <CardDescription>{copy.whereHint}</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-6 sm:grid-cols-3">
+          <Field label={`1. ${copy.tradeLine}`} hint={copy.tradeLineHint}>
+            {sellerLines.length === 1 ? (
+              <p className="flex h-9 items-center text-sm font-medium text-foreground">
+                {lineName(sellerLines[0])}
+              </p>
+            ) : (
+              <select
+                value={form.tradeLine}
+                onChange={(event) => chooseLine(event.target.value)}
+                className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+              >
+                {sellerLines.map((slug) => (
+                  <option key={slug} value={slug}>
+                    {lineName(slug)}
+                  </option>
+                ))}
+              </select>
+            )}
+          </Field>
+
+          <Field label={`2. ${copy.category}`}>
+            {lineCategories.length === 1 && !keptCategory ? (
+              <p className="flex h-9 items-center text-sm font-medium text-foreground">
+                {pick(lineCategories[0].name)}
+              </p>
+            ) : (
+              <select
+                value={category}
+                onChange={(event) =>
+                  setForm((current) => ({
+                    ...current,
+                    category: event.target.value,
+                    // The catalogue belonged to the category being left.
+                    catalogue: '',
+                  }))
+                }
+                className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+              >
+                {keptCategory && (
+                  <option value={form.category}>{form.category}</option>
+                )}
+                {lineCategories.map((entry) => (
+                  <option key={entry.slug} value={entry.slug}>
+                    {pick(entry.name)}
+                  </option>
+                ))}
+              </select>
+            )}
+          </Field>
+
+          <Field label={`3. ${t.catalogue.catalogue}`}>
+            <select
+              value={form.catalogue}
+              onChange={(event) => set('catalogue', event.target.value)}
+              disabled={lineCatalogues.length === 0 && !keptCatalogue}
+              className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50"
+            >
+              <option value="">{t.catalogue.allCatalogues}</option>
+              {keptCatalogue && (
+                <option value={form.catalogue}>{form.catalogue}</option>
+              )}
+              {lineCatalogues.map((item) => (
+                <option key={item.slug} value={item.slug}>
+                  {pick(item.name)}
+                </option>
+              ))}
+            </select>
+          </Field>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Basic Details</CardTitle>
@@ -194,73 +335,6 @@ export function SellerProductForm({
               placeholder={copy.namePlaceholder}
             />
           </Field>
-          {/* A line with one destination is stated, not offered: a select
-              holding a single disabled option reads as a list that failed to
-              load rather than as a decision already made. */}
-          {categories.length === 1 ? (
-            <Field label={copy.category}>
-              <p className="flex h-9 items-center text-sm text-foreground">
-                {pick(categories[0].name)}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {copy.categoryLocked}
-              </p>
-            </Field>
-          ) : (
-            <Field label={copy.category}>
-              <select
-                value={form.category}
-                onChange={(event) => {
-                  set('category', event.target.value)
-                  // The catalogue belongs to the category being left behind.
-                  // The server drops a mismatched pair to null; clearing it
-                  // here means the seller sees that rather than finding out
-                  // on save.
-                  set('catalogue', '')
-                }}
-                className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
-              >
-                {grouped.length > 1
-                  ? grouped.map((group) => (
-                      <optgroup key={group.slug} label={group.label}>
-                        {group.categories.map((category) => (
-                          <option key={category.slug} value={category.slug}>
-                            {pick(category.name)}
-                          </option>
-                        ))}
-                      </optgroup>
-                    ))
-                  : categories.map((category) => (
-                      <option key={category.slug} value={category.slug}>
-                        {pick(category.name)}
-                      </option>
-                    ))}
-              </select>
-              <p className="text-xs text-muted-foreground">
-                {sellerLines.length > 0 ? copy.categoryLine : copy.categoryUnset}
-              </p>
-            </Field>
-          )}
-          {/* Hidden when the picked category has no catalogues — an empty
-              dropdown is a question with no answers. */}
-          {catalogues.some((item) => item.categorySlug === form.category) && (
-            <Field label={t.catalogue.catalogue}>
-              <select
-                value={form.catalogue}
-                onChange={(event) => set('catalogue', event.target.value)}
-                className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
-              >
-                <option value="">{t.catalogue.allCatalogues}</option>
-                {catalogues
-                  .filter((item) => item.categorySlug === form.category)
-                  .map((item) => (
-                    <option key={item.slug} value={item.slug}>
-                      {pick(item.name)}
-                    </option>
-                  ))}
-              </select>
-            </Field>
-          )}
         </CardContent>
       </Card>
 
@@ -292,7 +366,7 @@ export function SellerProductForm({
             Set your wholesale price, available stock, and minimum order quantity.
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-6 sm:grid-cols-3">
+        <CardContent className="grid gap-6 sm:grid-cols-2">
           <Field label={copy.price} hint={copy.priceHint}>
             <div className="space-y-3">
               <div className="relative">
@@ -327,6 +401,36 @@ export function SellerProductForm({
                 }
                 return null
               })()}
+            </div>
+          </Field>
+          <Field label={copy.mrp} hint={copy.mrpHint}>
+            <div className="space-y-2">
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 font-medium text-muted-foreground">
+                  ৳
+                </span>
+                <Input
+                  type="number"
+                  step="1"
+                  min={0}
+                  className="pl-8"
+                  value={form.mrp}
+                  onChange={(event) => set('mrp', event.target.value)}
+                />
+              </div>
+              {/* The same arithmetic the card will print, shown before saving
+                  so a typo'd MRP is caught here rather than on the market. */}
+              {discountPercent(Number(form.price) || 0, Number(form.mrp) || 0) >
+                0 && (
+                <p className="text-xs font-medium text-emerald-700">
+                  {copy.belowMrp.replace(
+                    '{n}',
+                    String(
+                      discountPercent(Number(form.price) || 0, Number(form.mrp) || 0),
+                    ),
+                  )}
+                </p>
+              )}
             </div>
           </Field>
           <Field label={copy.stock} hint={copy.stockHint}>
@@ -377,6 +481,14 @@ export function SellerProductForm({
             />
           </Field>
 
+          <Field label={copy.colors} hint={copy.colorsHint}>
+            <Input
+              value={form.colors}
+              onChange={(event) => set('colors', event.target.value)}
+              placeholder="Black, Navy, Maroon"
+            />
+          </Field>
+
           <Field label={copy.description} hint={copy.descriptionHint}>
             <Textarea
               rows={4}
@@ -397,8 +509,18 @@ export function SellerProductForm({
         >
           {copy.cancel}
         </Button>
+        {canDraft && (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={pending}
+            onClick={() => save(false)}
+          >
+            {copy.saveDraft}
+          </Button>
+        )}
         <Button type="submit" disabled={pending} className="min-w-[140px]">
-          {pending ? copy.saving : copy.save}
+          {pending ? copy.saving : canDraft ? copy.submitReview : copy.save}
         </Button>
       </div>
     </form>

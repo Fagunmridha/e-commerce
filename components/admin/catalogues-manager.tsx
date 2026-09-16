@@ -46,20 +46,20 @@ export function CataloguesManager({
   }, [categories, catalogues])
 
   async function remove(row: Row) {
-    // Deleting a catalogue leaves its products alone — they fall back to "All"
-    // — but the admin should know how many are about to move before it happens.
-    const warning = row.productCount
-      ? `Delete “${row.name.en}”? Its ${row.productCount} product(s) stay in the shop and move back under “All”.`
-      : `Delete “${row.name.en}”?`
-    if (!confirm(warning)) return
+    // Only an empty catalogue gets this far — the button is disabled otherwise,
+    // and `deleteCatalogue` refuses one that holds products.
+    if (!confirm(`Delete “${row.name.en}”?`)) return
 
     setPending(true)
     try {
       await deleteCatalogue(row.slug)
       toast.success('Catalogue deleted')
       router.refresh()
-    } catch {
-      toast.error('Could not delete that catalogue')
+    } catch (error) {
+      // The server's own sentence — it names the product count and the way out.
+      toast.error(
+        error instanceof Error ? error.message : 'Could not delete that catalogue',
+      )
     } finally {
       setPending(false)
     }
@@ -134,9 +134,18 @@ export function CataloguesManager({
                       <Pencil className="size-4" aria-hidden="true" />
                       Edit
                     </Button>
+                    {/* Disabled with the reason beside it, as on the categories
+                        page — a catalogue that holds products cannot be deleted,
+                        only moved out of or switched to Inactive. */}
                     <Button
                       variant="outline"
                       size="sm"
+                      disabled={row.productCount > 0}
+                      title={
+                        row.productCount > 0
+                          ? 'Contains products — move them or set it to Inactive'
+                          : undefined
+                      }
                       onClick={() => remove(row)}
                     >
                       <Trash2 className="size-4" aria-hidden="true" />

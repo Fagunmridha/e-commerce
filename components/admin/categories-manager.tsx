@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Card,
   CardContent,
@@ -21,9 +22,9 @@ import type { AdminCategory } from '@/lib/categories'
 import type { CategoryScope, TreeStatus } from '@/lib/types'
 
 const SCOPE_HINT: Record<CategoryScope, string> = {
-  both: 'Shown in the shop and offered to wholesale shops.',
+  both: 'In the shop and offered to wholesale sellers.',
   retail: 'Shop only — wholesalers cannot list under it.',
-  wholesale: 'Trade only — no /slug page on the storefront.',
+  wholesale: 'Wholesale only — no /slug page on the storefront.',
 }
 
 /**
@@ -68,7 +69,7 @@ export function CategoriesManager({
       row.catalogueCount &&
         `its ${row.catalogueCount} catalogue(s) go with it`,
       row.sellerCount &&
-        `${row.sellerCount} wholesale shop(s) approved for it will have no trade line until you set a new one`,
+        `${row.sellerCount} wholesale shop(s) approved for it lose this trade line`,
     ].filter(Boolean)
 
     const warning = effects.length
@@ -174,7 +175,7 @@ function CategoryRow({
   // click. Showing the reason beside a disabled button beats letting the
   // action fail and explaining it in a toast.
   const blocker = row.productCount
-    ? `${row.productCount} product(s) here — move them first`
+    ? `Contains ${row.productCount} product(s) — move or reassign them before deleting`
     : row.childCount
       ? `${row.childCount} sub-categor${row.childCount === 1 ? 'y' : 'ies'} — delete those first`
       : null
@@ -192,7 +193,8 @@ function CategoryRow({
           )}
         </p>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          <code>{row.slug}</code> · position {row.position} · {row.scope} ·{' '}
+          <code>{row.slug}</code> · position {row.position} ·{' '}
+          {row.scope === 'both' ? 'Shop + Wholesale' : row.scope === 'retail' ? 'Shop' : 'Wholesale'} ·{' '}
           {row.productCount} product
           {row.productCount === 1 ? '' : 's'} · {row.catalogueCount} catalogue
           {row.catalogueCount === 1 ? '' : 's'} · {row.sellerCount} shop
@@ -258,6 +260,25 @@ function CategoryForm({
   // A row with children is a line by definition; moving it under another would
   // make three levels, which `upsertCategory` refuses.
   const parentLocked = Boolean(existing?.childCount)
+
+  const inShop = form.scope === 'retail' || form.scope === 'both'
+  const inTrade = form.scope === 'wholesale' || form.scope === 'both'
+
+  /**
+   * Maps the two boxes back onto the one column. Unticking the last box is
+   * refused rather than obeyed: a category available nowhere is a category
+   * nobody can reach, and the way to hide one is Status → Inactive, which
+   * keeps its visibility settings for when it comes back.
+   */
+  const setAvailability = (side: 'shop' | 'trade', on: boolean) => {
+    const shop = side === 'shop' ? on : inShop
+    const trade = side === 'trade' ? on : inTrade
+    if (!shop && !trade) {
+      toast.error('A category must be available somewhere — use Status to hide it')
+      return
+    }
+    set('scope', shop && trade ? 'both' : shop ? 'retail' : 'wholesale')
+  }
 
   const leavingStorefront =
     form.scope === 'wholesale' &&
@@ -394,17 +415,33 @@ function CategoryForm({
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="category-scope">Where it appears</Label>
-        <select
-          id="category-scope"
-          value={form.scope}
-          onChange={(e) => set('scope', e.target.value as CategoryScope)}
-          className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
-        >
-          <option value="both">Shop and trade</option>
-          <option value="retail">Shop only</option>
-          <option value="wholesale">Trade only</option>
-        </select>
+        {/* Two ticks rather than a three-way select: "shop", "wholesale" and
+            "both" are really two independent yes/no answers, and a pair of
+            boxes says so. They still store as the one `scope` column —
+            `both` is simply both ticked — so no category is ever duplicated
+            to appear in two places. */}
+        <Label>Availability</Label>
+        <div className="flex flex-wrap gap-6 rounded-md border border-border px-3 py-2.5">
+          {(
+            [
+              { key: 'shop', label: 'Shop', on: inShop },
+              { key: 'trade', label: 'Wholesale', on: inTrade },
+            ] as const
+          ).map((option) => (
+            <label
+              key={option.key}
+              className="flex cursor-pointer items-center gap-2 text-sm"
+            >
+              <Checkbox
+                checked={option.on}
+                onCheckedChange={(next) =>
+                  setAvailability(option.key, next === true)
+                }
+              />
+              <span>{option.label}</span>
+            </label>
+          ))}
+        </div>
         <p className="text-xs text-muted-foreground">
           {SCOPE_HINT[form.scope]}
         </p>

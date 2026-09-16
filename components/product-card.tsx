@@ -9,6 +9,7 @@ import { Rating } from '@/components/rating'
 import { ProductQuickView } from '@/components/product-quick-view'
 import { useLanguage } from '@/components/language-provider'
 import { useStore } from '@/components/store-provider'
+import { discountPercent } from '@/lib/currency'
 import { cn } from '@/lib/utils'
 import type { Product } from '@/lib/types'
 
@@ -34,6 +35,7 @@ export function ProductCard({
   const label = pick(name)
   const favorited = isWishlisted(id)
   const soldOut = stock <= 0
+  const discount = discountPercent(price, oldPrice)
 
   // Second gallery shot, revealed on hover. Falls back to the primary image so
   // the crossfade is a no-op rather than a flash of empty space.
@@ -88,6 +90,14 @@ export function ProductCard({
           </Link>
 
           <div className="pointer-events-none absolute top-3 left-3 flex flex-col items-start gap-1.5">
+            {/* Ahead of the `sale` word, not instead of it: one says there is
+                a promotion on, the other says how much. A rise in price scores
+                0 and prints nothing — see `discountPercent`. */}
+            {discount > 0 && (
+              <span className="rounded-md bg-badge-sale px-2.5 py-1 text-[11px] font-bold text-badge-sale-foreground">
+                {t.badges.discount.replace('{n}', String(discount))}
+              </span>
+            )}
             {badge && (
               <span
                 className={cn(

@@ -10,10 +10,10 @@ export type WholesaleApplicationView = {
   shopName: string
   businessType: BusinessType
   /**
-   * The trade line this shop asked for — what the picker reopens on a
-   * resubmission. Null on a shop approved before trade lines existed.
+   * Every trade line this application asked for, granted or not — what the
+   * picker re-ticks on a resubmission. Empty for a shop that predates lines.
    */
-  categorySlug: string | null
+  categorySlugs: string[]
   taxToken: string | null
   binNumber: string | null
   tradeLicenseNo: string | null

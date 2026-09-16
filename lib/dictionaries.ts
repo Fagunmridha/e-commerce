@@ -76,6 +76,8 @@ const en = {
   badges: {
     new: 'New',
     sale: 'Sale',
+    /** Worked out from the struck-through price, never stored. */
+    discount: '-{n}%',
   },
   cart: {
     open: 'Open cart',
@@ -932,7 +934,22 @@ const en = {
       categoryLine: 'The categories your shop’s trade line covers.',
       categoryUnset:
         'Your shop has no trade line yet — ask us to set one.',
-      price: 'Selling price (৳)',
+      /** Step one of where a listing is filed. */
+      tradeLine: 'Trade line',
+      tradeLineHint: 'Only the lines your shop is approved for.',
+      whereTitle: 'Where it is listed',
+      whereHint: 'Trade line, then category, then catalogue.',
+      noLinesTitle: 'No trade line approved yet',
+      noLinesBody:
+        'Your shop is approved, but no trade line has been granted to it yet, so there is nowhere to list. We will be in touch — or contact us to speed it up.',
+      mrp: 'MRP (৳)',
+      mrpHint: 'The retail price on the goods. Optional — shown struck through.',
+      belowMrp: '{n}% below MRP',
+      colors: 'Colours',
+      colorsHint: 'Separate with commas.',
+      saveDraft: 'Save as draft',
+      submitReview: 'Submit for approval',
+      price: 'Wholesale price (৳)',
       priceHint:
         'What a buyer pays, in taka. This is your price — we do not change it.',
       stock: 'Pieces available',
@@ -1371,6 +1388,7 @@ const bn: Dictionary = {
   badges: {
     new: 'নতুন',
     sale: 'ছাড়',
+    discount: '-{n}%',
   },
   cart: {
     open: 'কার্ট খুলুন',
@@ -2146,7 +2164,21 @@ const bn: Dictionary = {
       categoryLine: 'আপনার দোকানের ব্যবসার লাইনে যে ক্যাটাগরিগুলো আছে।',
       categoryUnset:
         'আপনার দোকানের কোনো ব্যবসার লাইন এখনও ঠিক করা হয়নি — আমাদের জানান।',
-      price: 'বিক্রয়মূল্য (৳)',
+      tradeLine: 'ট্রেড লাইন',
+      tradeLineHint: 'শুধু যে লাইনগুলো আপনার দোকানের জন্য অনুমোদিত।',
+      whereTitle: 'কোথায় তালিকাভুক্ত হবে',
+      whereHint: 'প্রথমে ট্রেড লাইন, তারপর ক্যাটাগরি, তারপর ক্যাটালগ।',
+      noLinesTitle: 'এখনো কোনো ট্রেড লাইন অনুমোদিত হয়নি',
+      noLinesBody:
+        'আপনার দোকান অনুমোদিত, কিন্তু এখনো কোনো ট্রেড লাইন দেওয়া হয়নি, তাই পণ্য তোলার জায়গা নেই। আমরা যোগাযোগ করব — দ্রুত চাইলে আমাদের জানান।',
+      mrp: 'এমআরপি (৳)',
+      mrpHint: 'পণ্যের গায়ের খুচরা দাম। ঐচ্ছিক — কেটে দেখানো হয়।',
+      belowMrp: 'এমআরপি থেকে {n}% কম',
+      colors: 'রং',
+      colorsHint: 'কমা দিয়ে আলাদা করুন।',
+      saveDraft: 'খসড়া হিসেবে রাখুন',
+      submitReview: 'অনুমোদনের জন্য পাঠান',
+      price: 'পাইকারি দাম (৳)',
       priceHint: 'ক্রেতা যত টাকা দিবে। দামটা আপনারই — আমরা বদলাই না।',
       stock: 'কত পিস আছে',
       stockHint: 'অর্ডার এলে স্টক কমতে থাকবে। ০ দিলে "শেষ" দেখাবে।',

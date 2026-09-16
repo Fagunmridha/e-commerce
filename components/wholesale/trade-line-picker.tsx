@@ -4,18 +4,8 @@ import Image from 'next/image'
 import { ArrowRight, Check, Layers } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useLanguage } from '@/components/language-provider'
-import { cn } from '@/lib/utils'
+import { cn, hasPhoto } from '@/lib/utils'
 import type { Category } from '@/lib/types'
-
-/**
- * `/placeholder.svg` is what the whole codebase uses to mean "no picture", and
- * a category's `image` column is NOT NULL — so most rows carry it rather than
- * a photograph. Treating it as absent is what keeps this grid from being a wall
- * of identical grey boxes, which is exactly what it was.
- */
-function hasPhoto(image: string): boolean {
-  return Boolean(image) && !image.endsWith('/placeholder.svg')
-}
 
 /**
  * Tints for the fallback icon, cycled by position so the lines without a
@@ -50,7 +40,8 @@ const FALLBACK_TONES = [
  *
  * Every line is drawn from `categories` where `parent_slug is null`, in the
  * admin's own `position` order, so a line added tomorrow appears here with
- * nothing rebuilt. One choice, not several: a shop is approved for one line.
+ * nothing rebuilt. Several may be ticked: a shop trades in as many lines as it
+ * trades in, and the admin grants or refuses each one separately.
  *
  * The heading belongs to the page's hero, not to this — see `WholesaleContent`.
  */
@@ -61,14 +52,21 @@ export function TradeLinePicker({
   onContinue,
 }: {
   lines: Category[]
-  /** The slug currently picked, or '' before anything is. */
-  value: string
-  onChange: (slug: string) => void
+  /** The slugs ticked so far, in the order they were ticked. */
+  value: string[]
+  onChange: (slugs: string[]) => void
   onContinue: () => void
 }) {
   const { t, pick } = useLanguage()
   const copy = t.wholesale.linePicker
-  const chosen = lines.find((line) => line.slug === value)
+  const chosen = lines.filter((line) => value.includes(line.slug))
+
+  const toggle = (slug: string) =>
+    onChange(
+      value.includes(slug)
+        ? value.filter((entry) => entry !== slug)
+        : [...value, slug],
+    )
 
   if (lines.length === 0) {
     // Nothing to pick means an admin has not opened any line to trade yet.
@@ -84,7 +82,7 @@ export function TradeLinePicker({
     <div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {lines.map((line, index) => {
-          const selected = value === line.slug
+          const selected = value.includes(line.slug)
           const name = pick(line.name)
           // The other language under the name. Identical strings — an admin who
           // filled in only English — would print twice, so one is enough then.
@@ -94,7 +92,7 @@ export function TradeLinePicker({
             <button
               key={line.slug}
               type="button"
-              onClick={() => onChange(line.slug)}
+              onClick={() => toggle(line.slug)}
               aria-pressed={selected}
               className={cn(
                 'flex items-center gap-4 rounded-xl border p-4 text-left transition-colors',
@@ -139,7 +137,7 @@ export function TradeLinePicker({
                   picking a card does not shift the name beside it. */}
               <span
                 className={cn(
-                  'grid size-6 shrink-0 place-items-center rounded-full border',
+                  'grid size-6 shrink-0 place-items-center rounded-md border',
                   selected
                     ? 'border-primary bg-primary text-primary-foreground'
                     : 'border-border',
@@ -153,12 +151,14 @@ export function TradeLinePicker({
       </div>
 
       <div className="mt-8 flex flex-col items-center gap-2 border-t border-border pt-8">
-        <Button size="lg" disabled={!value} onClick={onContinue}>
+        <Button size="lg" disabled={value.length === 0} onClick={onContinue}>
           {copy.continue}
           <ArrowRight className="size-4" aria-hidden="true" />
         </Button>
         <p className="text-xs text-muted-foreground">
-          {chosen ? `${copy.chosen}: ${pick(chosen.name)}` : copy.hint}
+          {chosen.length > 0
+            ? `${copy.chosen}: ${chosen.map((line) => pick(line.name)).join(', ')}`
+            : copy.hint}
         </p>
       </div>
     </div>

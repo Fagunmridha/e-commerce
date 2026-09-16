@@ -37,7 +37,7 @@ function buildSchema(errors: Dictionary['wholesale']['errors']) {
   return z.object({
     shopName: z.string().min(2, errors.shopName),
     businessType: z.enum(BUSINESS_TYPES),
-    categorySlug: z.string().min(1, errors.category),
+    categorySlugs: z.array(z.string()).min(1, errors.category),
     taxToken: optional,
     binNumber: optional,
     tradeLicenseNo: optional,
@@ -89,15 +89,15 @@ export function WholesaleForm({
   application,
   defaultName,
   defaultEmail,
-  categorySlug,
+  categorySlugs,
   onCancel,
 }: {
   /**
-   * The trade line, already chosen on the screen before this one. Carried in
-   * rather than asked for again: it is the decision the whole application
+   * The trade lines, already ticked on the screen before this one. Carried in
+   * rather than asked for again: they are the decision the whole application
    * hangs off, and a field here would let the two answers disagree.
    */
-  categorySlug: string
+  categorySlugs: string[]
   application: WholesaleApplicationView | null
   defaultName: string
   defaultEmail: string
@@ -120,7 +120,7 @@ export function WholesaleForm({
       shopName: application?.shopName ?? '',
       businessType: application?.businessType ?? 'retail_shop',
       // Set by the picker one screen back, not by any field in here.
-      categorySlug,
+      categorySlugs,
       taxToken: application?.taxToken ?? '',
       binNumber: application?.binNumber ?? '',
       tradeLicenseNo: application?.tradeLicenseNo ?? '',
@@ -155,7 +155,7 @@ export function WholesaleForm({
     const result = await submitWholesaleApplication({
       shopName: values.shopName,
       businessType: values.businessType,
-      categorySlug: values.categorySlug,
+      categorySlugs: values.categorySlugs,
       taxToken: values.taxToken,
       binNumber: values.binNumber,
       tradeLicenseNo: values.tradeLicenseNo,

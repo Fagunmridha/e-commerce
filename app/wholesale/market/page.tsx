@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { PageHeader } from '@/components/page-header'
 import { WholesaleMarket } from '@/components/wholesale/wholesale-market'
 import { pageMetadata } from '@/lib/metadata'
 
@@ -11,10 +10,8 @@ export function generateMetadata(): Promise<Metadata> {
 }
 
 export default function WholesaleMarketPage() {
-  return (
-    <>
-      <PageHeader pageKey="wholesaleMarket" />
-      <WholesaleMarket />
-    </>
-  )
+  // No `PageHeader`: `WholesaleMarket` opens with its own hero, which carries
+  // the breadcrumb and swaps its title for the open category's name. The band
+  // above it was a second heading over the first.
+  return <WholesaleMarket />
 }
