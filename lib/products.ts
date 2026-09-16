@@ -701,6 +701,27 @@ export async function getProductImages(product: Product): Promise<string[]> {
   return [product.image, ...extra.map((row) => row.url)]
 }
 
+/**
+ * The extra shots alone — no primary image prepended — keyed by id rather
+ * than a full `Product`.
+ *
+ * `getProductImages` above needs the row for its primary `image`, which forces
+ * the caller to await the product first and only then fetch the gallery: two
+ * round trips in sequence. This needs nothing but the id, so a caller that
+ * already has it from a route param can fetch this alongside everything else
+ * in one `Promise.all` — the shape the seller's edit page wants, since its
+ * form only ever edits the extras.
+ */
+export async function getProductGallery(id: string): Promise<string[]> {
+  const rows = await db
+    .select({ url: productImages.url })
+    .from(productImages)
+    .where(eq(productImages.productId, id))
+    .orderBy(asc(productImages.position))
+
+  return rows.map((row) => row.url)
+}
+
 /** Free-text search over English and Bangla product names. */
 export async function searchProducts(query: string): Promise<Product[]> {
   const term = `%${query.trim()}%`

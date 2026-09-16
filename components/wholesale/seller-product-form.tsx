@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -41,6 +42,7 @@ export function SellerProductForm({
   sellerLines,
   definitions,
   attributeValues = [],
+  gallery = [],
 }: {
   product?: Product
   defaultCommissionPct: number
@@ -48,6 +50,8 @@ export function SellerProductForm({
   definitions: AttributeDefinition[]
   /** This listing's stored answers, on the edit screen. */
   attributeValues?: AttributeValue[]
+  /** Extra shots beyond `product.image`, in position order. */
+  gallery?: string[]
   /**
    * The trade lines this shop was approved for. Empty for a shop approved
    * before lines existed — those keep the full list until an admin grants some.
@@ -78,6 +82,10 @@ export function SellerProductForm({
     ''
 
   const [pending, setPending] = useState(false)
+
+  // Kept outside the main form object, matching the admin form: it's a
+  // growable list whose rows are uploaders with their own progress state.
+  const [shots, setShots] = useState<string[]>(gallery)
 
   const [form, setForm] = useState({
     // The seller types one name, so the English side is the one to read back.
@@ -185,6 +193,7 @@ export function SellerProductForm({
       id: product?.id ?? null,
       name: form.name.trim(),
       image: form.image.trim(),
+      gallery: shots.map((url) => url.trim()).filter(Boolean),
       tradeLine: form.tradeLine,
       category,
       catalogue: form.catalogue || null,
@@ -457,13 +466,59 @@ export function SellerProductForm({
           <CardTitle>Product Media</CardTitle>
           <CardDescription>Upload a clear, high-quality image of the product.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
           <ImageUploader
             value={form.image}
             onChange={(url) => set('image', url)}
             folder="wholesale-products"
             label={copy.image}
           />
+
+          <div className="space-y-3">
+            <Label>Gallery</Label>
+            <p className="text-xs text-muted-foreground">
+              Extra shots of this product, shown as thumbnails after the
+              primary image. Leave empty and the product page shows a single
+              photo with no thumbnail strip.
+            </p>
+            <div className="grid gap-4 sm:grid-cols-3">
+              {shots.map((url, index) => (
+                <div key={index} className="space-y-2">
+                  <ImageUploader
+                    value={url}
+                    onChange={(next) =>
+                      setShots((current) =>
+                        current.map((item, i) => (i === index ? next : item)),
+                      )
+                    }
+                    folder="wholesale-products"
+                    label={`Shot ${index + 2}`}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      setShots((current) => current.filter((_, i) => i !== index))
+                    }
+                  >
+                    Remove
+                  </Button>
+                </div>
+              ))}
+            </div>
+            {shots.length < 4 && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShots((current) => [...current, ''])}
+              >
+                <Plus className="size-4" />
+                Add a shot
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
 

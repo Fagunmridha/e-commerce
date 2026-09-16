@@ -3,7 +3,7 @@
 import { revalidatePath, updateTag } from 'next/cache'
 import { and, eq, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
-import { products } from '@/lib/db/schema'
+import { productImages, products } from '@/lib/db/schema'
 import { requireApprovedWholesaler } from '@/lib/wholesalers'
 import { checkCatalogue } from '@/lib/catalogues'
 import { categoriesInLine } from '@/lib/category-tree'
@@ -61,6 +61,29 @@ async function saveAttributes(
   const allowed = definitionsForCategory(definitions, categories, categorySlug)
 
   await db.batch(attributeWrites(productId, values, allowed))
+}
+
+/**
+ * Replaces a product's gallery with exactly `urls` — the extra shots shown as
+ * thumbnails after the primary image on the detail page.
+ *
+ * The same delete-then-insert batch `upsertProduct` uses in
+ * app/actions/admin.ts for the house-stock gallery: Neon's HTTP driver has no
+ * interactive transaction, so `batch` is the nearest thing to one, and it
+ * keeps the gallery from landing without the product it describes.
+ * `values([])` throws in Drizzle, so an emptied gallery is a delete on its own.
+ */
+async function saveGallery(productId: string, urls: string[]): Promise<void> {
+  if (urls.length) {
+    await db.batch([
+      db.delete(productImages).where(eq(productImages.productId, productId)),
+      db
+        .insert(productImages)
+        .values(urls.map((url, index) => ({ productId, url, position: index }))),
+    ])
+  } else {
+    await db.delete(productImages).where(eq(productImages.productId, productId))
+  }
 }
 
 function refresh() {
@@ -237,6 +260,7 @@ export async function upsertSellerProduct(
 
     if (!updated) return { ok: false, error: 'That listing is not yours.' }
     await saveAttributes(data.id, data.category, data.attributes)
+    await saveGallery(data.id, data.gallery)
   } else {
     const id = await uniqueProductId(data.name)
     await db.insert(products).values({
@@ -251,6 +275,7 @@ export async function upsertSellerProduct(
       submittedAt: data.submit ? new Date() : null,
     })
     await saveAttributes(id, data.category, data.attributes)
+    await saveGallery(id, data.gallery)
   }
 
   refresh()

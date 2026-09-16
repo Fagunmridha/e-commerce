@@ -1,4 +1,5 @@
 import 'server-only'
+import { unstable_cache } from 'next/cache'
 import { asc, eq, inArray } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { attributeDefinitions, productAttributeValues } from '@/lib/db/schema'
@@ -51,6 +52,18 @@ export async function getAllAttributeDefinitions(): Promise<
 
   return rows.map(toDefinition)
 }
+
+/**
+ * The same list, cached on the `catalogue` tag. For pages every shopper loads —
+ * the market reads it on each visit, and the DB is a round trip across an
+ * ocean. `upsertAttributeDefinition` busts the tag, so an admin's new field
+ * shows at once. The admin screen keeps reading the uncached version above.
+ */
+export const getCachedAttributeDefinitions = unstable_cache(
+  getAllAttributeDefinitions,
+  ['attribute-definitions'],
+  { tags: ['catalogue'], revalidate: 60 },
+)
 
 /** One product's stored answers. */
 export async function getProductAttributes(

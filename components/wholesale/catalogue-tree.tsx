@@ -6,8 +6,10 @@ import { useLanguage } from '@/components/language-provider'
 import { cn } from '@/lib/utils'
 import type { Catalogue, Category, Product } from '@/lib/types'
 
-/** The catalogue filter for stock in a category that has none set. */
-export const UNSORTED = '__unsorted__'
+/** The catalogue filter for stock in a category that has none set. Defined
+ *  beside the rest of the market's filter rules so there is one sentinel. */
+import { UNSORTED } from '@/lib/wholesale/market-filters'
+export { UNSORTED }
 
 type Branch = { value: string; label: string; count: number }
 type Node = { slug: string; label: string; branches: Branch[]; count: number }

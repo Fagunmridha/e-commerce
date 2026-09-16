@@ -172,6 +172,17 @@ export const sellerProductSchema = z
       .nullish()
       .transform((value) => (value?.length ? value : null)),
     description: optionalText(2000),
+    /**
+     * Extra shots beyond the primary `image`, shown as thumbnails after it —
+     * see `components/product-detail.tsx`. Capped at 4 (5 photos total),
+     * distinct from the admin form's cap of 8: a seller's own gallery, not
+     * the store's.
+     */
+    gallery: z
+      .array(imageSchema)
+      .max(4, 'Up to 4 extra photos')
+      .nullish()
+      .transform((value) => (value?.length ? value : [])),
     /** Colour names as the seller types them — "Black", "Navy". */
     colors: z
       .array(z.string().trim().min(1).max(40))

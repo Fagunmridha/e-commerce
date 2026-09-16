@@ -21,10 +21,23 @@ const BADGE_STYLES = {
 export function ProductCard({
   product,
   priority = false,
+  actions = 'icons',
 }: {
   product: Product
   /** Set on the first row above the fold so the LCP image is not lazy-loaded. */
   priority?: boolean
+  /**
+   * How the card offers its actions.
+   *
+   * `icons` — the storefront's three-button strip (cart, save, quick view).
+   * `button` — the marketplace layout: save as a heart on the photo, and one
+   * labelled "Add to cart" across the foot. A trade buyer is there to order,
+   * so the order action is spelled out rather than left as a bare icon.
+   *
+   * A prop rather than a second card, so price, badges, MOQ and rating are
+   * drawn once and the two layouts cannot drift.
+   */
+  actions?: 'icons' | 'button'
 }) {
   const { t, pick, price: formatPrice } = useLanguage()
   const { addToCart, isWishlisted, toggleWishlist } = useStore()
@@ -114,6 +127,20 @@ export function ProductCard({
               </span>
             )}
           </div>
+
+          {actions === 'button' && (
+            <button
+              type="button"
+              onClick={onToggleWishlist}
+              aria-label={favorited ? t.wishlist.remove : t.product.favorite}
+              aria-pressed={favorited}
+              className="absolute top-3 right-3 grid size-8 place-items-center rounded-full bg-background/90 text-foreground shadow-card backdrop-blur transition-colors hover:text-primary focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+            >
+              <Heart
+                className={cn('size-4', favorited && 'fill-primary text-primary')}
+              />
+            </button>
+          )}
         </div>
 
         <div className="flex flex-1 flex-col p-3 sm:p-4">
@@ -148,7 +175,20 @@ export function ProductCard({
           <Rating value={rating} reviews={reviews} className="mt-1.5" />
         </div>
 
-        {/* Persistent action row — reachable on touch without a hover state. */}
+        {actions === 'button' ? (
+          <div className="px-3 pb-3 sm:px-4 sm:pb-4">
+            <button
+              type="button"
+              onClick={quickAdd}
+              disabled={soldOut}
+              className="flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-primary/40 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none disabled:pointer-events-none disabled:border-border disabled:text-muted-foreground"
+            >
+              <ShoppingCart className="size-4" aria-hidden="true" />
+              {soldOut ? t.card.outOfStock : t.card.addToBag}
+            </button>
+          </div>
+        ) : (
+        /* Persistent action row — reachable on touch without a hover state. */
         <div className="grid grid-cols-3 divide-x divide-border border-t border-border bg-secondary/50">
           <button
             type="button"
@@ -179,6 +219,7 @@ export function ProductCard({
             <Eye className="size-4" />
           </button>
         </div>
+        )}
       </article>
 
       <ProductQuickView

@@ -9,7 +9,7 @@ import {
   getAllAttributeDefinitions,
   getProductAttributes,
 } from '@/lib/attributes'
-import { getSellerProductById } from '@/lib/products'
+import { getProductGallery, getSellerProductById } from '@/lib/products'
 import { getServerDictionary } from '@/lib/server-locale'
 import { getStoreSettings } from '@/app/actions/settings'
 
@@ -26,7 +26,7 @@ export default async function EditSellerProductPage({
 
   // Scoped by shop, so another seller's id is a 404 rather than a form that
   // silently refuses to save.
-  const [product, t, settings, lines, definitions, attributeValues] =
+  const [product, t, settings, lines, definitions, attributeValues, gallery] =
     await Promise.all([
       getSellerProductById(shop.id, id),
       getServerDictionary(),
@@ -34,6 +34,7 @@ export default async function EditSellerProductPage({
       getApplicationLines(shop),
       getAllAttributeDefinitions(),
       getProductAttributes(id),
+      getProductGallery(id),
     ])
   if (!product) notFound()
 
@@ -66,6 +67,7 @@ export default async function EditSellerProductPage({
         sellerLines={lines.approved}
         definitions={definitions}
         attributeValues={attributeValues}
+        gallery={gallery}
       />
     </div>
   )
