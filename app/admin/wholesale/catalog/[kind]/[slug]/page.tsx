@@ -4,9 +4,9 @@ import { ChevronRight, FolderTree } from 'lucide-react'
 import {
   getWholesaleNode,
   getWholesaleTree,
+  type WholesaleNodeDetail,
   type WholesaleNodeKind,
 } from '@/lib/wholesale/dashboard'
-import { WholesaleCatalogDetail } from '@/components/admin/wholesale/catalog-detail'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,7 +28,7 @@ export default async function WholesaleNodePage({
   const { kind, slug } = await params
   if (!KINDS.includes(kind as WholesaleNodeKind)) notFound()
 
-  // Slug 'new' is reserved for the create form — see `WholesaleCatalogDetail`.
+  // Slug 'new' is reserved for the create form — see `PlaceholderDetail` below.
   if (slug === 'new') {
     return <NewNodePage kind={kind as WholesaleNodeKind} />
   }
@@ -67,7 +67,7 @@ export default async function WholesaleNodePage({
 
       <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
         <CatalogTreeNav tree={tree} activeNode={node} />
-        <WholesaleCatalogDetail tree={tree} node={node} />
+        <PlaceholderDetail node={node} />
       </div>
     </div>
   )
@@ -118,6 +118,50 @@ function NewNodePage({ kind }: { kind: WholesaleNodeKind }) {
           </p>
         </div>
       </div>
+    </div>
+  )
+}
+
+/**
+ * Stands in for the row-editor panel this screen was built to show — rename,
+ * toggle active/inactive, and a create-child form, all wired up in
+ * `lib/wholesale/dashboard.ts` and `app/actions/wholesale-admin.ts`, but never
+ * given a UI. Rather than a crash on every visit to this tree, it says plainly
+ * what the row is and points at the equivalent screens that already work.
+ *
+ * `/admin/categories` and `/admin/catalogues` cover the same rows today: this
+ * page is a second, tree-shaped way to browse the same data, not a
+ * replacement for them. Swap this component out once the real panel exists —
+ * nothing else on the page depends on it.
+ */
+function PlaceholderDetail({ node }: { node: WholesaleNodeDetail }) {
+  const label =
+    node.kind === 'type'
+      ? 'trade line'
+      : node.kind === 'category'
+        ? 'category'
+        : 'catalogue'
+  const managePath =
+    node.kind === 'catalogue' ? '/admin/catalogues' : '/admin/categories'
+
+  return (
+    <div className="rounded-lg border border-dashed border-border bg-card p-6">
+      <FolderTree className="size-6 text-muted-foreground" aria-hidden />
+      <h2 className="mt-3 text-lg font-semibold">
+        {pickName(node.row.name)}
+      </h2>
+      <p className="mt-1 text-xs text-muted-foreground capitalize">{label}</p>
+      <p className="mt-4 text-sm text-muted-foreground">
+        This tree-view detail panel is not built yet. To rename this {label},
+        change where it appears, or add a child under it, use{' '}
+        <Link
+          href={managePath}
+          className="font-medium text-primary hover:underline"
+        >
+          {managePath}
+        </Link>{' '}
+        for now — it manages the same underlying rows.
+      </p>
     </div>
   )
 }
