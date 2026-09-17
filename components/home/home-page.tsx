@@ -14,6 +14,7 @@ import { useLanguage } from '@/components/language-provider'
 import { useCatalogue } from '@/components/catalogue-provider'
 import type { FeaturedCoupon } from '@/lib/coupon-math'
 import type { HomeReview } from '@/lib/types'
+import type { WholesaleRole } from '@/lib/db/schema'
 
 const ROW = 8
 
@@ -26,12 +27,15 @@ export function HomePage({
   featuredCoupon,
   reviews,
   wholesaleStatus,
+  wholesaleRole,
 }: {
   featuredCoupon: FeaturedCoupon | null
   /** Approved customer reviews for the testimonial rail. */
   reviews: HomeReview[]
   /** The viewer's own wholesale application, if any — drives the hero's offer card. */
   wholesaleStatus: 'pending' | 'approved' | 'rejected' | 'suspended' | null
+  /** Which side of the wholesale market the viewer already picked, if any. */
+  wholesaleRole: WholesaleRole | null
 }) {
   const { t } = useLanguage()
   const { products } = useCatalogue()
@@ -54,7 +58,11 @@ export function HomePage({
 
   return (
     <>
-      <Hero coupon={featuredCoupon} wholesaleStatus={wholesaleStatus} />
+      <Hero
+        coupon={featuredCoupon}
+        wholesaleStatus={wholesaleStatus}
+        wholesaleRole={wholesaleRole}
+      />
       <FeatureBar />
 
       <CategoryShowcase />

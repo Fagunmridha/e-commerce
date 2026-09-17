@@ -22,6 +22,7 @@ export default async function Home() {
       featuredCoupon={featuredCoupon}
       reviews={reviews}
       wholesaleStatus={application?.status ?? null}
+      wholesaleRole={user?.wholesaleRole ?? null}
     />
   )
 }

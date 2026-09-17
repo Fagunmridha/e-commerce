@@ -8,6 +8,7 @@ import { Container } from '@/components/layout/container'
 import { Reveal } from '@/components/reveal'
 import { useLanguage } from '@/components/language-provider'
 import type { FeaturedCoupon } from '@/lib/coupon-math'
+import type { WholesaleRole } from '@/lib/db/schema'
 import { cn } from '@/lib/utils'
 
 /**
@@ -38,17 +39,33 @@ import couponTickets from '@/public/icons/coupon-tickets.png'
 export function Hero({
   coupon = null,
   wholesaleStatus = null,
+  wholesaleRole = null,
 }: {
   coupon?: FeaturedCoupon | null
   /** The viewer's own wholesale application, if any — an approved seller
    * gets a link back to their shop instead of the "Apply now" pitch. */
   wholesaleStatus?: 'pending' | 'approved' | 'rejected' | 'suspended' | null
+  /** Which side of the wholesale market the viewer already picked, if any —
+   * a buyer needs no approval, so this alone is enough to point them at the
+   * market instead of the "Apply now" pitch. */
+  wholesaleRole?: WholesaleRole | null
 }) {
   const { t } = useLanguage()
 
   const copy = t.hero.slide
   const cards = t.home.heroCards
   const approvedSeller = wholesaleStatus === 'approved'
+  const wholesaleBuyer = !approvedSeller && wholesaleRole === 'buyer'
+  const wholesaleHref = approvedSeller
+    ? '/wholesale/dashboard'
+    : wholesaleBuyer
+      ? '/wholesale/market'
+      : '/wholesale'
+  const wholesaleCta = approvedSeller
+    ? t.wholesale.status.approvedCta
+    : wholesaleBuyer
+      ? t.wholesale.status.marketCta
+      : cards.wholesaleCta
 
   return (
     <section className="pt-4 pb-5 lg:pt-6 lg:pb-8">
@@ -136,9 +153,10 @@ export function Hero({
               <Link
                 // The chooser, not the application form, for anyone who has
                 // not picked a side yet — /wholesale routes them on by the
-                // side they choose. An approved seller has already picked,
-                // so this goes straight to their own shop instead.
-                href={approvedSeller ? '/wholesale/dashboard' : '/wholesale'}
+                // side they choose. An approved seller goes straight to their
+                // own shop, and a buyer straight to the market, since both
+                // have already picked a side.
+                href={wholesaleHref}
                 className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card p-5 transition-all sm:p-6 duration-300 hover:-translate-y-1 hover:border-transparent hover:shadow-card-hover focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
               >
                 <h2 className="text-xl leading-tight font-bold text-foreground">
@@ -152,7 +170,7 @@ export function Hero({
                   {cards.wholesaleBody}
                 </p>
                 <span className="relative mt-5 inline-flex h-9 w-fit items-center rounded-md border border-button/40 px-4 text-xs font-semibold text-button transition-colors group-hover:bg-button group-hover:text-button-foreground">
-                  {approvedSeller ? t.wholesale.status.approvedCta : cards.wholesaleCta}
+                  {wholesaleCta}
                 </span>
 
                 {/* The carton stack is a transparent PNG, so it drops straight
