@@ -25,10 +25,13 @@ const ROW = 8
 export function HomePage({
   featuredCoupon,
   reviews,
+  wholesaleStatus,
 }: {
   featuredCoupon: FeaturedCoupon | null
   /** Approved customer reviews for the testimonial rail. */
   reviews: HomeReview[]
+  /** The viewer's own wholesale application, if any — drives the hero's offer card. */
+  wholesaleStatus: 'pending' | 'approved' | 'rejected' | 'suspended' | null
 }) {
   const { t } = useLanguage()
   const { products } = useCatalogue()
@@ -51,7 +54,7 @@ export function HomePage({
 
   return (
     <>
-      <Hero coupon={featuredCoupon} />
+      <Hero coupon={featuredCoupon} wholesaleStatus={wholesaleStatus} />
       <FeatureBar />
 
       <CategoryShowcase />

@@ -35,11 +35,20 @@ import couponTickets from '@/public/icons/coupon-tickets.png'
  * photo, with the two standing offers stacked in a rail beside it. On phones
  * the rail drops below the panel and the offers sit side by side.
  */
-export function Hero({ coupon = null }: { coupon?: FeaturedCoupon | null }) {
+export function Hero({
+  coupon = null,
+  wholesaleStatus = null,
+}: {
+  coupon?: FeaturedCoupon | null
+  /** The viewer's own wholesale application, if any — an approved seller
+   * gets a link back to their shop instead of the "Apply now" pitch. */
+  wholesaleStatus?: 'pending' | 'approved' | 'rejected' | 'suspended' | null
+}) {
   const { t } = useLanguage()
 
   const copy = t.hero.slide
   const cards = t.home.heroCards
+  const approvedSeller = wholesaleStatus === 'approved'
 
   return (
     <section className="pt-4 pb-5 lg:pt-6 lg:pb-8">
@@ -125,11 +134,11 @@ export function Hero({ coupon = null }: { coupon?: FeaturedCoupon | null }) {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 lg:gap-5">
             <Reveal delay={100}>
               <Link
-                // The chooser, not the application form. Applying is one of
-                // the two ways into the programme, and this card must not
-                // decide which one for someone who has not picked yet —
-                // /wholesale routes them on by the side they chose.
-                href="/wholesale"
+                // The chooser, not the application form, for anyone who has
+                // not picked a side yet — /wholesale routes them on by the
+                // side they choose. An approved seller has already picked,
+                // so this goes straight to their own shop instead.
+                href={approvedSeller ? '/wholesale/dashboard' : '/wholesale'}
                 className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card p-5 transition-all sm:p-6 duration-300 hover:-translate-y-1 hover:border-transparent hover:shadow-card-hover focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
               >
                 <h2 className="text-xl leading-tight font-bold text-foreground">
@@ -143,7 +152,7 @@ export function Hero({ coupon = null }: { coupon?: FeaturedCoupon | null }) {
                   {cards.wholesaleBody}
                 </p>
                 <span className="relative mt-5 inline-flex h-9 w-fit items-center rounded-md border border-button/40 px-4 text-xs font-semibold text-button transition-colors group-hover:bg-button group-hover:text-button-foreground">
-                  {cards.wholesaleCta}
+                  {approvedSeller ? t.wholesale.status.approvedCta : cards.wholesaleCta}
                 </span>
 
                 {/* The carton stack is a transparent PNG, so it drops straight
