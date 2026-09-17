@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound, useSearchParams } from 'next/navigation'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, SlidersHorizontal } from 'lucide-react'
 import { ProductCard } from '@/components/product-card'
 import { ProductListCard } from '@/components/product-list-card'
 import { CategorySidebar } from '@/components/category-sidebar'
@@ -12,6 +12,13 @@ import { ViewToggle, type ViewMode } from '@/components/browse/view-toggle'
 import { Reveal } from '@/components/reveal'
 import { FeatureBar } from '@/components/feature-bar'
 import { Newsletter } from '@/components/newsletter'
+import { Button } from '@/components/ui/button'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
 import { useLanguage } from '@/components/language-provider'
 import { useCatalogue } from '@/components/catalogue-provider'
 import { cn, hasPhoto } from '@/lib/utils'
@@ -43,6 +50,9 @@ export function CategoryPage({ slug }: { slug: CategorySlug }) {
   )
   const [sort, setSort] = useState<SortKey>('featured')
   const [view, setView] = useState<ViewMode>('grid')
+  // The category tree and the size pills both live in one sheet below `lg` —
+  // stacking them inline there was the mess this was built to fix.
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
   const all = useMemo(
     () => getProductsByCategory(slug),
@@ -63,6 +73,9 @@ export function CategoryPage({ slug }: { slug: CategorySlug }) {
     inCatalogue.forEach((product) => product.sizes?.forEach((s) => found.add(s)))
     return [...found]
   }, [inCatalogue])
+
+  const sizeOptions = useMemo(() => ['all', ...sizes], [sizes])
+  const activeFilterCount = (catalogue ? 1 : 0) + (size !== 'all' ? 1 : 0)
 
   const products = useMemo(() => {
     const list =
@@ -155,6 +168,7 @@ export function CategoryPage({ slug }: { slug: CategorySlug }) {
       <div className="mx-auto max-w-page px-4 py-6 sm:px-6 lg:px-4">
         <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
           <CategorySidebar
+            className="hidden lg:block"
             categories={categories}
             catalogues={catalogues}
             products={allProducts}
@@ -169,45 +183,42 @@ export function CategoryPage({ slug }: { slug: CategorySlug }) {
           />
 
           <div className="min-w-0 flex-1">
-            {/* Toolbar */}
-            <div className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex flex-wrap items-center gap-2">
+            {/* Toolbar — one row for every breakpoint. Below `lg` the size
+                pills and category tree fold into the "Filters" sheet instead
+                of stacking as their own blocks above the grid. */}
+            <div className="flex items-center gap-3 border-b border-border pb-5">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setFiltersOpen(true)}
+                className="shrink-0 gap-1.5 lg:hidden"
+              >
+                <SlidersHorizontal className="size-4" aria-hidden="true" />
+                {t.shop.filterTitle}
+                {activeFilterCount > 0 && (
+                  <span className="grid size-5 place-items-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </Button>
+
+              <div className="hidden min-w-0 flex-1 flex-wrap items-center gap-2 lg:flex">
                 <span className="mr-1 text-xs font-bold tracking-wider text-muted-foreground uppercase">
                   {t.category.filterBy}
                 </span>
-                <button
-                  onClick={() => setSize('all')}
-                  aria-pressed={size === 'all'}
-                  className={cn(
-                    'rounded-full border px-4 py-1.5 text-xs font-bold tracking-wide uppercase transition-colors',
-                    size === 'all'
-                      ? 'border-foreground bg-foreground text-background'
-                      : 'border-border text-muted-foreground hover:border-foreground hover:text-foreground',
-                  )}
-                >
-                  {t.category.allSizes}
-                </button>
-                {sizes.map((item) => (
-                  <button
-                    key={item}
-                    onClick={() => setSize(item)}
-                    aria-pressed={size === item}
-                    className={cn(
-                      'rounded-full border px-4 py-1.5 text-xs font-bold tracking-wide uppercase transition-colors',
-                      size === item
-                        ? 'border-foreground bg-foreground text-background'
-                        : 'border-border text-muted-foreground hover:border-foreground hover:text-foreground',
-                    )}
-                  >
-                    {item}
-                  </button>
-                ))}
+                <SizePills
+                  options={sizeOptions}
+                  active={size}
+                  onSelect={setSize}
+                  allLabel={t.category.allSizes}
+                />
               </div>
 
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="ml-auto flex items-center gap-2 sm:gap-3">
                 <label
                   htmlFor="category-sort"
-                  className="shrink-0 text-xs font-bold tracking-wider text-muted-foreground uppercase"
+                  className="sr-only shrink-0 text-xs font-bold tracking-wider text-muted-foreground uppercase lg:not-sr-only"
                 >
                   {t.shop.sortBy}
                 </label>
@@ -215,7 +226,7 @@ export function CategoryPage({ slug }: { slug: CategorySlug }) {
                   id="category-sort"
                   value={sort}
                   onChange={(event) => setSort(event.target.value as SortKey)}
-                  className="h-9 rounded-full border border-border bg-background px-4 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                  className="h-9 rounded-full border border-border bg-background px-3 text-xs font-semibold outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:px-4 sm:text-sm sm:font-normal"
                 >
                   <option value="featured">{t.shop.sortFeatured}</option>
                   <option value="rating">{t.category.topRated}</option>
@@ -254,10 +265,83 @@ export function CategoryPage({ slug }: { slug: CategorySlug }) {
         </div>
       </div>
 
+      <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
+        <SheetContent side="left" className="w-full gap-0 overflow-y-auto p-4 sm:max-w-sm">
+          <SheetHeader className="px-0 pb-4">
+            <SheetTitle>{t.shop.filterTitle}</SheetTitle>
+          </SheetHeader>
+
+          <div className="space-y-6">
+            <CategorySidebar
+              categories={categories}
+              catalogues={catalogues}
+              products={allProducts}
+              activeCategory={slug}
+              activeCatalogue={catalogue}
+              onCatalogueChange={(next) => {
+                setCatalogue(next)
+                setSize('all')
+                setFiltersOpen(false)
+              }}
+              showExtras={false}
+            />
+
+            <div>
+              <h2 className="mb-2 px-1 text-sm font-bold text-foreground">
+                {t.category.filterBy}
+              </h2>
+              <div className="flex flex-wrap gap-2 px-1">
+                <SizePills
+                  options={sizeOptions}
+                  active={size}
+                  onSelect={setSize}
+                  allLabel={t.category.allSizes}
+                />
+              </div>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
       <FeatureBar />
       <div className="pt-14">
         <Newsletter />
       </div>
+    </>
+  )
+}
+
+/** The size-pill row, shared between the desktop toolbar and the mobile
+ * filter sheet so the two can never drift into different pills. */
+function SizePills({
+  options,
+  active,
+  onSelect,
+  allLabel,
+}: {
+  options: string[]
+  active: string
+  onSelect: (value: string) => void
+  allLabel: string
+}) {
+  return (
+    <>
+      {options.map((item) => (
+        <button
+          key={item}
+          type="button"
+          onClick={() => onSelect(item)}
+          aria-pressed={active === item}
+          className={cn(
+            'shrink-0 rounded-full border px-4 py-1.5 text-xs font-bold tracking-wide uppercase transition-colors',
+            active === item
+              ? 'border-foreground bg-foreground text-background'
+              : 'border-border text-muted-foreground hover:border-foreground hover:text-foreground',
+          )}
+        >
+          {item === 'all' ? allLabel : item}
+        </button>
+      ))}
     </>
   )
 }

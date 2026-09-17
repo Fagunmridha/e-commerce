@@ -38,6 +38,8 @@ export function CategorySidebar({
   activeCategory,
   activeCatalogue,
   onCatalogueChange,
+  className,
+  showExtras = true,
 }: {
   categories: Category[]
   catalogues: Catalogue[]
@@ -48,6 +50,10 @@ export function CategorySidebar({
   /** Only ever fires for a catalogue under `activeCategory` — a plain link
    * handles every other one. */
   onCatalogueChange: (slug: string) => void
+  className?: string
+  /** Off inside the mobile filter sheet, where the promo card and trust
+   * badges would just be dead weight below the category tree. */
+  showExtras?: boolean
 }) {
   const { t, pick } = useLanguage()
   const copy = t.category
@@ -66,7 +72,7 @@ export function CategorySidebar({
   )
 
   return (
-    <aside className="w-full shrink-0 lg:w-64">
+    <aside className={cn('w-full shrink-0 lg:w-64', className)}>
       <div className="space-y-5 lg:sticky lg:top-24">
         <div className="rounded-xl border border-border bg-card p-4">
           <h2 className="mb-1 px-1 text-sm font-bold text-foreground">
@@ -163,7 +169,7 @@ export function CategorySidebar({
           </Accordion>
         </div>
 
-        {activeCategoryRow && (
+        {showExtras && activeCategoryRow && (
           <Link
             href={`/${activeCategoryRow.slug}`}
             className="group relative block h-32 overflow-hidden rounded-xl border border-border"
@@ -190,24 +196,26 @@ export function CategorySidebar({
           </Link>
         )}
 
-        <ul className="space-y-3 rounded-xl border border-border bg-card p-4">
-          {TRUST_INDEXES.map((featureIndex, index) => {
-            const feature = t.features[featureIndex]
-            const Icon = TRUST_ICONS[index]
-            if (!feature) return null
+        {showExtras && (
+          <ul className="space-y-3 rounded-xl border border-border bg-card p-4">
+            {TRUST_INDEXES.map((featureIndex, index) => {
+              const feature = t.features[featureIndex]
+              const Icon = TRUST_ICONS[index]
+              if (!feature) return null
 
-            return (
-              <li key={feature.title} className="flex items-center gap-3">
-                <span className="grid size-8 shrink-0 place-items-center rounded-full bg-accent text-accent-foreground">
-                  <Icon className="size-4" aria-hidden="true" />
-                </span>
-                <span className="text-xs font-semibold text-foreground">
-                  {feature.title}
-                </span>
-              </li>
-            )
-          })}
-        </ul>
+              return (
+                <li key={feature.title} className="flex items-center gap-3">
+                  <span className="grid size-8 shrink-0 place-items-center rounded-full bg-accent text-accent-foreground">
+                    <Icon className="size-4" aria-hidden="true" />
+                  </span>
+                  <span className="text-xs font-semibold text-foreground">
+                    {feature.title}
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
+        )}
       </div>
     </aside>
   )
