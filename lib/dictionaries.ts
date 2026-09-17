@@ -1331,6 +1331,9 @@ const en = {
     priceLowHigh: 'Price: Low to High',
     priceHighLow: 'Price: High to Low',
     topRated: 'Top rated',
+    categoriesHeading: 'Categories',
+    sidebarPromoTagline: 'Style starts here',
+    sidebarPromoCta: 'Shop now',
   },
   meta: {
     suffix: '| CP Market',
@@ -2557,6 +2560,9 @@ const bn: Dictionary = {
     priceLowHigh: 'দাম: কম থেকে বেশি',
     priceHighLow: 'দাম: বেশি থেকে কম',
     topRated: 'সর্বোচ্চ রেটিং',
+    categoriesHeading: 'ক্যাটাগরি',
+    sidebarPromoTagline: 'স্টাইল শুরু এখানে',
+    sidebarPromoCta: 'এখনই দেখুন',
   },
   meta: {
     suffix: '| CP Market',

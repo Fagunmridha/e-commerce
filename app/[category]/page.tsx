@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import { CategoryPage } from '@/components/category-page'
 import { categoryMetadata } from '@/lib/metadata'
@@ -50,5 +51,9 @@ export default async function Page({
   const categories = await getRetailCategories()
   if (!categories.some((item) => item.slug === category)) notFound()
 
-  return <CategoryPage slug={category} />
+  return (
+    <Suspense>
+      <CategoryPage slug={category} />
+    </Suspense>
+  )
 }
