@@ -740,6 +740,13 @@ const en = {
       edit: 'Edit and resubmit',
       cancel: 'Cancel',
       openingDashboard: 'Opening your dashboard…',
+      stepSubmitted: 'Submitted',
+      stepReviewing: 'Under review',
+      stepDecision: 'Decision',
+      pendingBadge: 'Pending',
+      approvedBadge: 'Approved',
+      rejectedBadge: 'Not approved',
+      suspendedBadge: 'Suspended',
     },
     /**
      * The seller's own landing page — what they see at /wholesale once they
@@ -2004,6 +2011,13 @@ const bn: Dictionary = {
       edit: 'সম্পাদনা করে আবার জমা দিন',
       cancel: 'বাতিল',
       openingDashboard: 'আপনার ড্যাশবোর্ড খোলা হচ্ছে…',
+      stepSubmitted: 'জমা দেওয়া হয়েছে',
+      stepReviewing: 'যাচাই চলছে',
+      stepDecision: 'সিদ্ধান্ত',
+      pendingBadge: 'পর্যালোচনায়',
+      approvedBadge: 'অনুমোদিত',
+      rejectedBadge: 'অনুমোদিত হয়নি',
+      suspendedBadge: 'সাময়িক বন্ধ',
     },
     pitch: {
       stepsEyebrow: 'কীভাবে কাজ করে',
