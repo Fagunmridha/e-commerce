@@ -1,5 +1,5 @@
 import 'server-only'
-import { and, count, desc, eq, isNotNull, isNull, sql } from 'drizzle-orm'
+import { and, count, desc, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import {
   catalogues,
@@ -257,6 +257,49 @@ export async function getRecentWholesaleOrders(
     status: row.status,
     itemCount: row.itemCount,
   }))
+}
+
+export type WholesaleCatalogSummary = {
+  /** Top-level, wholesale-scoped categories — what a seller picks when applying. */
+  tradeLines: number
+  /** Their children, where products are actually filed. */
+  categories: number
+  catalogues: number
+}
+
+/**
+ * The three counts behind the "Manage the wholesale catalog" card — enough
+ * for an admin to tell at a glance whether the tree has been filled in
+ * without opening the manager.
+ */
+export async function getWholesaleCatalogSummary(): Promise<WholesaleCatalogSummary> {
+  const tradeLineRows = await db
+    .select({ slug: categories.slug })
+    .from(categories)
+    .where(and(isNull(categories.parentSlug), sql`${categories.scope} <> 'retail'`))
+
+  if (tradeLineRows.length === 0) {
+    return { tradeLines: 0, categories: 0, catalogues: 0 }
+  }
+  const tradeLineSlugs = tradeLineRows.map((row) => row.slug)
+
+  const categoryRows = await db
+    .select({ slug: categories.slug })
+    .from(categories)
+    .where(inArray(categories.parentSlug, tradeLineSlugs))
+
+  const [catalogueRow] = categoryRows.length
+    ? await db
+        .select({ n: count() })
+        .from(catalogues)
+        .where(inArray(catalogues.categorySlug, categoryRows.map((row) => row.slug)))
+    : [{ n: 0 }]
+
+  return {
+    tradeLines: tradeLineRows.length,
+    categories: categoryRows.length,
+    catalogues: Number(catalogueRow?.n ?? 0),
+  }
 }
 
 /* -------------------------------------------------------------------------- */

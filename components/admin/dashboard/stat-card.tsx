@@ -55,6 +55,15 @@ const STROKE: Record<StatAccent, string> = {
   rose: '#f43f5e',
 }
 
+/** Solid fill for the optional top accent bar — a shade deeper than `CHIP`. */
+const BAR: Record<StatAccent, string> = {
+  violet: 'bg-violet-500',
+  emerald: 'bg-emerald-500',
+  amber: 'bg-amber-500',
+  sky: 'bg-sky-500',
+  rose: 'bg-rose-500',
+}
+
 export function StatCard({
   label,
   value,
@@ -64,6 +73,7 @@ export function StatCard({
   change,
   series,
   href,
+  topAccent = false,
 }: {
   label: string
   value: string
@@ -76,6 +86,9 @@ export function StatCard({
   /** 14-point sparkline. Omitted when the metric has no time series. */
   series?: number[]
   href?: string
+  /** A thin accent-coloured bar along the card's top edge. Off by default —
+   * opt in on pages that want a bolder, more colourful stat row. */
+  topAccent?: boolean
 }) {
   const Icon = ICONS[icon]
   const up = (change ?? 0) >= 0
@@ -90,6 +103,7 @@ export function StatCard({
         href && 'hover:-translate-y-0.5 hover:shadow-md',
       )}
     >
+      {topAccent && <div className={cn('h-1', BAR[accent])} aria-hidden="true" />}
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">

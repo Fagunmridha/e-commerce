@@ -1,15 +1,24 @@
 'use client'
 
 import Link from 'next/link'
-import { Store, Clock, Package, AlertTriangle } from 'lucide-react'
+import { ArrowRight, Store, Clock, Package } from 'lucide-react'
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { StatCard } from '@/components/admin/dashboard/stat-card'
 import {
   WHOLESALER_STATUS_CLASS,
@@ -23,6 +32,22 @@ import type {
   RecentWholesaleOrder,
   WholesaleOverviewStats,
 } from '@/lib/wholesale/dashboard'
+
+/** Same palette `RecentOrdersTable` uses on the main dashboard, so a status
+ * reads the same colour everywhere in admin. */
+const ORDER_STATUS: Record<
+  RecentWholesaleOrder['status'],
+  { label: string; className: string }
+> = {
+  pending: { label: 'Pending', className: 'bg-amber-500/12 text-amber-700' },
+  processing: { label: 'Processing', className: 'bg-sky-500/12 text-sky-700' },
+  shipped: { label: 'Shipped', className: 'bg-violet-500/12 text-violet-700' },
+  delivered: {
+    label: 'Delivered',
+    className: 'bg-emerald-500/12 text-emerald-700',
+  },
+  cancelled: { label: 'Cancelled', className: 'bg-rose-500/12 text-rose-700' },
+}
 
 /**
  * Wholesale dashboard body. Receives all counts and rows from the server
@@ -46,9 +71,11 @@ export function WholesaleOverview({
         <StatCard
           label="Total sellers"
           value={stats.totalSellers.toLocaleString('en-IN')}
+          hint="Approved shops"
           icon="customers"
           accent="emerald"
           href="/admin/wholesalers?status=approved"
+          topAccent
         />
         <StatCard
           label="Pending applications"
@@ -57,6 +84,7 @@ export function WholesaleOverview({
           icon="pending"
           accent="amber"
           href="/admin/wholesalers?status=pending"
+          topAccent
         />
         <StatCard
           label="Wholesale products"
@@ -65,6 +93,7 @@ export function WholesaleOverview({
           icon="products"
           accent="violet"
           href="/admin/products/review"
+          topAccent
         />
         <StatCard
           label="Pending product approvals"
@@ -73,10 +102,11 @@ export function WholesaleOverview({
           icon="alert"
           accent="rose"
           href="/admin/products/review"
+          topAccent
         />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="space-y-6">
         <RecentApplicationsCard applications={applications} />
         <RecentPendingProductsCard products={pendingProducts} />
         <RecentOrdersCard orders={recentOrders} />
@@ -93,41 +123,73 @@ function RecentApplicationsCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Store className="size-4 text-muted-foreground" aria-hidden />
-          Recent applications
-        </CardTitle>
-        <CardDescription>The latest five submissions.</CardDescription>
+        <div>
+          <CardTitle className="flex items-center gap-2">
+            <span className="grid size-7 shrink-0 place-items-center rounded-md bg-sky-500/12 text-sky-600">
+              <Store className="size-3.5" aria-hidden />
+            </span>
+            Recent applications
+          </CardTitle>
+          <CardDescription className="mt-1">
+            The latest five submissions.
+          </CardDescription>
+        </div>
+        <CardAction>
+          <ViewAllLink href="/admin/wholesalers" />
+        </CardAction>
       </CardHeader>
       <CardContent>
         {applications.length === 0 ? (
           <Empty>No applications yet.</Empty>
         ) : (
-          <ul className="space-y-3">
-            {applications.map((application) => (
-              <li key={application.id} className="space-y-1">
-                <div className="flex items-start justify-between gap-2">
-                  <Link
-                    href={`/admin/wholesalers/${application.id}`}
-                    className="line-clamp-1 text-sm font-medium text-foreground hover:underline"
-                  >
-                    {application.shopName}
-                  </Link>
-                  <Badge
-                    className={WHOLESALER_STATUS_CLASS[application.status as WholesalerStatus]}
-                  >
-                    {WHOLESALER_STATUS_LABEL[application.status as WholesalerStatus]}
-                  </Badge>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {application.contactName} · {application.tradeLines || '—'}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {formatRelativeDate(application.submitted)}
-                </p>
-              </li>
-            ))}
-          </ul>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Shop</TableHead>
+                <TableHead>Trade lines</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Submitted</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {applications.map((application) => (
+                <TableRow key={application.id}>
+                  <TableCell>
+                    <Link
+                      href={`/admin/wholesalers/${application.id}`}
+                      className="text-sm font-medium text-foreground hover:underline"
+                    >
+                      {application.shopName}
+                    </Link>
+                    <p className="text-xs text-muted-foreground">
+                      {application.contactName}
+                    </p>
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {application.tradeLines || '—'}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      className={
+                        WHOLESALER_STATUS_CLASS[
+                          application.status as WholesalerStatus
+                        ]
+                      }
+                    >
+                      {
+                        WHOLESALER_STATUS_LABEL[
+                          application.status as WholesalerStatus
+                        ]
+                      }
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right text-sm text-muted-foreground">
+                    {formatRelativeDate(application.submitted)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         )}
       </CardContent>
     </Card>
@@ -142,37 +204,64 @@ function RecentPendingProductsCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Package className="size-4 text-muted-foreground" aria-hidden />
-          Pending product approvals
-        </CardTitle>
-        <CardDescription>Seller submissions awaiting a verdict.</CardDescription>
+        <div>
+          <CardTitle className="flex items-center gap-2">
+            <span className="grid size-7 shrink-0 place-items-center rounded-md bg-violet-500/12 text-violet-600">
+              <Package className="size-3.5" aria-hidden />
+            </span>
+            Pending product approvals
+          </CardTitle>
+          <CardDescription className="mt-1">
+            Seller submissions awaiting a verdict.
+          </CardDescription>
+        </div>
+        <CardAction>
+          <ViewAllLink href="/admin/products/review" />
+        </CardAction>
       </CardHeader>
       <CardContent>
         {products.length === 0 ? (
           <Empty>Nothing waiting for review.</Empty>
         ) : (
-          <ul className="space-y-3">
-            {products.map((product) => (
-              <li key={product.id} className="space-y-1">
-                <Link
-                  href={`/admin/products/${product.id}`}
-                  className="line-clamp-1 text-sm font-medium text-foreground hover:underline"
-                >
-                  {product.name}
-                </Link>
-                <p className="text-xs text-muted-foreground">
-                  {product.shopName} · {product.category}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {formatPrice(product.price)}{' '}
-                  {product.submittedAt
-                    ? `· ${formatRelativeDate(product.submittedAt)}`
-                    : ''}
-                </p>
-              </li>
-            ))}
-          </ul>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Product</TableHead>
+                <TableHead>Shop</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead className="text-right">Submitted</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {products.map((product) => (
+                <TableRow key={product.id}>
+                  <TableCell>
+                    <Link
+                      href={`/admin/products/${product.id}`}
+                      className="text-sm font-medium text-foreground hover:underline"
+                    >
+                      {product.name}
+                    </Link>
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {product.shopName}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {product.category}
+                  </TableCell>
+                  <TableCell className="text-sm font-medium text-foreground">
+                    {formatPrice(product.price)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm text-muted-foreground">
+                    {product.submittedAt
+                      ? formatRelativeDate(product.submittedAt)
+                      : '—'}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         )}
       </CardContent>
     </Card>
@@ -187,45 +276,83 @@ function RecentOrdersCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Clock className="size-4 text-muted-foreground" aria-hidden />
-          Recent wholesale orders
-        </CardTitle>
-        <CardDescription>
-          Orders containing at least one marketplace product.
-        </CardDescription>
+        <div>
+          <CardTitle className="flex items-center gap-2">
+            <span className="grid size-7 shrink-0 place-items-center rounded-md bg-emerald-500/12 text-emerald-600">
+              <Clock className="size-3.5" aria-hidden />
+            </span>
+            Recent wholesale orders
+          </CardTitle>
+          <CardDescription className="mt-1">
+            Orders containing at least one marketplace product.
+          </CardDescription>
+        </div>
+        <CardAction>
+          <ViewAllLink href="/admin/orders" />
+        </CardAction>
       </CardHeader>
       <CardContent>
         {orders.length === 0 ? (
           <Empty>No wholesale orders yet.</Empty>
         ) : (
-          <ul className="space-y-3">
-            {orders.map((order) => (
-              <li key={order.id} className="space-y-1">
-                <div className="flex items-start justify-between gap-2">
-                  <Link
-                    href={`/admin/orders/${order.id}`}
-                    className="line-clamp-1 text-sm font-medium text-foreground hover:underline"
-                  >
-                    {order.orderNumber}
-                  </Link>
-                  <span className="text-sm font-semibold text-foreground">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Order</TableHead>
+                <TableHead>Customer</TableHead>
+                <TableHead>Items</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Total</TableHead>
+                <TableHead className="text-right">Date</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {orders.map((order) => (
+                <TableRow key={order.id}>
+                  <TableCell>
+                    <Link
+                      href={`/admin/orders/${order.id}`}
+                      className="font-mono text-xs font-semibold text-primary hover:underline"
+                    >
+                      {order.orderNumber}
+                    </Link>
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {order.customer}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {order.itemCount}
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={ORDER_STATUS[order.status].className}>
+                      {ORDER_STATUS[order.status].label}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-sm font-semibold text-foreground">
                     {formatPrice(order.total)}
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {order.customer} · {order.itemCount} item
-                  {order.itemCount === 1 ? '' : 's'}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {formatRelativeDate(order.placedAt)}
-                </p>
-              </li>
-            ))}
-          </ul>
+                  </TableCell>
+                  <TableCell className="text-right text-sm text-muted-foreground">
+                    {formatRelativeDate(order.placedAt)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         )}
       </CardContent>
     </Card>
+  )
+}
+
+function ViewAllLink({ href }: { href: string }) {
+  return (
+    <Link
+      href={href}
+      className="flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+    >
+      View all
+      <ArrowRight className="size-3.5" aria-hidden="true" />
+    </Link>
   )
 }
 
