@@ -1,24 +1,32 @@
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
-import { ChevronRight, FolderTree } from 'lucide-react'
+import { notFound, redirect } from 'next/navigation'
+import { ChevronRight } from 'lucide-react'
+import { SetBreadcrumbLabel } from '@/components/breadcrumb-label'
+import { CatalogNodePanel, CreateTypeForm } from '@/components/admin/wholesale/catalog-node-panel'
+import { CatalogTree } from '@/components/admin/wholesale/catalog-tree'
+import { nodeName } from '@/components/admin/wholesale/catalog-helpers'
 import {
   getWholesaleNode,
   getWholesaleTree,
   type WholesaleNodeDetail,
   type WholesaleNodeKind,
+  type WholesaleTreeType,
 } from '@/lib/wholesale/dashboard'
 
 export const dynamic = 'force-dynamic'
 
 const KINDS: readonly WholesaleNodeKind[] = ['type', 'category', 'catalogue']
+const CATALOG_HOME = '/admin/wholesale/catalog'
 
 /**
- * One node selected — the right panel shows its row, the children it has, and
- * a create-child form (a Type page adds a Category; a Category page adds a
- * Catalogue; a Catalogue leaf has nothing underneath to add).
+ * One node selected — the tree on the left, and on the right the panel for that
+ * row: its numbers, rename / switch off / delete, and the form that adds the
+ * next level down (a trade line takes a category, a category takes a
+ * catalogue, a catalogue is the leaf).
  *
- * The page is selected by `[kind]/[slug]` rather than a single `[node]`
- * segment because slugs contain hyphens and would collide with `new`.
+ * Addressed by `[kind]/[slug]` rather than a single `[node]` segment because
+ * slugs are free-form and a trade line called "new" would collide with the
+ * create route. `new` is also refused as a slug on write.
  */
 export default async function WholesaleNodePage({
   params,
@@ -28,9 +36,12 @@ export default async function WholesaleNodePage({
   const { kind, slug } = await params
   if (!KINDS.includes(kind as WholesaleNodeKind)) notFound()
 
-  // Slug 'new' is reserved for the create form — see `PlaceholderDetail` below.
   if (slug === 'new') {
-    return <NewNodePage kind={kind as WholesaleNodeKind} />
+    // Only a trade line is created from scratch. A category or a catalogue is
+    // added from the panel of the node it goes under, so there is no
+    // standalone form for them — send the URL somewhere useful.
+    if (kind !== 'type') redirect(CATALOG_HOME)
+    return <NewTypePage />
   }
 
   const [tree, node] = await Promise.all([
@@ -41,296 +52,120 @@ export default async function WholesaleNodePage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          Manage wholesale catalog
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {breadcrumbsFor(node).map((crumb, index) => (
-            <span key={crumb.href}>
-              {index > 0 && (
-                <ChevronRight
-                  className="mx-1 inline size-3.5 align-middle text-muted-foreground"
-                  aria-hidden
-                />
-              )}
-              <Link
-                href={crumb.href}
-                className="hover:underline hover:text-foreground"
-              >
-                {crumb.label}
-              </Link>
-            </span>
-          ))}
-        </p>
-      </div>
+      {/* The header crumb otherwise shows the raw slug. */}
+      <SetBreadcrumbLabel label={nodeName(node.row.name)} />
+
+      <PageHeading>
+        <Crumbs trail={trailFor(tree, node)} />
+      </PageHeading>
 
       <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <CatalogTreeNav tree={tree} activeNode={node} />
-        <PlaceholderDetail node={node} />
+        <CatalogTree tree={tree} active={{ kind: node.kind, slug: node.row.slug }} />
+        <CatalogNodePanel node={node} />
       </div>
     </div>
   )
 }
 
-/**
- * The "create a new Type" page — same layout, but the right panel is a
- * create form rather than a row that already exists. Categories and
- * Catalogues can also be created here, but a `Type` must be picked for the
- * first drop-down, so the page starts there.
- */
-function NewNodePage({ kind }: { kind: WholesaleNodeKind }) {
+async function NewTypePage() {
+  const tree = await getWholesaleTree()
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          Manage wholesale catalog
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          New {kind === 'type' ? 'trade line' : kind}
-        </p>
-      </div>
+      <PageHeading>
+        <Crumbs trail={[{ label: 'New trade line' }]} />
+      </PageHeading>
 
       <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <div className="rounded-lg border border-border bg-card p-3">
-          <p className="px-2 py-4 text-xs text-muted-foreground">
-            The tree on the left appears once a node is saved.
-          </p>
-        </div>
-
-        <div className="rounded-lg border border-dashed border-border bg-card p-6">
-          <FolderTree className="size-6 text-muted-foreground" aria-hidden />
-          <h2 className="mt-3 text-lg font-semibold">Use the form below</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {kind === 'type'
-              ? 'Pick this trade line from the catalogue list above and click edit to rename or toggle it.'
-              : 'Use an existing node on the left to add a child from its detail panel.'}
-          </p>
-          <p className="mt-4 text-sm text-muted-foreground">
-            Or head back to{' '}
-            <Link
-              href="/admin/wholesale/catalog"
-              className="font-medium text-primary hover:underline"
-            >
-              the catalog manager
-            </Link>{' '}
-            to pick an existing one.
-          </p>
-        </div>
+        <CatalogTree tree={tree} />
+        <CreateTypeForm />
       </div>
     </div>
   )
 }
 
-/**
- * Stands in for the row-editor panel this screen was built to show — rename,
- * toggle active/inactive, and a create-child form, all wired up in
- * `lib/wholesale/dashboard.ts` and `app/actions/wholesale-admin.ts`, but never
- * given a UI. Rather than a crash on every visit to this tree, it says plainly
- * what the row is and points at the equivalent screens that already work.
- *
- * `/admin/categories` and `/admin/catalogues` cover the same rows today: this
- * page is a second, tree-shaped way to browse the same data, not a
- * replacement for them. Swap this component out once the real panel exists —
- * nothing else on the page depends on it.
- */
-function PlaceholderDetail({ node }: { node: WholesaleNodeDetail }) {
-  const label =
-    node.kind === 'type'
-      ? 'trade line'
-      : node.kind === 'category'
-        ? 'category'
-        : 'catalogue'
-  const managePath =
-    node.kind === 'catalogue' ? '/admin/catalogues' : '/admin/categories'
-
+function PageHeading({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-lg border border-dashed border-border bg-card p-6">
-      <FolderTree className="size-6 text-muted-foreground" aria-hidden />
-      <h2 className="mt-3 text-lg font-semibold">
-        {pickName(node.row.name)}
-      </h2>
-      <p className="mt-1 text-xs text-muted-foreground capitalize">{label}</p>
-      <p className="mt-4 text-sm text-muted-foreground">
-        This tree-view detail panel is not built yet. To rename this {label},
-        change where it appears, or add a child under it, use{' '}
-        <Link
-          href={managePath}
-          className="font-medium text-primary hover:underline"
-        >
-          {managePath}
-        </Link>{' '}
-        for now — it manages the same underlying rows.
-      </p>
+    <div>
+      <h1 className="text-2xl font-bold tracking-tight">
+        Manage wholesale catalog
+      </h1>
+      <div className="text-sm text-muted-foreground">{children}</div>
     </div>
   )
 }
 
-/**
- * The left-hand tree, with the open node highlighted. Lives next to the
- * detail page rather than behind a tab so the manager reads as one screen.
- */
-function CatalogTreeNav({
-  tree,
-  activeNode,
-}: {
-  tree: Awaited<ReturnType<typeof getWholesaleTree>>
-  activeNode: NonNullable<Awaited<ReturnType<typeof getWholesaleNode>>>
-}) {
-  if (tree.length === 0) {
-    return (
-      <div className="rounded-lg border border-border bg-card p-3 text-xs text-muted-foreground">
-        No trade lines yet.
-      </div>
-    )
-  }
-
-  return (
-    <nav className="rounded-lg border border-border bg-card p-3">
-      <ul className="space-y-1">
-        {tree.map((line) => {
-          const lineActive =
-            activeNode.kind === 'type' && activeNode.row.slug === line.slug
-          return (
-            <li key={line.slug}>
-              <TreeRow
-                href={`/admin/wholesale/catalog/type/${line.slug}`}
-                label={pickName(line.name)}
-                inactive={line.status === 'inactive'}
-                active={lineActive}
-              />
-              {line.children.length > 0 && (
-                <ul className="ml-4 mt-1 space-y-1 border-l border-border pl-2">
-                  {line.children.map((child) => {
-                    const childActive =
-                      (activeNode.kind === 'type' &&
-                        child.slug === activeNode.row.slug) ||
-                      (activeNode.kind === 'category' &&
-                        activeNode.row.slug === child.slug)
-                    return (
-                      <li key={child.slug}>
-                        <TreeRow
-                          href={`/admin/wholesale/catalog/category/${child.slug}`}
-                          label={pickName(child.name)}
-                          inactive={child.status === 'inactive'}
-                          active={Boolean(childActive)}
-                          small
-                        />
-                        {child.catalogues.length > 0 && (
-                          <ul className="ml-4 mt-1 space-y-1 border-l border-border pl-2">
-                            {child.catalogues.map((catalogue) => {
-                              const catActive =
-                                activeNode.kind === 'catalogue' &&
-                                activeNode.row.slug === catalogue.slug
-                              return (
-                                <li key={catalogue.slug}>
-                                  <TreeRow
-                                    href={`/admin/wholesale/catalog/catalogue/${catalogue.slug}`}
-                                    label={pickName(catalogue.name)}
-                                    inactive={catalogue.status === 'inactive'}
-                                    active={Boolean(catActive)}
-                                    small
-                                    muted
-                                  />
-                                </li>
-                              )
-                            })}
-                          </ul>
-                        )}
-                      </li>
-                    )
-                  })}
-                </ul>
-              )}
-            </li>
-          )
-        })}
-      </ul>
-    </nav>
-  )
-}
-
-function TreeRow({
-  href,
-  label,
-  inactive,
-  active,
-  small,
-  muted,
-}: {
-  href: string
-  label: string
-  inactive?: boolean
-  active: boolean
-  small?: boolean
-  muted?: boolean
-}) {
-  return (
-    <Link
-      href={href}
-      className={[
-        'flex items-center gap-2 rounded-md px-2 py-1.5',
-        small ? 'text-xs' : 'text-sm font-medium',
-        muted && 'text-muted-foreground',
-        active
-          ? 'bg-primary/10 text-primary'
-          : 'hover:bg-muted',
-      ]
-        .filter(Boolean)
-        .join(' ')}
-    >
-      <ChevronRight className="size-3.5 text-muted-foreground" aria-hidden />
-      <span className="capitalize">{label}</span>
-      {inactive && (
-        <span className="ml-auto rounded bg-muted px-1.5 py-0.5 text-[10px] uppercase text-muted-foreground">
-          off
-        </span>
-      )}
-    </Link>
-  )
-}
+type Crumb = { label: string; href?: string }
 
 /**
- * The breadcrumb chain above the detail panel, derived from the loaded node
- * rather than `params` — what the parent slug *resolves to* matters, not what
- * the URL says.
+ * The trail above the panel, resolved from the loaded tree rather than the URL:
+ * what a parent slug *is* matters, not what the address says. A parent that is
+ * not in the tree (a category under a line that is shop-only) falls back to its
+ * slug so the trail still has the right shape.
  */
-function breadcrumbsFor(
-  node: NonNullable<Awaited<ReturnType<typeof getWholesaleNode>>>,
-) {
-  const root: { label: string; href: string } = {
-    label: 'Wholesale catalog',
-    href: '/admin/wholesale/catalog',
-  }
+function trailFor(tree: WholesaleTreeType[], node: WholesaleNodeDetail): Crumb[] {
+  const root: Crumb = { label: 'Wholesale catalog', href: CATALOG_HOME }
+  const current: Crumb = { label: nodeName(node.row.name) }
 
-  if (node.kind === 'type') {
-    return [root, { label: pickName(node.row.name), href: '#' }]
-  }
+  if (node.kind === 'type') return [root, current]
+
   if (node.kind === 'category') {
+    const parent = node.row.parentSlug
+    const line = tree.find((type) => type.slug === parent)
     return [
       root,
-      {
-        label: pickName(node.row.parentSlug ?? '') || pickName(node.row.name),
-        href: `/admin/wholesale/catalog/type/${node.row.parentSlug ?? ''}`,
-      },
-      { label: pickName(node.row.name), href: '#' },
+      ...(parent
+        ? [
+            {
+              label: line ? nodeName(line.name) : parent,
+              href: `${CATALOG_HOME}/type/${parent}`,
+            },
+          ]
+        : []),
+      current,
     ]
   }
+
+  const line = tree.find((type) =>
+    type.children.some((category) => category.slug === node.row.categorySlug),
+  )
   return [
     root,
+    ...(line
+      ? [{ label: nodeName(line.name), href: `${CATALOG_HOME}/type/${line.slug}` }]
+      : []),
     {
-      label: '…',
-      href: '/admin/wholesale/catalog',
+      label: nodeName(node.row.parentCategoryName),
+      href: `${CATALOG_HOME}/category/${node.row.categorySlug}`,
     },
-    {
-      label: pickName(node.row.parentCategoryName),
-      href: `/admin/wholesale/catalog/category/${node.row.categorySlug}`,
-    },
-    { label: pickName(node.row.name), href: '#' },
+    current,
   ]
 }
 
-function pickName(name: { en?: string; bn?: string } | string | null | undefined): string {
-  if (typeof name === 'string') return name
-  return name?.en ?? name?.bn ?? ''
+function Crumbs({ trail }: { trail: Crumb[] }) {
+  return (
+    <nav aria-label="Breadcrumb">
+      <ol className="flex flex-wrap items-center gap-1">
+        {trail.map((crumb, index) => (
+          <li key={`${index}-${crumb.label}`} className="flex items-center gap-1">
+            {index > 0 && (
+              <ChevronRight className="size-3.5" aria-hidden />
+            )}
+            {crumb.href ? (
+              <Link
+                href={crumb.href}
+                className="capitalize hover:text-foreground hover:underline"
+              >
+                {crumb.label}
+              </Link>
+            ) : (
+              <span aria-current="page" className="capitalize text-foreground">
+                {crumb.label}
+              </span>
+            )}
+          </li>
+        ))}
+      </ol>
+    </nav>
+  )
 }

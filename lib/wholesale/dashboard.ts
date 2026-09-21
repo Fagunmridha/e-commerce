@@ -405,18 +405,26 @@ export async function getWholesaleTree(): Promise<WholesaleTreeType[]> {
   }))
 }
 
+/**
+ * A category row as the manager reads it. `Category` also carries the
+ * storefront's `href` and `itemCount`, which this loader has no use for and does
+ * not select — claiming them here type-checked only because nothing checks it.
+ */
+export type WholesaleCategoryRow = Omit<Category, 'href' | 'itemCount'>
+
 export type WholesaleNodeDetail =
   | {
       kind: 'type'
-      row: Category & {
-        children: Category[]
+      row: WholesaleCategoryRow & {
+        children: WholesaleCategoryRow[]
         productCount: number
+        /** Shops approved for this line — not applications still waiting. */
         sellerCount: number
       }
     }
   | {
       kind: 'category'
-      row: Category & {
+      row: WholesaleCategoryRow & {
         catalogues: Catalogue[]
         productCount: number
       }
@@ -474,27 +482,43 @@ export async function getWholesaleNode(
     .from(categories)
     .where(eq(categories.slug, slug))
   if (!row) return null
+  // The URL names a kind, but the row decides what it is. A category opened as
+  // `/type/…` (or the reverse) would render the wrong panel and offer to add
+  // the wrong child, so it is a 404 rather than a guess.
+  if ((kind === 'type') !== (row.parentSlug === null)) return null
+  if (kind === 'type' && row.scope === 'retail') return null
 
   if (kind === 'type') {
-    const children = await db
-      .select()
-      .from(categories)
-      .where(eq(categories.parentSlug, slug))
-      .orderBy(categories.position, categories.slug)
+    // Two independent reads — one round trip's worth of waiting, not two.
+    const [children, [sellerRow]] = await Promise.all([
+      db
+        .select()
+        .from(categories)
+        .where(eq(categories.parentSlug, slug))
+        .orderBy(categories.position, categories.slug),
+      // Approved only: a "requested" line is an application still waiting on a
+      // decision, not a shop that trades here.
+      db
+        .select({ n: count() })
+        .from(wholesalerTradeLines)
+        .where(
+          and(
+            eq(wholesalerTradeLines.categorySlug, slug),
+            eq(wholesalerTradeLines.status, 'approved'),
+          ),
+        ),
+    ])
 
-    const [productRow] = await db
-      .select({ n: count() })
-      .from(products)
-      .where(
-        sql`${products.category} = ${slug} OR ${products.catalogueSlug} IN (${sql.raw(
-          `SELECT slug FROM catalogues WHERE category_slug = '${slug}'`,
-        )})`,
-      )
-
-    const [sellerRow] = await db
-      .select({ n: count() })
-      .from(wholesalerTradeLines)
-      .where(eq(wholesalerTradeLines.categorySlug, slug))
+    // Products are filed under a category, never under the line itself, so the
+    // count is over the line's children. The slugs reach the query as bound
+    // parameters — the line's own slug came straight from the URL.
+    const childSlugs = children.map((child) => child.slug)
+    const [productRow] = childSlugs.length
+      ? await db
+          .select({ n: count() })
+          .from(products)
+          .where(inArray(products.category, childSlugs))
+      : [{ n: 0 }]
 
     return {
       kind: 'type',

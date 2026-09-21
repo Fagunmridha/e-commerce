@@ -1,12 +1,14 @@
 import Link from 'next/link'
-import { ChevronRight, FolderTree } from 'lucide-react'
+import { FolderTree, Plus } from 'lucide-react'
+import { CatalogTree } from '@/components/admin/wholesale/catalog-tree'
+import { Button } from '@/components/ui/button'
 import { getWholesaleTree } from '@/lib/wholesale/dashboard'
 
 export const dynamic = 'force-dynamic'
 
 /**
- * Wholesale catalog landing page — when no node is selected, the right panel
- * is a guide rather than an empty box.
+ * Wholesale catalog landing page — no node selected, so the right panel is a
+ * guide to how the three levels fit together rather than an empty box.
  */
 export default async function WholesaleCatalogPage() {
   const tree = await getWholesaleTree()
@@ -25,115 +27,66 @@ export default async function WholesaleCatalogPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <TreePanel tree={tree} />
+        <CatalogTree tree={tree} />
 
-        <div className="rounded-lg border border-dashed border-border bg-card p-6">
+        <div className="min-w-0 rounded-lg border border-border bg-card p-6">
           <FolderTree className="size-6 text-muted-foreground" aria-hidden />
-          <h2 className="mt-3 text-lg font-semibold">Pick a node on the left</h2>
+          <h2 className="mt-3 text-lg font-semibold">
+            {tree.length === 0
+              ? 'Start with a trade line'
+              : 'Pick a node on the left'}
+          </h2>
           <p className="mt-2 text-sm text-muted-foreground">
             {tree.length === 0
-              ? 'No trade lines yet — create the first one to start the tree.'
-              : 'Each trade line lists its categories, and each category its catalogues. The right panel shows the row you pick.'}
+              ? 'Nothing is set up yet. Create the first trade line, then add its categories and catalogues.'
+              : 'Open a row to rename it, switch it off, or add what goes under it.'}
           </p>
-          {tree.length === 0 && (
-            <Link
-              href="/admin/wholesale/catalog/type/new"
-              className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
-            >
-              Create the first trade line
-              <ChevronRight className="size-4" aria-hidden />
+
+          <ol className="mt-5 space-y-3 text-sm">
+            <Step n={1} title="Trade line" example="Cloth">
+              What a wholesaler picks when they apply.
+            </Step>
+            <Step n={2} title="Category" example="Men, Women">
+              Sits inside a trade line. Products are filed here.
+            </Step>
+            <Step n={3} title="Catalogue" example="Jeans, Shirt, Panjabi">
+              Sits inside a category. The finest level.
+            </Step>
+          </ol>
+
+          <Button asChild className="mt-6">
+            <Link href="/admin/wholesale/catalog/type/new">
+              <Plus className="size-4" aria-hidden />
+              New trade line
             </Link>
-          )}
+          </Button>
         </div>
       </div>
     </div>
   )
 }
 
-/**
- * The left tree, rendered server-side from `getWholesaleTree`. The page itself
- * is server-rendered, so a client island is only needed when a row is being
- * edited — that is the detail panel's job, not the tree's.
- */
-function TreePanel({
-  tree,
+function Step({
+  n,
+  title,
+  example,
+  children,
 }: {
-  tree: Awaited<ReturnType<typeof getWholesaleTree>>
+  n: number
+  title: string
+  example: string
+  children: React.ReactNode
 }) {
-  if (tree.length === 0) return <div className="text-sm text-muted-foreground" />
-
   return (
-    <nav className="rounded-lg border border-border bg-card p-3">
-      <ul className="space-y-1">
-        {tree.map((line) => (
-          <li key={line.slug}>
-            <Link
-              href={`/admin/wholesale/catalog/type/${line.slug}`}
-              className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium hover:bg-muted"
-            >
-              <ChevronRight className="size-3.5 text-muted-foreground" aria-hidden />
-              <span className="capitalize">{pickName(line.name)}</span>
-              {line.status === 'inactive' && (
-                <span className="ml-auto rounded bg-muted px-1.5 py-0.5 text-[10px] uppercase text-muted-foreground">
-                  off
-                </span>
-              )}
-            </Link>
-            {line.children.length > 0 && (
-              <ul className="ml-4 mt-1 space-y-1 border-l border-border pl-2">
-                {line.children.map((child) => (
-                  <li key={child.slug}>
-                    <Link
-                      href={`/admin/wholesale/catalog/category/${child.slug}`}
-                      className="flex items-center gap-2 rounded-md px-2 py-1 text-xs hover:bg-muted"
-                    >
-                      <ChevronRight
-                        className="size-3 text-muted-foreground"
-                        aria-hidden
-                      />
-                      <span className="capitalize">{pickName(child.name)}</span>
-                      {child.status === 'inactive' && (
-                        <span className="ml-auto rounded bg-muted px-1.5 py-0.5 text-[10px] uppercase text-muted-foreground">
-                          off
-                        </span>
-                      )}
-                    </Link>
-                    {child.catalogues.length > 0 && (
-                      <ul className="ml-4 mt-1 space-y-1 border-l border-border pl-2">
-                        {child.catalogues.map((catalogue) => (
-                          <li key={catalogue.slug}>
-                            <Link
-                              href={`/admin/wholesale/catalog/catalogue/${catalogue.slug}`}
-                              className="flex items-center gap-2 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
-                            >
-                              <ChevronRight
-                                className="size-3 text-muted-foreground/70"
-                                aria-hidden
-                              />
-                              <span className="capitalize">
-                                {pickName(catalogue.name)}
-                              </span>
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </li>
-        ))}
-      </ul>
-    </nav>
+    <li className="flex gap-3">
+      <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+        {n}
+      </span>
+      <span>
+        <span className="font-medium text-foreground">{title}</span>
+        <span className="text-muted-foreground"> — e.g. {example}. </span>
+        <span className="text-muted-foreground">{children}</span>
+      </span>
+    </li>
   )
-}
-
-/**
- * Pull the English label out of a localised name. Wholesale admin does not
- * need a Bangla toggle — the form on the right handles both — so the tree
- * just shows the name a reader will recognise.
- */
-function pickName(name: { en?: string; bn?: string } | null | undefined): string {
-  return name?.en ?? name?.bn ?? ''
 }

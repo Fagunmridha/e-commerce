@@ -223,6 +223,23 @@ const SECTION_LABELS: Record<string, string> = {
 export type AdminCrumb = { label: string; href?: string }
 
 /**
+ * `/admin/wholesale/catalog/[kind]/[slug]` — the `[kind]` segment (type,
+ * category or catalogue) only selects which row to load and has no page of its
+ * own, so a crumb for it would link to a 404.
+ */
+const CATALOG_KINDS = new Set(['type', 'category', 'catalogue'])
+
+function isCatalogKindSegment(segments: string[], index: number): boolean {
+  return (
+    segments[0] === 'wholesale' &&
+    segments[1] === 'catalog' &&
+    index === 2 &&
+    segments.length === 4 &&
+    CATALOG_KINDS.has(segments[2])
+  )
+}
+
+/**
  * The breadcrumb trail for an admin pathname.
  *
  * `entityLabel` is what the open detail page calls the row it loaded — empty
@@ -236,7 +253,9 @@ export function adminBreadcrumb(
 
   const segments = pathname.replace(/^\/admin\/?/, '').split('/').filter(Boolean)
 
-  return segments.map((segment, index) => {
+  return segments.flatMap((segment, index): AdminCrumb[] => {
+    if (isCatalogKindSegment(segments, index)) return []
+
     // Every section is a real page, so a non-terminal crumb can always link to
     // its own path. The last one is the current page and stays unlinked.
     const href =
@@ -244,15 +263,32 @@ export function adminBreadcrumb(
         ? undefined
         : `/admin/${segments.slice(0, index + 1).join('/')}`
 
-    const section = index > 0 ? DETAIL_SECTIONS[segments[index - 1]] : undefined
-    if (section && !STATIC_CHILDREN[segment]) {
-      return { label: entityLabel || section, href }
+    // The selected node's own name, once the page hands it up — `new` is the
+    // create form, not a node.
+    if (segments[0] === 'wholesale' && segments[1] === 'catalog' && index === 3) {
+      return [
+        {
+          label:
+            segment === 'new'
+              ? STATIC_CHILDREN.new
+              : entityLabel || humanize(segment),
+          href,
+        },
+      ]
     }
 
-    return {
-      label: STATIC_CHILDREN[segment] ?? SECTION_LABELS[segment] ?? humanize(segment),
-      href,
+    const section = index > 0 ? DETAIL_SECTIONS[segments[index - 1]] : undefined
+    if (section && !STATIC_CHILDREN[segment]) {
+      return [{ label: entityLabel || section, href }]
     }
+
+    return [
+      {
+        label:
+          STATIC_CHILDREN[segment] ?? SECTION_LABELS[segment] ?? humanize(segment),
+        href,
+      },
+    ]
   })
 }
 

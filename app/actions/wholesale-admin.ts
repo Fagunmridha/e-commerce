@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath, updateTag } from 'next/cache'
-import { and, eq, isNull, sql } from 'drizzle-orm'
+import { and, eq, isNull } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { categories, catalogues } from '@/lib/db/schema'
 import { isUniqueViolation } from '@/lib/db/errors'
@@ -43,6 +43,45 @@ function refresh() {
   revalidatePath('/admin/products')
 }
 
+/**
+ * Turns a unique-constraint failure on `categories` into a sentence naming what
+ * to change. Anything else is rethrown as it came.
+ */
+function friendlyCategoryError(
+  error: unknown,
+  slug: string,
+  what: 'trade line' | 'category',
+): unknown {
+  if (isUniqueViolation(error, 'categories_pkey')) {
+    return new Error(
+      `The slug “${slug}” is already used by another category on the store. Pick a different slug, or open it under Categories if it is the row you meant.`,
+    )
+  }
+  if (isUniqueViolation(error, 'categories_parent_name_idx')) {
+    return new Error(
+      what === 'trade line'
+        ? 'A trade line with that English name already exists'
+        : 'A category with that English name already exists under this trade line',
+    )
+  }
+  return error
+}
+
+/** The `catalogues` counterpart of `friendlyCategoryError`. */
+function friendlyCatalogueError(error: unknown, slug: string): unknown {
+  if (isUniqueViolation(error, 'catalogues_pkey')) {
+    return new Error(
+      `The slug “${slug}” is already used by another catalogue. Slugs are shared across the whole store — try a more specific one, like men-jeans.`,
+    )
+  }
+  if (isUniqueViolation(error, 'catalogues_category_name_idx')) {
+    return new Error(
+      'A catalogue with that English name already exists in this category',
+    )
+  }
+  return error
+}
+
 const wholesaleKindSchema = z.enum(['type', 'category', 'catalogue'])
 
 const wholesaleSlugSchema = z
@@ -56,6 +95,9 @@ const wholesaleSlugSchema = z
     (value) => !RESERVED_CATEGORY_SLUGS.has(value),
     'That name is already a page on the store — pick another slug',
   )
+  // `/admin/wholesale/catalog/type/new` is the create form; a row with this
+  // slug could never be opened.
+  .refine((value) => value !== 'new', '“new” is reserved — pick another slug')
 
 const wholesaleRenameSchema = z.object({
   kind: wholesaleKindSchema,
@@ -114,6 +156,10 @@ export type WholesaleCreateCategoryInput = z.infer<
  * — a `retail`-only line would not appear under the wholesale tree, and a
  * form that lets an admin pick it is the kind of bug that does not show up
  * until somebody filters a report and finds the row missing.
+ *
+ * A plain insert, not an upsert: `slug` is the primary key of every category
+ * on the store, so reusing one would silently rename a live row — an aisle the
+ * shop already sells from — while the form reported success.
  */
 export async function createWholesaleType(
   input: WholesaleCreateTypeInput,
@@ -121,48 +167,18 @@ export async function createWholesaleType(
   await requireAdmin()
   const data = parseOrThrow(wholesaleCreateTypeSchema, input)
 
-  // The tree caps at two levels — a wholesale line must be a root row. If a
-  // row with this slug already exists with a `parentSlug`, refuse rather than
-  // silently promote it: a line that was previously a child of another trade
-  // line changing sides is exactly the kind of move an admin should mean.
-  const [existing] = await db
-    .select({ parentSlug: categories.parentSlug })
-    .from(categories)
-    .where(eq(categories.slug, data.slug))
-  if (existing?.parentSlug) {
-    throw new Error('A category with that slug already exists under another trade line')
-  }
-
   try {
-    await db
-      .insert(categories)
-      .values({
-        slug: data.slug,
-        name: data.name,
-        image: '',
-        scope: data.scope satisfies CategoryScope,
-        parentSlug: null,
-        position: 0,
-        status: 'active' satisfies TreeStatus,
-      })
-      .onConflictDoUpdate({
-        target: categories.slug,
-        // Touch only the fields the wholesale manager owns — an admin who set
-        // the scope to `both` from a separate screen keeps that change rather
-        // than having it silently narrowed back to `wholesale` on the next
-        // edit.
-        set: {
-          name: data.name,
-          parentSlug: null,
-          updatedAt: new Date(),
-        },
-      })
+    await db.insert(categories).values({
+      slug: data.slug,
+      name: data.name,
+      image: '',
+      scope: data.scope satisfies CategoryScope,
+      parentSlug: null,
+      position: 0,
+      status: 'active' satisfies TreeStatus,
+    })
   } catch (error) {
-    // `slug` is the primary key, so a duplicate surfaces as `categories_pkey`.
-    if (isUniqueViolation(error, 'categories_pkey')) {
-      throw new Error('A trade line with that slug already exists')
-    }
-    throw error
+    throw friendlyCategoryError(error, data.slug, 'trade line')
   }
 
   refresh()
@@ -193,34 +209,17 @@ export async function createWholesaleCategory(
   }
 
   try {
-    await db
-      .insert(categories)
-      .values({
-        slug: data.slug,
-        name: data.name,
-        image: '',
-        scope: 'wholesale',
-        parentSlug: data.parentSlug,
-        position: 0,
-        status: 'active',
-      })
-      .onConflictDoUpdate({
-        target: categories.slug,
-        // An existing row that was a sibling under another line keeps its own
-        // parent — promotion to the new one is a bigger change than this
-        // action should make alone.
-        set: { name: data.name, updatedAt: new Date() },
-      })
+    await db.insert(categories).values({
+      slug: data.slug,
+      name: data.name,
+      image: '',
+      scope: 'wholesale',
+      parentSlug: data.parentSlug,
+      position: 0,
+      status: 'active',
+    })
   } catch (error) {
-    if (isUniqueViolation(error, 'categories_pkey')) {
-      throw new Error('A category with that slug already exists')
-    }
-    if (isUniqueViolation(error, 'categories_parent_name_idx')) {
-      throw new Error(
-        'A category with that English name already exists under this trade line',
-      )
-    }
-    throw error
+    throw friendlyCategoryError(error, data.slug, 'category')
   }
 
   refresh()
@@ -244,6 +243,9 @@ export async function renameWholesaleNode(
       .set({ name: data.name, updatedAt: new Date() })
       .where(eq(catalogues.slug, data.slug))
       .returning({ slug: catalogues.slug })
+      .catch((error) => {
+        throw friendlyCatalogueError(error, data.slug)
+      })
     if (!updated) throw new Error('That catalogue does not exist')
   } else {
     const [updated] = await db
@@ -251,6 +253,9 @@ export async function renameWholesaleNode(
       .set({ name: data.name, updatedAt: new Date() })
       .where(eq(categories.slug, data.slug))
       .returning({ slug: categories.slug })
+      .catch((error) => {
+        throw friendlyCategoryError(error, data.slug, 'category')
+      })
     if (!updated) throw new Error('That node does not exist')
   }
 
@@ -354,33 +359,15 @@ export async function createWholesaleCatalogue(
   })
 
   try {
-    await db
-      .insert(catalogues)
-      .values({
-        slug: values.slug,
-        categorySlug: data.categorySlug,
-        name: values.name,
-        position: values.position,
-        status: values.status,
-      })
-      .onConflictDoUpdate({
-        target: catalogues.slug,
-        set: {
-          name: values.name,
-          categorySlug: data.categorySlug,
-          updatedAt: new Date(),
-        },
-      })
+    await db.insert(catalogues).values({
+      slug: values.slug,
+      categorySlug: data.categorySlug,
+      name: values.name,
+      position: values.position,
+      status: values.status,
+    })
   } catch (error) {
-    if (isUniqueViolation(error, 'catalogues_pkey')) {
-      throw new Error('A catalogue with that slug already exists')
-    }
-    if (isUniqueViolation(error, 'catalogues_category_name_idx')) {
-      throw new Error(
-        'A catalogue with that English name already exists in this category',
-      )
-    }
-    throw error
+    throw friendlyCatalogueError(error, values.slug)
   }
 
   refresh()
