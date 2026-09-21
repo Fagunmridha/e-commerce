@@ -18,6 +18,7 @@ import {
 import { LoadingOverlay } from '@/components/loading-overlay'
 import { ImageUploader } from '@/components/admin/image-uploader'
 import { upsertCategory, deleteCategory } from '@/app/actions/categories'
+import { slugify, slugInput } from '@/lib/slug'
 import type { AdminCategory } from '@/lib/categories'
 import type { CategoryScope, TreeStatus } from '@/lib/types'
 
@@ -249,6 +250,11 @@ function CategoryForm({
     value: (typeof form)[K],
   ) => setForm((current) => ({ ...current, [key]: value }))
 
+  // The slug follows the English name until the admin types one of their own
+  // (and follows it again if they clear the field). An existing row's slug is
+  // its identity and never moves, so it starts out as "edited".
+  const [slugEdited, setSlugEdited] = useState(Boolean(existing))
+
   // Only rows that are themselves lines, and never this row. The tree is two
   // levels deep, so anything already nested cannot take a child — offering it
   // here would only produce an error on save.
@@ -332,7 +338,11 @@ function CategoryForm({
             // Changing it on an existing row would orphan every one of them,
             // so an edit renames the label, never the identity.
             disabled={Boolean(existing)}
-            onChange={(e) => set('slug', e.target.value)}
+            onChange={(e) => {
+              const next = slugInput(e.target.value)
+              setSlugEdited(next !== '')
+              set('slug', next)
+            }}
             placeholder="e.g. electronics"
           />
         </div>
@@ -366,7 +376,14 @@ function CategoryForm({
           <Input
             id="category-name-en"
             value={form.nameEn}
-            onChange={(e) => set('nameEn', e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value
+              setForm((current) => ({
+                ...current,
+                nameEn: value,
+                slug: slugEdited ? current.slug : slugify(value),
+              }))
+            }}
             placeholder="Electronics"
           />
         </div>

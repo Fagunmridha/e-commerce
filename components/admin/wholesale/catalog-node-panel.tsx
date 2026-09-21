@@ -20,19 +20,22 @@ import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { ImageUploader } from '@/components/admin/image-uploader'
 import { LoadingOverlay } from '@/components/loading-overlay'
 import {
   createWholesaleCatalogue,
   createWholesaleCategory,
   createWholesaleType,
   renameWholesaleNode,
+  setWholesaleNodeImage,
   toggleWholesaleNodeStatus,
 } from '@/app/actions/wholesale-admin'
 import { deleteCategory } from '@/app/actions/categories'
 import { deleteCatalogue } from '@/app/actions/catalogues'
 import type { WholesaleNodeDetail } from '@/lib/wholesale/dashboard'
 import { cn } from '@/lib/utils'
-import { nodeName, SLUG_PATTERN, slugify } from './catalog-helpers'
+import { SLUG_PATTERN, slugInput, slugify } from '@/lib/slug'
+import { nodeName } from './catalog-helpers'
 
 const CATALOG_HOME = '/admin/wholesale/catalog'
 
@@ -206,6 +209,17 @@ export function CatalogNodePanel({ node }: { node: WholesaleNodeDetail }) {
       )}
 
       {node.kind !== 'catalogue' && (
+        <NodeImageCard
+          // Re-seed the draft from the saved value after every save or switch.
+          key={`${node.kind}:${node.row.slug}:${node.row.image}`}
+          kind={node.kind}
+          slug={node.row.slug}
+          saved={node.row.image}
+          run={run}
+        />
+      )}
+
+      {node.kind !== 'catalogue' && (
         <ChildrenCard node={node} run={run} />
       )}
     </section>
@@ -256,6 +270,76 @@ function Stats({ node }: { node: WholesaleNodeDetail }) {
         </div>
       ))}
     </dl>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/* Photo                                                                       */
+/* -------------------------------------------------------------------------- */
+
+const IMAGE_COPY = {
+  type: {
+    label: 'Trade line photo',
+    hint: 'Optional — shown on the wholesale apply form and market.',
+  },
+  category: {
+    label: 'Category photo',
+    hint: 'Optional — shown on the wholesale market. Without one, a photo of a product inside is used.',
+  },
+} as const
+
+/**
+ * The photo of a trade line or a category. Picking or removing one only changes
+ * a draft; nothing is written until Save, so a wrong file is one click from
+ * undone and an upload that never gets saved does not silently replace the live
+ * photo.
+ */
+function NodeImageCard({
+  kind,
+  slug,
+  saved,
+  run,
+}: {
+  kind: 'type' | 'category'
+  slug: string
+  saved: string
+  run: Run
+}) {
+  const [draft, setDraft] = useState(saved)
+  const dirty = draft !== saved
+  const copy = IMAGE_COPY[kind]
+
+  return (
+    <Card>
+      <CardContent className="space-y-4">
+        <ImageUploader
+          value={draft}
+          onChange={setDraft}
+          folder="categories"
+          label={copy.label}
+          hint={copy.hint}
+        />
+        {dirty && (
+          <div className="flex gap-3">
+            <Button
+              size="sm"
+              onClick={() =>
+                run(
+                  () => setWholesaleNodeImage({ kind, slug, image: draft }),
+                  draft ? 'Photo saved' : 'Photo removed',
+                )
+              }
+            >
+              Save photo
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setDraft(saved)}>
+              <X className="size-4" aria-hidden />
+              Discard
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   )
 }
 
@@ -615,7 +699,7 @@ function useNameFields() {
     },
     setBn,
     setSlug(value: string) {
-      const next = value.toLowerCase().replace(/\s+/g, '-')
+      const next = slugInput(value)
       setSlug(next)
       setSlugEdited(next !== '')
     },
@@ -795,6 +879,7 @@ export function CreateTypeForm() {
   const { pending, run } = useNodeAction()
   const fields = useNameFields()
   const [scope, setScope] = useState<'wholesale' | 'both'>('wholesale')
+  const [image, setImage] = useState('')
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault()
@@ -805,6 +890,7 @@ export function CreateTypeForm() {
         createWholesaleType({
           slug: fields.slug,
           name: { en: fields.en.trim(), bn: fields.bn.trim() },
+          image,
           scope,
         }),
       'Trade line created',
@@ -853,6 +939,14 @@ export function CreateTypeForm() {
             : 'Also usable as a shop aisle on the storefront.'}
         </p>
       </div>
+
+      <ImageUploader
+        value={image}
+        onChange={setImage}
+        folder="categories"
+        label="Trade line photo"
+        hint="Optional — shown on the wholesale apply form and market."
+      />
 
       <div className="flex gap-3">
         <Button type="submit" disabled={!fields.complete}>

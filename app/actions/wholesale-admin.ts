@@ -1,12 +1,12 @@
 'use server'
 
 import { revalidatePath, updateTag } from 'next/cache'
-import { and, eq, isNull } from 'drizzle-orm'
+import { and, eq, isNotNull, isNull } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { categories, catalogues } from '@/lib/db/schema'
 import { isUniqueViolation } from '@/lib/db/errors'
 import { requireAdmin } from '@/lib/auth'
-import { parseOrThrow } from '@/lib/validation/shared'
+import { imageSchema, parseOrThrow } from '@/lib/validation/shared'
 import { catalogueSchema } from '@/lib/validation/admin'
 import { RESERVED_CATEGORY_SLUGS } from '@/lib/reserved-slugs'
 import { z } from 'zod'
@@ -41,6 +41,10 @@ function refresh() {
   revalidatePath('/admin/categories')
   revalidatePath('/admin/catalogues')
   revalidatePath('/admin/products')
+  // A `both` trade line is a shop aisle as well, and its photo is the tile on
+  // the homepage. `updateTag` busts the data cache but not the prerendered
+  // routes built from it — see `refresh` in categories.ts.
+  revalidatePath('/', 'layout')
 }
 
 /**
@@ -81,6 +85,16 @@ function friendlyCatalogueError(error: unknown, slug: string): unknown {
   }
   return error
 }
+
+/**
+ * A trade line's photo. Optional — the apply form and the market both fall back
+ * to a plain tile when it is empty — so '' is a valid value, and is also how a
+ * photo is removed.
+ */
+const wholesaleImageSchema = imageSchema
+  .or(z.literal(''))
+  .nullish()
+  .transform((value) => value ?? '')
 
 const wholesaleKindSchema = z.enum(['type', 'category', 'catalogue'])
 
@@ -123,6 +137,7 @@ const wholesaleCreateTypeSchema = z.object({
     en: z.string().trim().min(1, 'English text is required').max(500),
     bn: z.string().trim().min(1, 'Bangla text is required').max(500),
   }),
+  image: wholesaleImageSchema,
   /**
    * Wholesale catalog rows are open to trade but may also be browsable on the
    * storefront when scope is `both`. Defaulting to `wholesale` is the safe
@@ -171,7 +186,7 @@ export async function createWholesaleType(
     await db.insert(categories).values({
       slug: data.slug,
       name: data.name,
-      image: '',
+      image: data.image,
       scope: data.scope satisfies CategoryScope,
       parentSlug: null,
       position: 0,
@@ -220,6 +235,52 @@ export async function createWholesaleCategory(
     })
   } catch (error) {
     throw friendlyCategoryError(error, data.slug, 'category')
+  }
+
+  refresh()
+}
+
+const wholesaleNodeImageSchema = z.object({
+  /** Only the two kinds that are `categories` rows — a catalogue has no photo. */
+  kind: z.enum(['type', 'category']),
+  slug: wholesaleSlugSchema,
+  image: wholesaleImageSchema,
+})
+
+export type WholesaleNodeImageInput = z.input<typeof wholesaleNodeImageSchema>
+
+/**
+ * Sets, replaces or (with '') removes the photo of a trade line or a category.
+ *
+ * `kind` is checked against where the row sits, so a request cannot write the
+ * photo of a category through the trade-line path or the reverse. The replaced
+ * file is left in the bucket, as it is by `upsertCategory`: the same URL may
+ * still be pasted on another row.
+ */
+export async function setWholesaleNodeImage(
+  input: WholesaleNodeImageInput,
+): Promise<void> {
+  await requireAdmin()
+  const data = parseOrThrow(wholesaleNodeImageSchema, input)
+
+  const [updated] = await db
+    .update(categories)
+    .set({ image: data.image, updatedAt: new Date() })
+    .where(
+      and(
+        eq(categories.slug, data.slug),
+        data.kind === 'type'
+          ? isNull(categories.parentSlug)
+          : isNotNull(categories.parentSlug),
+      ),
+    )
+    .returning({ slug: categories.slug })
+  if (!updated) {
+    throw new Error(
+      data.kind === 'type'
+        ? 'That trade line does not exist'
+        : 'That category does not exist',
+    )
   }
 
   refresh()

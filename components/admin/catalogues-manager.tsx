@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/card'
 import { LoadingOverlay } from '@/components/loading-overlay'
 import { upsertCatalogue, deleteCatalogue } from '@/app/actions/catalogues'
+import { slugify, slugInput } from '@/lib/slug'
 import type { Catalogue, Category, TreeStatus } from '@/lib/types'
 
 type Row = Catalogue & { productCount: number }
@@ -186,6 +187,11 @@ function CatalogueForm({
   const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
     setForm((current) => ({ ...current, [key]: value }))
 
+  // The slug follows the English name until the admin types one of their own
+  // (and follows it again if they clear the field). An existing row's slug is
+  // its identity and never moves, so it starts out as "edited".
+  const [slugEdited, setSlugEdited] = useState(Boolean(existing))
+
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault()
     setPending(true)
@@ -227,7 +233,11 @@ function CatalogueForm({
             // Changing it on an existing row would orphan every one of them,
             // so an edit renames the label, never the identity.
             disabled={Boolean(existing)}
-            onChange={(e) => set('slug', e.target.value)}
+            onChange={(e) => {
+              const next = slugInput(e.target.value)
+              setSlugEdited(next !== '')
+              set('slug', next)
+            }}
             placeholder="e.g. jeans"
           />
         </div>
@@ -254,7 +264,14 @@ function CatalogueForm({
           <Input
             id="catalogue-name-en"
             value={form.nameEn}
-            onChange={(e) => set('nameEn', e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value
+              setForm((current) => ({
+                ...current,
+                nameEn: value,
+                slug: slugEdited ? current.slug : slugify(value),
+              }))
+            }}
             placeholder="Jeans"
           />
         </div>
