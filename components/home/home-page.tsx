@@ -48,11 +48,24 @@ export function HomePage({
       (list.length > 0 ? list : products).slice(0, ROW)
 
     return {
+      // Best-reviewed stock, highest rating first.
+      top: orFallback(
+        [...products]
+          .filter((product) => product.rating >= 4)
+          .sort((a, b) => b.rating - a.rating),
+      ),
+      // Most-reviewed stock stands in for "trending" — a distinct signal from
+      // `top`'s average rating, without needing a live view/sales counter.
+      trending: orFallback(
+        [...products].sort((a, b) => b.reviews - a.reviews),
+      ),
       // The catalogue has no createdAt, so `new` badges stand in for recency.
       newArrivals: orFallback(
         products.filter((product) => product.badge === 'new'),
       ),
-      featured: orFallback(products.filter((product) => product.rating >= 4)),
+      // Hand-curated by the admin — hidden rather than backfilled when empty,
+      // since a "Combo Package" row showing non-combo stock would mislead.
+      combo: products.filter((product) => product.isCombo),
     }
   }, [products])
 
@@ -67,13 +80,13 @@ export function HomePage({
 
       <CategoryShowcase />
 
-      <ProductSection
-        title={t.home.newTitle}
-        products={rows.newArrivals}
-        priority
-      />
+      <ProductSection title={t.home.topTitle} products={rows.top} priority />
 
-      <ProductSection title={t.home.featuredTitle} products={rows.featured} />
+      <ProductSection title={t.home.popularTitle} products={rows.trending} />
+
+      <ProductSection title={t.home.newTitle} products={rows.newArrivals} />
+
+      <ProductSection title={t.home.comboTitle} products={rows.combo} />
 
       <ComingSoon />
 

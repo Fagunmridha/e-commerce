@@ -130,6 +130,7 @@ export function ProductForm({
     category: (product?.category ?? categories[0]?.slug ?? '') as CategorySlug,
     catalogue: product?.catalogue ?? '',
     badge: product?.badge ?? '',
+    isCombo: product?.isCombo ?? false,
     stock: product?.stock?.toString() ?? '0',
     // Undefined on the type when it is 1 (see lib/products.ts), but the field
     // should read "1" rather than blank.
@@ -253,6 +254,7 @@ export function ProductForm({
       category: form.category,
       catalogue: form.catalogue || null,
       badge: form.badge ? (form.badge as 'new' | 'sale') : null,
+      isCombo: form.isCombo,
       sizes: form.sizes
         ? form.sizes.split(',').map((s) => s.trim()).filter(Boolean)
         : null,
@@ -489,6 +491,20 @@ export function ProductForm({
             <option value="sale">Sale</option>
           </select>
         </Field>
+        <Field label="Combo Package">
+          <label className="flex h-9 items-center gap-2.5 text-sm">
+            <input
+              type="checkbox"
+              checked={form.isCombo}
+              onChange={(e) => set('isCombo', e.target.checked)}
+              className="size-4 accent-button"
+            />
+            Show in the homepage Combo Package rail
+          </label>
+        </Field>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Sizes (comma separated)">
           <Input
             value={form.sizes}

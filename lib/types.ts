@@ -48,6 +48,8 @@ export type Product = {
    */
   catalogue?: CatalogueSlug
   badge?: 'new' | 'sale'
+  /** Curated by hand from the admin form — drives the homepage's Combo Package rail. */
+  isCombo?: boolean
   sizes?: string[]
   colors?: ProductColor[]
   /** Per-product selling points — "100% Cotton", "Breathable". */

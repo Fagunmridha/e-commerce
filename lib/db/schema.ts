@@ -197,6 +197,12 @@ export const products = pgTable('products', {
    */
   catalogueSlug: text('catalogue_slug'),
   badge: text('badge', { enum: ['new', 'sale'] }),
+  /**
+   * Marks the row as part of the homepage's "Combo Package" rail — a bundle
+   * deal the admin curates by hand, independent of `badge`: a product can be
+   * both on sale and a combo pick.
+   */
+  isCombo: boolean('is_combo').notNull().default(false),
   sizes: text('sizes').array(),
   /**
    * `[{ name: { en, bn }, hex? }]`. It was `[{ en, bn }]` until migration 0012

@@ -113,6 +113,7 @@ function toProduct(
     category: row.category,
     catalogue: row.catalogueSlug ?? undefined,
     badge: row.badge ?? undefined,
+    isCombo: row.isCombo || undefined,
     sizes: row.sizes ?? undefined,
     colors: toColors(row.colors),
     highlights: row.highlights?.length ? row.highlights : undefined,

@@ -68,6 +68,8 @@ export type ProductInput = {
    */
   catalogue?: string | null
   badge?: 'new' | 'sale' | null
+  /** Marks the row for the homepage's Combo Package rail. */
+  isCombo?: boolean | null
   sizes?: string[] | null
   colors?: ProductColor[] | null
   /** Per-product selling points shown on the detail page. */
@@ -128,6 +130,7 @@ export async function upsertProduct(input: ProductInput): Promise<void> {
     category: data.category as CategorySlug,
     catalogueSlug: catalogueCheck.slug,
     badge: data.badge,
+    isCombo: data.isCombo,
     sizes: data.sizes,
     colors: data.colors,
     highlights: data.highlights,

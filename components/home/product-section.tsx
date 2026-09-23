@@ -48,7 +48,7 @@ export function ProductSection({
               <RailItem
                 key={product.id}
                 rail={rail}
-                className="sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+                className="sm:basis-1/2 lg:basis-1/3 xl:basis-1/5"
               >
                 <ProductCard product={product} priority={priority && index < 4} />
               </RailItem>

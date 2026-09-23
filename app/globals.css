@@ -32,6 +32,8 @@
   --badge-new-foreground: oklch(1 0 0);
   --badge-sale: oklch(0.6 0.235 27.5);
   --badge-sale-foreground: oklch(1 0 0);
+  --badge-combo: oklch(0.55 0.21 283);
+  --badge-combo-foreground: oklch(1 0 0);
   /* The cart and wishlist counters. Their own token, not `badge-sale`: that
      one is the red "Sale" tag on product cards and must stay red. */
   --badge-count: #8f81f4;
@@ -193,6 +195,8 @@
   --color-badge-new-foreground: var(--badge-new-foreground);
   --color-badge-sale: var(--badge-sale);
   --color-badge-sale-foreground: var(--badge-sale-foreground);
+  --color-badge-combo: var(--badge-combo);
+  --color-badge-combo-foreground: var(--badge-combo-foreground);
   --color-badge-count: var(--badge-count);
   --color-badge-count-foreground: var(--badge-count-foreground);
   --color-button: var(--button);

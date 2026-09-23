@@ -43,8 +43,20 @@ export function ProductCard({
   const { addToCart, isWishlisted, toggleWishlist } = useStore()
   const [quickViewOpen, setQuickViewOpen] = useState(false)
 
-  const { id, name, price, oldPrice, image, images, badge, rating, reviews, stock, moq } =
-    product
+  const {
+    id,
+    name,
+    price,
+    oldPrice,
+    image,
+    images,
+    badge,
+    isCombo,
+    rating,
+    reviews,
+    stock,
+    moq,
+  } = product
   const label = pick(name)
   const favorited = isWishlisted(id)
   const soldOut = stock <= 0
@@ -76,7 +88,7 @@ export function ProductCard({
   return (
     <>
       <article className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:border-transparent hover:shadow-card-hover">
-        <div className="relative aspect-4/3 overflow-hidden bg-secondary">
+        <div className="relative aspect-[3/4] overflow-hidden bg-secondary">
           <Link
             href={`/product/${id}`}
             // The image is decorative here; the title below is the real link.
@@ -88,7 +100,7 @@ export function ProductCard({
               src={image || '/placeholder.svg'}
               alt=""
               fill
-              sizes="(max-width: 1024px) 45vw, 25vw"
+              sizes="(max-width: 640px) 45vw, (max-width: 1280px) 33vw, 20vw"
               priority={priority}
               className="object-cover transition-all duration-500 group-hover:scale-105 group-hover:opacity-0"
             />
@@ -96,7 +108,7 @@ export function ProductCard({
               src={hoverImage || '/placeholder.svg'}
               alt=""
               fill
-              sizes="(max-width: 1024px) 45vw, 25vw"
+              sizes="(max-width: 640px) 45vw, (max-width: 1280px) 33vw, 20vw"
               loading="lazy"
               className="scale-105 object-cover opacity-0 transition-all duration-500 group-hover:opacity-100"
             />
@@ -119,6 +131,11 @@ export function ProductCard({
                 )}
               >
                 {t.badges[badge]}
+              </span>
+            )}
+            {isCombo && (
+              <span className="rounded-md bg-badge-combo px-2.5 py-1 text-[11px] font-bold text-badge-combo-foreground">
+                {t.badges.combo}
               </span>
             )}
             {soldOut && (

@@ -243,6 +243,11 @@ export const productSchema = z.object({
     .enum(['new', 'sale'])
     .nullish()
     .transform((value) => value ?? null),
+  /** Marks the row for the homepage's Combo Package rail. */
+  isCombo: z
+    .boolean()
+    .nullish()
+    .transform((value) => value ?? false),
   sizes: z
     .array(z.string().trim().min(1).max(32))
     .max(30)
