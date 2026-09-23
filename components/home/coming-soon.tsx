@@ -56,15 +56,15 @@ export function ComingSoon() {
                 <RailItem
                   key={product.id}
                   rail={rail}
-                  className="sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+                  className="sm:basis-1/2 lg:basis-1/3 xl:basis-1/5"
                 >
                   <article className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:border-transparent hover:shadow-card-hover">
-                    <div className="relative aspect-4/3 overflow-hidden bg-secondary">
+                    <div className="relative aspect-[4/5] overflow-hidden bg-secondary">
                       <Image
                         src={product.image || '/placeholder.svg'}
                         alt={label}
                         fill
-                        sizes="(max-width: 640px) 45vw, (max-width: 1024px) 45vw, 25vw"
+                        sizes="(max-width: 640px) 45vw, (max-width: 1280px) 33vw, 20vw"
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                       <span className="absolute top-3 left-3 rounded-md bg-primary px-2.5 py-1 text-[11px] font-bold text-primary-foreground">

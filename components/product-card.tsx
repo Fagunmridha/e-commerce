@@ -88,7 +88,7 @@ export function ProductCard({
   return (
     <>
       <article className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:border-transparent hover:shadow-card-hover">
-        <div className="relative aspect-[3/4] overflow-hidden bg-secondary">
+        <div className="relative aspect-[4/5] overflow-hidden bg-secondary">
           <Link
             href={`/product/${id}`}
             // The image is decorative here; the title below is the real link.
