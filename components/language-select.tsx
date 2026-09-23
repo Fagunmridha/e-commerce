@@ -23,7 +23,7 @@ export function LanguageSelect({
       onClick={() => setLocale(nextLocale)}
       aria-label={t.header.language}
       className={cn(
-        'inline-flex cursor-pointer items-center gap-1.5 rounded-full border font-medium transition-colors outline-none focus-visible:ring-[3px]',
+        'inline-flex cursor-pointer items-center gap-1.5 rounded-md border font-medium transition-colors outline-none focus-visible:ring-[3px]',
         inverted
           ? 'h-7 border-white/15 bg-transparent px-3 text-xs text-background hover:border-white/40 focus-visible:ring-white/40'
           : 'h-9 border-border bg-background px-3.5 text-sm text-foreground hover:border-primary focus-visible:ring-ring/50',
