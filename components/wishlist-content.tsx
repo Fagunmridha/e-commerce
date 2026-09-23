@@ -8,15 +8,30 @@ import { PageHeader } from '@/components/page-header'
 import { useLanguage } from '@/components/language-provider'
 import { useStore } from '@/components/store-provider'
 
-export function WishlistContent() {
+/**
+ * `embedded` is for the account area, which already has its own shell and
+ * heading: it drops the page header and the page-width padding, and keeps the
+ * grid to two columns because the sidebar has taken the room for a third.
+ */
+export function WishlistContent({ embedded = false }: { embedded?: boolean }) {
   const { t, pick, price } = useLanguage()
   const { hydrated, wishlist, addToCart, toggleWishlist } = useStore()
 
   return (
     <>
-      <PageHeader pageKey="wishlist" />
+      {embedded ? (
+        <h1 className="mb-6 text-2xl font-bold tracking-tight text-foreground">
+          {t.pages.wishlist.title}
+        </h1>
+      ) : (
+        <PageHeader pageKey="wishlist" />
+      )}
 
-      <section className="mx-auto max-w-page px-4 py-12 sm:px-6 lg:px-4">
+      <section
+        className={
+          embedded ? undefined : 'mx-auto max-w-page px-4 py-12 sm:px-6 lg:px-4'
+        }
+      >
         {!hydrated ? null : wishlist.length === 0 ? (
           <div className="flex flex-col items-center gap-4 py-16 text-center">
             <Heart className="size-14 text-muted-foreground/40" strokeWidth={1.25} />
@@ -31,7 +46,9 @@ export function WishlistContent() {
             </Button>
           </div>
         ) : (
-          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul
+            className={`grid gap-4 sm:grid-cols-2 ${embedded ? '' : 'lg:grid-cols-3'}`}
+          >
             {wishlist.map((product) => {
               const name = pick(product.name)
 

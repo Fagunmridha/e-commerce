@@ -1,9 +1,14 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { ArrowLeft, ExternalLink, Layers, Store } from 'lucide-react'
+import { ArrowLeft, ChevronRight, ExternalLink, Layers, Store } from 'lucide-react'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
 import {
   Sidebar,
   SidebarContent,
@@ -13,6 +18,7 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
+  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
@@ -111,6 +117,8 @@ function CatalogueNav({ sellerLines }: { sellerLines: CategorySlug[] }) {
   const params = useSearchParams()
   const activeCategory = params.get('category') ?? ''
   const activeCatalogue = params.get('catalogue') ?? ''
+  /** Branches the seller folded or unfolded by hand, keyed `line:…` / `category:…`. */
+  const [overrides, setOverrides] = useState<Record<string, boolean>>({})
 
   const tree = useMemo(
     () =>
@@ -149,62 +157,155 @@ function CatalogueNav({ sellerLines }: { sellerLines: CategorySlug[] }) {
   // "Catalogue" heading over nothing reads as a section that failed to load.
   if (tree.length === 0) return null
 
+  // Every level is a dropdown. A branch is open when it holds the row being
+  // filtered on, so the tree always shows where the seller is; an explicit
+  // click on a chevron (or a label) wins over that until the next toggle. The
+  // link and the chevron are separate targets on purpose: the label filters the
+  // listing, the chevron only folds the branch.
+  const isOpen = (key: string, holdsActive: boolean) =>
+    overrides[key] ?? holdsActive
+  const setOpen = (key: string, open: boolean) =>
+    setOverrides((current) => ({ ...current, [key]: open }))
+  const toggleLabel = (open: boolean, label: string) =>
+    `${open ? pick({ en: 'Collapse', bn: 'বন্ধ করুন' }) : pick({ en: 'Expand', bn: 'খুলুন' })} ${label}`
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>{t.wholesale.nav.groupCatalogue}</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
-          {tree.map((line) => (
-            <SidebarMenuItem key={line.slug}>
-              <SidebarMenuButton
+          {tree.map((line) => {
+            const lineKey = `line:${line.slug}`
+            const lineOpen = isOpen(
+              lineKey,
+              activeCategory === line.slug ||
+                line.categories.some(
+                  (category) => category.slug === activeCategory,
+                ),
+            )
+
+            return (
+              <Collapsible
+                key={line.slug}
                 asChild
-                tooltip={line.label}
-                isActive={!activeCatalogue && activeCategory === line.slug}
+                open={lineOpen}
+                onOpenChange={(open) => setOpen(lineKey, open)}
               >
-                <Link href={`/wholesale/dashboard?category=${line.slug}`}>
-                  <Layers />
-                  <span>{line.label}</span>
-                </Link>
-              </SidebarMenuButton>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    tooltip={line.label}
+                    isActive={!activeCatalogue && activeCategory === line.slug}
+                  >
+                    <Link
+                      href={`/wholesale/dashboard?category=${line.slug}`}
+                      onClick={() => setOpen(lineKey, true)}
+                    >
+                      <Layers />
+                      <span>{line.label}</span>
+                    </Link>
+                  </SidebarMenuButton>
 
-              {line.categories.length > 0 && (
-                <SidebarMenuSub>
-                  {line.categories.map((category) => (
-                    <SidebarMenuSubItem key={category.slug}>
-                      <SidebarMenuSubButton
-                        asChild
-                        isActive={
-                          !activeCatalogue && activeCategory === category.slug
-                        }
-                      >
-                        <Link
-                          href={`/wholesale/dashboard?category=${category.slug}`}
+                  {line.categories.length > 0 && (
+                    <>
+                      <CollapsibleTrigger asChild>
+                        <SidebarMenuAction
+                          aria-label={toggleLabel(lineOpen, line.label)}
+                          className="data-[state=open]:rotate-90"
                         >
-                          <span>{category.label}</span>
-                        </Link>
-                      </SidebarMenuSubButton>
+                          <ChevronRight />
+                        </SidebarMenuAction>
+                      </CollapsibleTrigger>
 
-                      {category.catalogues.map((entry) => (
-                        <SidebarMenuSubButton
-                          key={entry.slug}
-                          asChild
-                          size="sm"
-                          className="ml-3"
-                          isActive={activeCatalogue === entry.slug}
-                        >
-                          <Link
-                            href={`/wholesale/dashboard?category=${category.slug}&catalogue=${entry.slug}`}
-                          >
-                            <span>{entry.label}</span>
-                          </Link>
-                        </SidebarMenuSubButton>
-                      ))}
-                    </SidebarMenuSubItem>
-                  ))}
-                </SidebarMenuSub>
-              )}
-            </SidebarMenuItem>
-          ))}
+                      <CollapsibleContent>
+                        <SidebarMenuSub>
+                          {line.categories.map((category) => {
+                            const categoryKey = `category:${category.slug}`
+                            const categoryOpen = isOpen(
+                              categoryKey,
+                              activeCategory === category.slug,
+                            )
+
+                            return (
+                              <Collapsible
+                                key={category.slug}
+                                asChild
+                                open={categoryOpen}
+                                onOpenChange={(open) =>
+                                  setOpen(categoryKey, open)
+                                }
+                              >
+                                <SidebarMenuSubItem>
+                                  <div className="flex items-center gap-0.5">
+                                    <SidebarMenuSubButton
+                                      asChild
+                                      className="flex-1"
+                                      isActive={
+                                        !activeCatalogue &&
+                                        activeCategory === category.slug
+                                      }
+                                    >
+                                      <Link
+                                        href={`/wholesale/dashboard?category=${category.slug}`}
+                                        onClick={() =>
+                                          setOpen(categoryKey, true)
+                                        }
+                                      >
+                                        <span>{category.label}</span>
+                                      </Link>
+                                    </SidebarMenuSubButton>
+
+                                    {category.catalogues.length > 0 && (
+                                      <CollapsibleTrigger asChild>
+                                        <button
+                                          type="button"
+                                          aria-label={toggleLabel(
+                                            categoryOpen,
+                                            category.label,
+                                          )}
+                                          className="text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex size-6 shrink-0 items-center justify-center rounded-md transition-transform data-[state=open]:rotate-90"
+                                        >
+                                          <ChevronRight className="size-3.5" />
+                                        </button>
+                                      </CollapsibleTrigger>
+                                    )}
+                                  </div>
+
+                                  {category.catalogues.length > 0 && (
+                                    <CollapsibleContent>
+                                      <SidebarMenuSub className="mx-2">
+                                        {category.catalogues.map((entry) => (
+                                          <SidebarMenuSubItem key={entry.slug}>
+                                            <SidebarMenuSubButton
+                                              asChild
+                                              size="sm"
+                                              isActive={
+                                                activeCatalogue === entry.slug
+                                              }
+                                            >
+                                              <Link
+                                                href={`/wholesale/dashboard?category=${category.slug}&catalogue=${entry.slug}`}
+                                              >
+                                                <span>{entry.label}</span>
+                                              </Link>
+                                            </SidebarMenuSubButton>
+                                          </SidebarMenuSubItem>
+                                        ))}
+                                      </SidebarMenuSub>
+                                    </CollapsibleContent>
+                                  )}
+                                </SidebarMenuSubItem>
+                              </Collapsible>
+                            )
+                          })}
+                        </SidebarMenuSub>
+                      </CollapsibleContent>
+                    </>
+                  )}
+                </SidebarMenuItem>
+              </Collapsible>
+            )
+          })}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
