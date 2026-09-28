@@ -131,7 +131,7 @@ export default async function AdminDashboard() {
       <div className="grid gap-4 lg:grid-cols-3">
         <TopProductsChart data={topProducts} />
 
-        <Card className="lg:col-span-2">
+        <Card className="min-w-0 lg:col-span-2">
           <CardHeader>
             <CardTitle>Recent orders</CardTitle>
             <CardDescription>

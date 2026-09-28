@@ -27,19 +27,32 @@ export function BrandMark({
   withTile = true,
   tone = 'default',
   className,
+  compact = false,
 }: {
   href?: string | null
   withTile?: boolean
   tone?: 'default' | 'inverted'
   className?: string
+  /** Drops "Market" below `sm`, keeping just "CP" + the bag tile. For the
+   * one spot — the sticky mobile header — that shares its row with the
+   * hamburger button on one side and four icon buttons on the other, where
+   * the full wordmark left the row too wide to fit a phone screen. Every
+   * other place this renders (the nav drawer, the footer) has room to spare
+   * for the full name, so they don't pass this. */
+  compact?: boolean
 }) {
   const inner = (
     <>
       {withTile && <BagMark />}
       <span className="text-xl font-extrabold tracking-tight whitespace-nowrap">
-        <span className="text-primary">CP</span>{' '}
-        <span className={tone === 'inverted' ? 'text-white' : 'text-foreground'}>
-          Market
+        <span className="text-primary">CP</span>
+        <span
+          className={cn(
+            tone === 'inverted' ? 'text-white' : 'text-foreground',
+            compact && 'hidden sm:inline',
+          )}
+        >
+          {' '}Market
         </span>
       </span>
     </>

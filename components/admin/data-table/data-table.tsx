@@ -290,9 +290,13 @@ export function DataTable<TData>({
         </div>
       </div>
 
-      {/* Table */}
-      <div className="relative max-h-[70vh] overflow-auto rounded-xl border border-border">
-        <Table>
+      {/* Table. The fade hints that a wide table keeps going past the right
+          edge on a phone — without it the last column just looks clipped
+          instead of a swipe away. `overflow-hidden` on the outer wrapper
+          keeps the fade itself from poking out past the rounded border. */}
+      <div className="relative overflow-hidden rounded-xl border border-border">
+        <div className="max-h-[70vh] overflow-auto">
+          <Table>
           <TableHeader className="sticky top-0 z-10 bg-muted/95 backdrop-blur">
             {table.getHeaderGroups().map((group) => (
               <TableRow key={group.id} className="hover:bg-transparent">
@@ -365,7 +369,12 @@ export function DataTable<TData>({
               </TableRow>
             )}
           </TableBody>
-        </Table>
+          </Table>
+        </div>
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-background to-transparent"
+        />
       </div>
 
       <DataTablePagination table={table} />
@@ -382,12 +391,19 @@ function DataTablePagination<TData>({
   const total = table.getFilteredRowModel().rows.length
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3">
+    // `flex-col` below `sm`: the row-count line, the rows-per-page picker,
+    // the page indicator, and four nav buttons don't fit on one line at
+    // ~375px, and the old single-level `flex-wrap` only had two wrap
+    // candidates (this text, and the *entire* controls group as one solid
+    // block) — so the controls group itself overflowed instead of wrapping.
+    // Stacking explicitly, plus letting the controls group wrap on its own,
+    // fixes that.
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-sm text-muted-foreground">
         {selected > 0 ? `${selected} of ${total} row(s) selected` : `${total} row(s)`}
       </p>
 
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-3 sm:gap-4">
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Rows</span>
           <Select

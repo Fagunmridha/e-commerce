@@ -73,7 +73,7 @@ export default async function AdminSettlementsPage({
           </p>
         </div>
 
-        <form className="flex gap-2" action="/admin/settlements">
+        <form className="flex flex-wrap gap-2" action="/admin/settlements">
           {active && <input type="hidden" name="status" value={active} />}
           <div className="relative">
             <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -81,7 +81,7 @@ export default async function AdminSettlementsPage({
               name="q"
               defaultValue={q ?? ''}
               placeholder="Settlement, order or shop…"
-              className="h-9 w-64 pl-8"
+              className="h-9 w-full pl-8 sm:w-64"
             />
           </div>
           <Button type="submit" variant="outline" className="h-9">

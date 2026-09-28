@@ -78,7 +78,11 @@ export function SalesChart({
   } satisfies ChartConfig
 
   return (
-    <Card className="lg:col-span-2">
+    // `min-w-0`: without it, a grid item won't shrink below its content's
+    // intrinsic width, and Recharts' ResponsiveContainer measures that
+    // intrinsic width before it has room to shrink — the chart (and the grid
+    // track, and the whole page) ends up wider than a narrow phone screen.
+    <Card className="min-w-0 lg:col-span-2">
       <CardHeader>
         <CardTitle>Sales over time</CardTitle>
         <CardDescription>Last 12 months</CardDescription>
@@ -183,7 +187,7 @@ export function CategoryChart({
   ) satisfies ChartConfig
 
   return (
-    <Card>
+    <Card className="min-w-0">
       <CardHeader>
         <CardTitle>Best-selling categories</CardTitle>
         <CardDescription>By revenue, all time</CardDescription>
@@ -245,7 +249,7 @@ export function TopProductsChart({
   } satisfies ChartConfig
 
   return (
-    <Card>
+    <Card className="min-w-0">
       <CardHeader>
         <CardTitle>Top products</CardTitle>
         <CardDescription>By revenue, all time</CardDescription>

@@ -130,7 +130,12 @@ export default async function RootLayout({
   return (
     <ClerkProvider>
       <html lang={locale} suppressHydrationWarning>
-        <body className={`font-sans antialiased`}>
+        {/* `overflow-x-hidden` here is a backstop: without it, any single
+            element anywhere in the tree that overflows its container on a
+            narrow phone makes the *whole page* horizontally scrollable —
+            dragging the header, hero, everything sideways together — instead
+            of just clipping the one offending element. */}
+        <body className="overflow-x-hidden font-sans antialiased">
           <LanguageProvider
             siteLocale={locales.site}
             wholesaleLocale={locales.wholesale}

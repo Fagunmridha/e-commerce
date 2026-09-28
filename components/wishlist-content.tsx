@@ -77,7 +77,7 @@ export function WishlistContent({ embedded = false }: { embedded?: boolean }) {
                       {price(product.price)}
                     </p>
 
-                    <div className="mt-auto flex items-center gap-2 pt-3">
+                    <div className="mt-auto flex flex-wrap items-center gap-2 pt-3">
                       <Button
                         size="sm"
                         onClick={() => {

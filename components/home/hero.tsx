@@ -96,7 +96,14 @@ export function Hero({
                       line, and a step that fits at 1920 still wraps at 1440.
                       The clamp tracks the column instead, capped at 3.25rem so
                       it stops growing once there is room to spare. */}
-                  <h1 className="mt-4 text-[1.75rem] leading-[1.12] font-extrabold tracking-tight text-foreground sm:text-[clamp(1.5rem,calc(3.2vw-2px),2.25rem)] lg:text-[clamp(1.5rem,calc(3.9vw-23px),3.25rem)]">
+                  {/* Below `sm` this used to be a flat 1.75rem, which is too
+                      wide for "Best Quality Products" to survive on its own
+                      line on a ~360–390px phone — it wrapped a second time
+                      into four ragged lines instead of the intended two. The
+                      clamp keeps it fluid down to the narrowest phones
+                      (~22.4px at 320px) while still landing back on 28px
+                      once there's room, same technique as the sm/lg steps. */}
+                  <h1 className="mt-4 text-[clamp(1.4rem,6.6vw,1.75rem)] leading-[1.12] font-extrabold tracking-tight text-foreground sm:text-[clamp(1.5rem,calc(3.2vw-2px),2.25rem)] lg:text-[clamp(1.5rem,calc(3.9vw-23px),3.25rem)]">
                     <span className="block">{copy.title}</span>
                     <span className="block">
                       {copy.titleLead}{' '}

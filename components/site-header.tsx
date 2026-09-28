@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Search, User } from 'lucide-react'
+import { Globe, Search, User } from 'lucide-react'
 import { UserButton, useUser } from '@clerk/nextjs'
 import { Container } from '@/components/layout/container'
 import { AnnouncementBar } from '@/components/header/announcement-bar'
@@ -19,6 +19,7 @@ import { useScrolled } from '@/components/header/use-scrolled'
 import { CartDrawer } from '@/components/cart-drawer'
 import { WishlistButton } from '@/components/wishlist-button'
 import { useLanguage } from '@/components/language-provider'
+import { LOCALES } from '@/lib/i18n'
 import type { Dictionary } from '@/lib/dictionaries'
 import { cn } from '@/lib/utils'
 
@@ -37,10 +38,11 @@ const FLAT_LINKS = NAV_LINKS.filter((link) => link.href !== '/shop')
 
 export function SiteHeader() {
   const pathname = usePathname()
-  const { t } = useLanguage()
+  const { t, locale, setLocale } = useLanguage()
   const { isSignedIn } = useUser()
   const scrolled = useScrolled()
   const [searchOpen, setSearchOpen] = useState(false)
+  const nextLocale = LOCALES[(LOCALES.indexOf(locale) + 1) % LOCALES.length]
 
   const isActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname.startsWith(href)
@@ -69,7 +71,7 @@ export function SiteHeader() {
           <div className="flex h-16 items-center justify-between gap-3 lg:h-20">
             <div className="flex items-center gap-1">
               <MobileMenu links={NAV_LINKS} isActive={isActive} />
-              <BrandMark />
+              <BrandMark compact />
             </div>
 
             <nav aria-label={t.nav.home} className="hidden lg:block">
@@ -119,11 +121,23 @@ export function SiteHeader() {
 
               <WishlistButton />
 
+              {/* Desktop already gets a language picker in the announcement
+                  bar (`sm:block` there); this is the mobile-only stand-in so
+                  the switcher isn't buried inside the hamburger drawer. */}
+              <button
+                type="button"
+                onClick={() => setLocale(nextLocale)}
+                aria-label={t.header.language}
+                className={cn(iconButton, 'sm:hidden')}
+              >
+                <Globe className="size-5" />
+              </button>
+
               {isSignedIn ? (
                 <>
                   <Link
                     href="/account"
-                    className={cn(iconButton, 'hidden sm:grid')}
+                    className={iconButton}
                     aria-label={t.header.account}
                   >
                     <User className="size-5" />
@@ -135,14 +149,18 @@ export function SiteHeader() {
               ) : (
                 <Link
                   href="/sign-in"
-                  className={cn(iconButton, 'hidden sm:grid')}
+                  className={iconButton}
                   aria-label={t.header.account}
                 >
                   <User className="size-5" />
                 </Link>
               )}
 
-              <CartDrawer />
+              {/* Cart lives in the bottom tab bar on mobile; showing it here
+                  too just duplicates the badge in a cramped row. */}
+              <div className="hidden sm:block">
+                <CartDrawer />
+              </div>
             </div>
           </div>
         </Container>

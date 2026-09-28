@@ -20,7 +20,15 @@ function CardHeader({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot="card-header"
       className={cn(
-        '@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6',
+        // A header with a `CardAction` (a button beside the title, e.g. a
+        // chart's range toggle or a "manage this" link) sits side-by-side
+        // with it only from `sm` up. Below that, a long title plus a real
+        // button don't fit on one row — forcing the 2-column grid there left
+        // the action stranded beside just the title's first line while the
+        // description wrapped underneath. Single column (and `CardAction`
+        // dropping its own explicit placement below `sm`, in the same file)
+        // lets it fall in as an ordinary third row instead.
+        '@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6 has-data-[slot=card-action]:grid-cols-1 has-data-[slot=card-action]:sm:grid-cols-[1fr_auto] [.border-b]:pb-6',
         className,
       )}
       {...props}
@@ -53,7 +61,7 @@ function CardAction({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot="card-action"
       className={cn(
-        'col-start-2 row-span-2 row-start-1 self-start justify-self-end',
+        'self-start justify-self-end sm:col-start-2 sm:row-span-2 sm:row-start-1',
         className,
       )}
       {...props}

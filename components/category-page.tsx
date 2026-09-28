@@ -215,7 +215,7 @@ export function CategoryPage({ slug }: { slug: CategorySlug }) {
                 />
               </div>
 
-              <div className="ml-auto flex items-center gap-2 sm:gap-3">
+              <div className="ml-auto flex min-w-0 items-center gap-2 sm:gap-3">
                 <label
                   htmlFor="category-sort"
                   className="sr-only shrink-0 text-xs font-bold tracking-wider text-muted-foreground uppercase lg:not-sr-only"
@@ -226,7 +226,7 @@ export function CategoryPage({ slug }: { slug: CategorySlug }) {
                   id="category-sort"
                   value={sort}
                   onChange={(event) => setSort(event.target.value as SortKey)}
-                  className="h-9 rounded-full border border-border bg-background px-3 text-xs font-semibold outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:px-4 sm:text-sm sm:font-normal"
+                  className="h-9 min-w-0 rounded-full border border-border bg-background px-3 text-xs font-semibold outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 sm:px-4 sm:text-sm sm:font-normal"
                 >
                   <option value="featured">{t.shop.sortFeatured}</option>
                   <option value="rating">{t.category.topRated}</option>

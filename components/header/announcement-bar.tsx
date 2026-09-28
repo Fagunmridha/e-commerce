@@ -32,9 +32,14 @@ export function AnnouncementBar() {
     <div className="border-b border-white/10 bg-foreground text-background">
       <Container>
         <div className="flex h-10 items-center justify-between gap-6 text-xs">
-          <p className="flex items-center gap-2 font-medium whitespace-nowrap">
+          {/* `min-w-0` lets this shrink inside the flex row instead of
+              forcing the whole header (and, since nothing above it stops
+              horizontal scroll, the whole page) wider than the viewport —
+              the Bangla and English shipping lines are both too long to fit
+              on one line at the very smallest phone widths otherwise. */}
+          <p className="flex min-w-0 items-center gap-2 truncate font-medium">
             <Truck className="size-3.5 shrink-0 text-primary" aria-hidden="true" />
-            {t.header.announceShipping}
+            <span className="truncate">{t.header.announceShipping}</span>
           </p>
 
           <ul className="hidden items-center gap-6 text-background/70 lg:flex">
