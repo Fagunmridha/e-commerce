@@ -2,8 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Heart, Home, ShoppingBag, Store, User } from 'lucide-react'
-import { useUser } from '@clerk/nextjs'
+import { Heart, Home, ShoppingBag, Store } from 'lucide-react'
 import { CartDrawer } from '@/components/cart-drawer'
 import { useLanguage } from '@/components/language-provider'
 import { useStore } from '@/components/store-provider'
@@ -11,12 +10,13 @@ import { cn } from '@/lib/utils'
 
 /**
  * Thumb-reach navigation for phones. Hidden from `lg` up, and suppressed on the
- * distraction-free `/lp` funnels and the admin dashboard.
+ * distraction-free `/lp` funnels and the admin dashboard. Account isn't in
+ * here — it lives in the sticky header instead (next to the language
+ * toggle), so it isn't shown in two places at once.
  */
 export function MobileBottomNav() {
   const pathname = usePathname()
   const { t } = useLanguage()
-  const { isSignedIn } = useUser()
   const { hydrated, itemCount, wishlist } = useStore()
 
   if (pathname?.startsWith('/lp') || pathname?.startsWith('/admin')) return null
@@ -76,15 +76,6 @@ export function MobileBottomNav() {
               </button>
             }
           />
-        </li>
-        <li className="flex flex-1">
-          <Link
-            href={isSignedIn ? '/account' : '/sign-in'}
-            className={item(isActive('/account'))}
-          >
-            <User className="size-5" aria-hidden="true" />
-            {t.mobileNav.account}
-          </Link>
         </li>
       </ul>
     </nav>

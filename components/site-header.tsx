@@ -119,7 +119,16 @@ export function SiteHeader() {
                 <Search className="size-5" />
               </button>
 
-              <WishlistButton />
+              {/* Wishlist and cart still live in the bottom tab bar too,
+                  which stays on screen everywhere below `lg` (see its own
+                  `lg:hidden`) — showing them again up here would just be the
+                  same icon twice on the same screen. They rejoin the header
+                  once the bottom bar is gone. Account is the one exception:
+                  it's kept out of the bottom bar entirely (below) so it can
+                  live up here, next to the language toggle, at every size. */}
+              <div className="hidden lg:block">
+                <WishlistButton />
+              </div>
 
               {/* Desktop already gets a language picker in the announcement
                   bar (`sm:block` there); this is the mobile-only stand-in so
@@ -135,30 +144,20 @@ export function SiteHeader() {
 
               {isSignedIn ? (
                 <>
-                  <Link
-                    href="/account"
-                    className={iconButton}
-                    aria-label={t.header.account}
-                  >
+                  <Link href="/account" className={iconButton} aria-label={t.header.account}>
                     <User className="size-5" />
                   </Link>
-                  <div className="ml-1 hidden items-center sm:flex">
+                  <div className="ml-1 hidden items-center lg:flex">
                     <UserButton />
                   </div>
                 </>
               ) : (
-                <Link
-                  href="/sign-in"
-                  className={iconButton}
-                  aria-label={t.header.account}
-                >
+                <Link href="/sign-in" className={iconButton} aria-label={t.header.account}>
                   <User className="size-5" />
                 </Link>
               )}
 
-              {/* Cart lives in the bottom tab bar on mobile; showing it here
-                  too just duplicates the badge in a cramped row. */}
-              <div className="hidden sm:block">
+              <div className="hidden lg:block">
                 <CartDrawer />
               </div>
             </div>
