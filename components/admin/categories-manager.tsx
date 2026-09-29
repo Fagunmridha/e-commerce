@@ -2,11 +2,21 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Pencil, Plus, Trash2, X } from 'lucide-react'
+import {
+  Layers,
+  ImageIcon,
+  Package,
+  Pencil,
+  Plus,
+  Store,
+  Trash2,
+  X,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
   Card,
@@ -19,6 +29,7 @@ import { LoadingOverlay } from '@/components/loading-overlay'
 import { ImageUploader } from '@/components/admin/image-uploader'
 import { upsertCategory, deleteCategory } from '@/app/actions/categories'
 import { slugify, slugInput } from '@/lib/slug'
+import { cn } from '@/lib/utils'
 import type { AdminCategory } from '@/lib/categories'
 import type { CategoryScope, TreeStatus } from '@/lib/types'
 
@@ -26,6 +37,18 @@ const SCOPE_HINT: Record<CategoryScope, string> = {
   both: 'In the shop and offered to wholesale sellers.',
   retail: 'Shop only — wholesalers cannot list under it.',
   wholesale: 'Wholesale only — no /slug page on the storefront.',
+}
+
+const SCOPE_LABEL: Record<CategoryScope, string> = {
+  both: 'Shop + Wholesale',
+  retail: 'Shop',
+  wholesale: 'Wholesale',
+}
+
+const SCOPE_CLASS: Record<CategoryScope, string> = {
+  both: 'bg-primary/10 text-primary',
+  retail: 'bg-sky-500/12 text-sky-700',
+  wholesale: 'bg-amber-500/12 text-amber-700',
 }
 
 /**
@@ -114,12 +137,28 @@ export function CategoriesManager({
       {grouped.map(({ line, children }) => (
         <Card key={line.slug}>
           <CardHeader>
-            <CardTitle>{line.name.en}</CardTitle>
-            <CardDescription>
-              {children.length
-                ? `Trade line · ${children.length} categor${children.length === 1 ? 'y' : 'ies'} under it`
-                : 'Products are filed directly under this one — add sub-categories to split it up.'}
-            </CardDescription>
+            <div className="flex items-center gap-3">
+              {line.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={line.image}
+                  alt=""
+                  className="size-10 shrink-0 rounded-md border border-border object-cover"
+                />
+              ) : (
+                <div className="grid size-10 shrink-0 place-items-center rounded-md bg-primary/10">
+                  <ImageIcon className="size-5 text-primary" aria-hidden />
+                </div>
+              )}
+              <div>
+                <CardTitle>{line.name.en}</CardTitle>
+                <CardDescription>
+                  {children.length
+                    ? `Trade line · ${children.length} categor${children.length === 1 ? 'y' : 'ies'} under it`
+                    : 'Products are filed directly under this one — add sub-categories to split it up.'}
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="space-y-2">
             {editing === line.slug ? (
@@ -181,43 +220,85 @@ function CategoryRow({
       ? `${row.childCount} sub-categor${row.childCount === 1 ? 'y' : 'ies'} — delete those first`
       : null
 
-  return (
-    <div className="flex flex-wrap items-center gap-3 rounded-md border border-border p-3">
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-foreground">
-          {row.name.en}
-          <span className="ml-2 text-muted-foreground">{row.name.bn}</span>
-          {row.status === 'inactive' && (
-            <span className="ml-2 rounded-sm bg-muted px-1.5 py-0.5 text-xs font-normal text-muted-foreground">
-              Inactive
-            </span>
-          )}
-        </p>
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          <code>{row.slug}</code> · position {row.position} ·{' '}
-          {row.scope === 'both' ? 'Shop + Wholesale' : row.scope === 'retail' ? 'Shop' : 'Wholesale'} ·{' '}
-          {row.productCount} product
-          {row.productCount === 1 ? '' : 's'} · {row.catalogueCount} catalogue
-          {row.catalogueCount === 1 ? '' : 's'} · {row.sellerCount} shop
-          {row.sellerCount === 1 ? '' : 's'}
-        </p>
-        {blocker && (
-          <p className="mt-0.5 text-xs text-muted-foreground">{blocker}</p>
-        )}
-      </div>
-      <Button variant="outline" size="sm" onClick={onEdit}>
+  const actions = (
+    <>
+      <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={onEdit}>
         <Pencil className="size-4" aria-hidden="true" />
         Edit
       </Button>
       <Button
         variant="outline"
         size="sm"
+        className="flex-1 sm:flex-none"
         disabled={Boolean(blocker)}
         onClick={onDelete}
       >
         <Trash2 className="size-4" aria-hidden="true" />
         Delete
       </Button>
+    </>
+  )
+
+  return (
+    <div className="rounded-lg border border-border p-3 transition-colors hover:border-primary/30">
+      <div className="flex items-start gap-3">
+        {row.image ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={row.image}
+            alt=""
+            className="size-10 shrink-0 rounded-md border border-border bg-muted object-cover"
+          />
+        ) : (
+          <div className="grid size-10 shrink-0 place-items-center rounded-md bg-muted">
+            <ImageIcon className="size-4 text-muted-foreground" aria-hidden />
+          </div>
+        )}
+
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <p className="text-sm font-medium text-foreground">
+              {row.name.en}{' '}
+              <span className="font-normal text-muted-foreground">
+                {row.name.bn}
+              </span>
+            </p>
+            <Badge variant="outline" className={cn('border-transparent', SCOPE_CLASS[row.scope])}>
+              {SCOPE_LABEL[row.scope]}
+            </Badge>
+            {row.status === 'inactive' && (
+              <Badge variant="secondary">Inactive</Badge>
+            )}
+          </div>
+
+          <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+            <span>
+              <code>{row.slug}</code> · position {row.position}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Package className="size-3.5" aria-hidden />
+              {row.productCount} product{row.productCount === 1 ? '' : 's'}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Layers className="size-3.5" aria-hidden />
+              {row.catalogueCount} catalogue{row.catalogueCount === 1 ? '' : 's'}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Store className="size-3.5" aria-hidden />
+              {row.sellerCount} shop{row.sellerCount === 1 ? '' : 's'}
+            </span>
+          </p>
+          {blocker && (
+            <p className="mt-0.5 text-xs text-muted-foreground">{blocker}</p>
+          )}
+        </div>
+
+        {/* Same two buttons as below, just inline on the right once there is
+            room for a fourth item on this row. */}
+        <div className="hidden shrink-0 gap-2 sm:flex">{actions}</div>
+      </div>
+
+      <div className="mt-3 flex gap-2 sm:hidden">{actions}</div>
     </div>
   )
 }
