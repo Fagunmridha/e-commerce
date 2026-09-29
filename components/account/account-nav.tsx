@@ -221,10 +221,10 @@ export function AccountNav({
       {/* Mobile and tablet. The fade on the right hints that the row keeps
           going past the edge — without it the last pill looks clipped
           instead of scrollable. */}
-      <div className="relative -mx-4 lg:hidden">
+      <div className="relative min-w-0 -mx-4 lg:hidden">
         <nav
           aria-label={pick({ en: 'Account', bn: 'অ্যাকাউন্ট' })}
-          className="overflow-x-auto px-4 pb-1"
+          className="overflow-x-auto px-4 pb-3"
         >
           <ul className="flex w-max gap-2">
             {[...main, ...wholesale].map(pill)}
@@ -232,7 +232,7 @@ export function AccountNav({
         </nav>
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute top-0 right-0 h-[calc(100%-0.25rem)] w-8 bg-gradient-to-l from-background to-transparent"
+          className="pointer-events-none absolute top-0 right-0 h-[calc(100%-0.75rem)] w-8 bg-gradient-to-l from-background to-transparent"
         />
       </div>
 
