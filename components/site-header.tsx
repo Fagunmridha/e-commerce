@@ -144,7 +144,11 @@ export function SiteHeader() {
 
               {isSignedIn ? (
                 <>
-                  <Link href="/account" className={iconButton} aria-label={t.header.account}>
+                  <Link
+                    href="/account"
+                    className={cn(iconButton, 'lg:hidden')}
+                    aria-label={t.header.account}
+                  >
                     {user?.imageUrl ? (
                       <img
                         src={user.imageUrl}
