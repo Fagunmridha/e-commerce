@@ -39,7 +39,7 @@ const FLAT_LINKS = NAV_LINKS.filter((link) => link.href !== '/shop')
 export function SiteHeader() {
   const pathname = usePathname()
   const { t, locale, setLocale } = useLanguage()
-  const { isSignedIn } = useUser()
+  const { isSignedIn, user } = useUser()
   const scrolled = useScrolled()
   const [searchOpen, setSearchOpen] = useState(false)
   const nextLocale = LOCALES[(LOCALES.indexOf(locale) + 1) % LOCALES.length]
@@ -145,7 +145,15 @@ export function SiteHeader() {
               {isSignedIn ? (
                 <>
                   <Link href="/account" className={iconButton} aria-label={t.header.account}>
-                    <User className="size-5" />
+                    {user?.imageUrl ? (
+                      <img
+                        src={user.imageUrl}
+                        alt=""
+                        className="size-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <User className="size-5" />
+                    )}
                   </Link>
                   <div className="ml-1 hidden items-center lg:flex">
                     <UserButton />
