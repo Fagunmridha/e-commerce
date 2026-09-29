@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import {
   ListingReview,
   type ListingReviewRow,
@@ -42,17 +43,24 @@ export default async function ListingReviewPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center gap-3">
-        <Button asChild variant="ghost" size="icon" className="size-8">
+      <div className="mb-6 flex items-start gap-3">
+        <Button asChild variant="ghost" size="icon" className="size-8 shrink-0">
           <Link href="/admin/products">
             <ArrowLeft className="size-4" />
             <span className="sr-only">Back to products</span>
           </Link>
         </Button>
         <div>
-          <h2 className="text-xl font-bold text-foreground">
-            Listings to review
-          </h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-xl font-bold text-foreground">
+              Listings to review
+            </h2>
+            {rows.length > 0 && (
+              <Badge variant="secondary">
+                {rows.length} pending
+              </Badge>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground">
             A seller&rsquo;s new listing goes live only once you approve it. A
             rejection is shown to them with your reason, and saving their
