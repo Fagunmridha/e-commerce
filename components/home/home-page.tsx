@@ -88,7 +88,11 @@ export function HomePage({
 
       <ProductSection title={t.home.comboTitle} products={rows.combo} />
 
-      <ComingSoon />
+      <ComingSoon
+        coupon={featuredCoupon}
+        wholesaleStatus={wholesaleStatus}
+        wholesaleRole={wholesaleRole}
+      />
 
       <OfferStrip />
 

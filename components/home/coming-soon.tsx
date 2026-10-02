@@ -15,6 +15,7 @@ import {
 import { useLanguage } from '@/components/language-provider'
 import { useCatalogue } from '@/components/catalogue-provider'
 import { BookingSheet } from '@/components/preorder/booking-sheet'
+import { MobileHeroOffers } from './mobile-hero-offers'
 import { formatShipDate } from '@/lib/preorder'
 import type { Product } from '@/lib/types'
 
@@ -29,7 +30,11 @@ import type { Product } from '@/lib/types'
  * pre-order and shelf stock cannot share an order, and keeping the two flows
  * apart is how that rule stops being the shopper's problem.
  */
-export function ComingSoon() {
+export function ComingSoon({
+  coupon,
+  wholesaleStatus,
+  wholesaleRole,
+}: any) {
   const { t, pick, locale, price } = useLanguage()
   const { preorderProducts } = useCatalogue()
   const rail = useCardRail({ gridBelowSm: 2 })
@@ -151,6 +156,13 @@ export function ComingSoon() {
 
         <RailDots rail={rail} label={title} className="mt-6 hidden sm:flex" />
       </SectionPanel>
+
+      {/* Mobile-only: show the hero offers (wholesale + coupon) below the Coming Soon rail */}
+      <MobileHeroOffers
+        coupon={coupon}
+        wholesaleStatus={wholesaleStatus}
+        wholesaleRole={wholesaleRole}
+      />
 
       <BookingSheet
         product={selected}
