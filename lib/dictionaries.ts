@@ -1341,6 +1341,8 @@ const en = {
     categoriesHeading: 'Categories',
     sidebarPromoTagline: 'Style starts here',
     sidebarPromoCta: 'Shop now',
+    heroEyebrow: '{name} Collection',
+    heroCta: 'Shop {name}',
   },
   meta: {
     suffix: '| CP Market',
@@ -2577,6 +2579,8 @@ const bn: Dictionary = {
     categoriesHeading: 'ক্যাটাগরি',
     sidebarPromoTagline: 'স্টাইল শুরু এখানে',
     sidebarPromoCta: 'এখনই দেখুন',
+    heroEyebrow: '{name} কালেকশন',
+    heroCta: '{name} কিনুন',
   },
   meta: {
     suffix: '| CP Market',

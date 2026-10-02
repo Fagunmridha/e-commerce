@@ -127,45 +127,59 @@ export function CategoryPage({ slug }: { slug: CategorySlug }) {
           )}
         </nav>
 
-        {/* Title + count on the left, the category's own photo as a short,
-            wide card on the right — a banner, but one line tall rather than
-            the full-bleed hero this page used to open with. */}
-        <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:items-stretch lg:gap-6">
-          <div className="min-w-0 lg:shrink-0">
-            <h1 className="text-2xl font-bold tracking-tight text-balance text-foreground sm:text-3xl">
+        {/* The hero: an eyebrow + heading + tagline + CTA on one side, the
+            category's own photo on the other, sharing one panel rather than
+            sitting as two disconnected boxes. Below `lg` they stack instead
+            of squeezing the desktop split into a narrow column. */}
+        <div className="relative mt-4 overflow-hidden rounded-2xl bg-gradient-to-br from-secondary to-background lg:grid lg:h-[21rem] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+          <div className="relative z-10 flex flex-col justify-center gap-3 px-6 py-8 sm:px-8 sm:py-10 lg:px-10 lg:py-0">
+            <span className="text-xs font-bold tracking-[0.15em] text-primary uppercase">
+              {t.category.heroEyebrow.replace('{name}', heading)}
+            </span>
+            <h1 className="text-3xl font-bold tracking-tight text-balance text-foreground sm:text-4xl">
               {heading}
             </h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              {all.length} {t.category.itemsFound}
-            </p>
+            {description && (
+              <p className="max-w-sm text-sm text-muted-foreground sm:text-base">
+                {description}
+              </p>
+            )}
+            <div className="mt-1 flex flex-wrap items-center gap-4">
+              <a
+                href="#category-products"
+                className="inline-flex h-11 shrink-0 items-center justify-center rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-card transition-all hover:-translate-y-0.5 hover:shadow-card-hover"
+              >
+                {t.category.heroCta.replace('{name}', heading)}
+              </a>
+              <span className="text-xs text-muted-foreground">
+                {all.length} {t.category.itemsFound}
+              </span>
+            </div>
           </div>
 
           {hasPhoto(category.image) && (
-            <div className="relative h-24 overflow-hidden rounded-xl sm:h-28 lg:h-32 lg:flex-1">
+            <div className="relative h-56 sm:h-72 lg:h-full">
               <Image
                 src={category.image}
                 alt=""
                 fill
-                sizes="(max-width: 1024px) 100vw, 60vw"
-                className="object-cover"
+                sizes="(max-width: 1024px) 100vw, 55vw"
+                className="object-cover object-[50%_12%]"
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/65 via-black/25 to-transparent" />
-              <div className="absolute inset-0 flex flex-col justify-center px-5">
-                <p className="text-base font-bold text-white sm:text-lg">
-                  {name}
-                </p>
-                {description && (
-                  <p className="mt-0.5 line-clamp-1 max-w-sm text-xs text-white/80 sm:text-sm">
-                    {description}
-                  </p>
-                )}
-              </div>
+              {/* Blends the photo into the panel instead of butting a hard
+                  rectangle against it — horizontal on the side-by-side
+                  desktop layout, vertical once the two stack. */}
+              <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-24 bg-gradient-to-r from-secondary to-transparent lg:block" />
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-secondary to-transparent lg:hidden" />
             </div>
           )}
         </div>
       </div>
 
-      <div className="mx-auto max-w-page px-4 py-6 sm:px-6 lg:px-4">
+      <div
+        id="category-products"
+        className="mx-auto max-w-page scroll-mt-24 px-4 py-6 sm:px-6 lg:px-4"
+      >
         <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
           <CategorySidebar
             className="hidden lg:block"
