@@ -24,7 +24,7 @@ function CategoryCard({ category }: { category: Category }) {
       href={category.href}
       className="group block h-full overflow-hidden rounded-xl transition-all duration-300 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none sm:border sm:border-border sm:bg-card sm:hover:-translate-y-1 sm:hover:border-transparent sm:hover:shadow-card-hover"
     >
-      {/* A round thumbnail packs four categories into one phone row. */}
+      {/* A round thumbnail fits about four categories across a phone screen. */}
       <div className="relative aspect-square overflow-hidden rounded-full bg-secondary sm:aspect-4/3 sm:rounded-none">
         <Image
           src={category.image}
@@ -50,7 +50,7 @@ function CategoryCard({ category }: { category: Category }) {
 export function CategoryShowcase() {
   const { t } = useLanguage()
   const { categories } = useCatalogue()
-  const rail = useCardRail({ gridBelowSm: 4 })
+  const rail = useCardRail()
 
   if (categories.length === 0) return null
 
@@ -68,8 +68,8 @@ export function CategoryShowcase() {
             {categories.map((category) => (
               <RailItem
                 key={category.slug}
-                rail={rail}
-                className="sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+                // A sliver of the fifth circle peeks in on phones, hinting the row scrolls.
+                className="basis-[23%] sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
               >
                 <CategoryCard category={category} />
               </RailItem>
