@@ -24,8 +24,8 @@ function CategoryCard({ category }: { category: Category }) {
       href={category.href}
       className="group block h-full overflow-hidden rounded-xl transition-all duration-300 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none sm:border sm:border-border sm:bg-card sm:hover:-translate-y-1 sm:hover:border-transparent sm:hover:shadow-card-hover"
     >
-      {/* A square thumbnail packs four categories into one phone row. */}
-      <div className="relative aspect-square overflow-hidden rounded-xl bg-secondary sm:aspect-4/3 sm:rounded-none">
+      {/* A round thumbnail packs four categories into one phone row. */}
+      <div className="relative aspect-square overflow-hidden rounded-full bg-secondary sm:aspect-4/3 sm:rounded-none">
         <Image
           src={category.image}
           alt=""
