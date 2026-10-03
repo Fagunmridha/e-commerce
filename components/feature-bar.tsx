@@ -24,8 +24,8 @@ export function FeatureBar() {
   return (
     <section className="py-6 lg:py-8">
       <Container>
-        {/* Two up on phones so the promises never become four stacked rows. */}
-        <ul className="grid grid-cols-2 rounded-2xl border border-border bg-card lg:grid-cols-4">
+        {/* One compact row on phones too — the promises read as a strip, not a block. */}
+        <ul className="grid grid-cols-4 rounded-2xl border border-border bg-card">
           {t.features.map((feature, index) => {
             const icon = ICONS[index]
 
@@ -37,15 +37,12 @@ export function FeatureBar() {
                 className={[
                   // A short centred rule rather than a full-height border: it
                   // reads as a separator instead of a table cell wall.
-                  "relative before:absolute before:top-1/2 before:left-0 before:hidden before:h-11 before:w-px before:-translate-y-1/2 before:bg-border before:content-['']",
-                  // Never before the first item of a row: even ones at two
-                  // columns, everything past the first at four.
-                  '[&:nth-child(even)]:before:block lg:[&:nth-child(n+2)]:before:block',
-                  // The second phone row needs its own rule above it.
-                  '[&:nth-child(n+3)]:border-t [&:nth-child(n+3)]:border-border lg:[&:nth-child(n+3)]:border-t-0',
+                  "relative before:absolute before:top-1/2 before:left-0 before:hidden before:h-8 before:w-px before:-translate-y-1/2 before:bg-border before:content-['']",
+                  // Never before the first item.
+                  'lg:before:h-11 [&:nth-child(n+2)]:before:block',
                 ].join(' ')}
               >
-                <div className="flex items-center gap-3 px-4 py-5 sm:gap-4 sm:px-6 sm:py-6">
+                <div className="flex items-center justify-center gap-1.5 px-1 py-3 md:justify-start md:gap-2.5 md:px-3 md:py-4 lg:gap-4 lg:px-6 lg:py-6">
                   {/* Bare outline icons — no tinted disc behind them. */}
                   <Image
                     src={icon}
@@ -54,13 +51,13 @@ export function FeatureBar() {
                     width={256}
                     height={256}
                     sizes="36px"
-                    className="size-8 shrink-0 object-contain sm:size-9"
+                    className="size-5 shrink-0 object-contain md:size-7 lg:size-9"
                   />
                   <div className="min-w-0">
-                    <h3 className="text-[13px] leading-tight font-bold text-foreground sm:text-[15px]">
+                    <h3 className="text-[10px] leading-tight font-bold text-foreground md:text-[12px] lg:text-[15px]">
                       {feature.title}
                     </h3>
-                    <p className="mt-1 text-[11px] leading-tight text-muted-foreground sm:text-sm">
+                    <p className="mt-0.5 hidden text-muted-foreground md:block md:text-[11px] md:leading-tight lg:mt-1 lg:text-sm">
                       {feature.description}
                     </p>
                   </div>
