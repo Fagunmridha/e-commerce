@@ -5,7 +5,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Eye, Heart, ShoppingCart } from 'lucide-react'
 import { toast } from 'sonner'
-import { Rating } from '@/components/rating'
 import { ProductQuickView } from '@/components/product-quick-view'
 import { useLanguage } from '@/components/language-provider'
 import { useStore } from '@/components/store-provider'
@@ -34,7 +33,7 @@ export function ProductCard({
    * labelled "Add to cart" across the foot. A trade buyer is there to order,
    * so the order action is spelled out rather than left as a bare icon.
    *
-   * A prop rather than a second card, so price, badges, MOQ and rating are
+   * A prop rather than a second card, so price, badges and MOQ are
    * drawn once and the two layouts cannot drift.
    */
   actions?: 'icons' | 'button'
@@ -52,8 +51,6 @@ export function ProductCard({
     images,
     badge,
     isCombo,
-    rating,
-    reviews,
     stock,
     moq,
   } = product
@@ -187,8 +184,6 @@ export function ProductCard({
               {t.wholesale.moq.badge.replace('{n}', String(moq))}
             </p>
           )}
-
-          <Rating value={rating} reviews={reviews} className="mt-1.5" />
         </div>
 
         {actions === 'button' ? (
