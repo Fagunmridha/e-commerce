@@ -167,7 +167,9 @@ export default async function RootLayout({
                   />
                   <MobileBottomNav />
                 </ConditionalChrome>
-                <FloatingWhatsApp />
+                <div className="contents print:hidden">
+                  <FloatingWhatsApp />
+                </div>
               </StoreProvider>
             </CatalogueProvider>
           </LanguageProvider>

@@ -22,6 +22,14 @@ export default async function OrderSuccessPage({
         order
           ? {
               orderNumber: order.orderNumber,
+              placedAt: order.placedAt.toISOString(),
+              items: order.items.map((line) => ({
+                name: line.name,
+                quantity: line.quantity,
+                size: line.size,
+                colorEn: line.colorEn,
+                unitPrice: line.unitPrice,
+              })),
               paymentMethod: order.paymentMethod,
               name: order.name,
               address: order.address,

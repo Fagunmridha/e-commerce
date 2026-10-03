@@ -20,5 +20,7 @@ export function ConditionalChrome({ children }: { children: React.ReactNode }) {
 
   if (BARE_ROUTES.some((route) => pathname?.startsWith(route))) return null
 
-  return <>{children}</>
+  // `contents` leaves layout untouched on screen; on paper the chrome goes, so
+  // a printed invoice is just the invoice.
+  return <div className="contents print:hidden">{children}</div>
 }
