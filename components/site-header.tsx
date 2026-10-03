@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Globe, Search, User } from 'lucide-react'
+import { Globe, Package, Search, User } from 'lucide-react'
 import { UserButton, useUser } from '@clerk/nextjs'
 import { Container } from '@/components/layout/container'
 import { AnnouncementBar } from '@/components/header/announcement-bar'
@@ -159,8 +159,23 @@ export function SiteHeader() {
                       <User className="size-5" />
                     )}
                   </Link>
+                  {/* Clerk's menu only offers its own account settings; the
+                      store's account pages are what a shopper is after. */}
                   <div className="ml-1 hidden items-center lg:flex">
-                    <UserButton />
+                    <UserButton>
+                      <UserButton.MenuItems>
+                        <UserButton.Link
+                          label={t.header.account}
+                          labelIcon={<User className="size-4" />}
+                          href="/account"
+                        />
+                        <UserButton.Link
+                          label={locale === 'bn' ? 'আমার অর্ডার' : 'My orders'}
+                          labelIcon={<Package className="size-4" />}
+                          href="/account/orders"
+                        />
+                      </UserButton.MenuItems>
+                    </UserButton>
                   </div>
                 </>
               ) : (

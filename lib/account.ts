@@ -2,9 +2,10 @@ import 'server-only'
 import { cache } from 'react'
 import { redirect } from 'next/navigation'
 import { getCurrentUser } from '@/lib/auth'
-import { getUserOrders } from '@/lib/orders'
+import { getUserOrdersWithItems } from '@/lib/orders'
 import { getApplicationForUser } from '@/lib/wholesalers'
 import type { WholesaleRole } from '@/lib/db/schema'
+import type { Localized } from '@/lib/i18n'
 
 /**
  * What the /account pages share: who is signed in, which side of the wholesale
@@ -54,6 +55,18 @@ export type AccountOrder = {
   status: string
   total: number
   itemCount: number
+  /** What was bought, as snapshotted at checkout. */
+  items: AccountOrderItem[]
+}
+
+export type AccountOrderItem = {
+  /** Null once the product has been deleted — the line is still shown. */
+  productId: string | null
+  name: Localized
+  image: string
+  quantity: number
+  size: string | null
+  unitPrice: number
 }
 
 /** The signed-in user's orders, newest first, in the shape a client component takes. */
@@ -61,7 +74,7 @@ export const getAccountOrders = cache(async function getAccountOrders(): Promise
   AccountOrder[]
 > {
   const { userId } = await getAccountContext()
-  const orders = await getUserOrders(userId)
+  const orders = await getUserOrdersWithItems(userId)
 
   return orders.map((order) => ({
     orderNumber: order.orderNumber,
@@ -69,5 +82,6 @@ export const getAccountOrders = cache(async function getAccountOrders(): Promise
     status: order.status,
     total: order.total,
     itemCount: order.itemCount,
+    items: order.items.map(({ orderId: _orderId, ...item }) => item),
   }))
 })

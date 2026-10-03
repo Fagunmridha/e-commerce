@@ -70,34 +70,83 @@ export function OrderList({
       {orders.map((order) => (
         <li
           key={order.orderNumber}
-          className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card p-4"
+          className="overflow-hidden rounded-lg border border-border bg-card"
         >
-          <div>
-            <p className="font-semibold text-foreground">{order.orderNumber}</p>
+          {/* What was bought leads — an order number means nothing to the
+              shopper until they need to quote it to support. */}
+          <ul className="divide-y divide-border">
+            {order.items.map((item, index) => {
+              const name = pick(item.name)
+              const thumb = (
+                <img
+                  src={item.image || '/placeholder.svg'}
+                  alt=""
+                  className="size-14 shrink-0 rounded-md bg-secondary object-cover"
+                />
+              )
+
+              return (
+                <li key={index} className="flex items-center gap-3 p-3 sm:p-4">
+                  {item.productId ? (
+                    <Link href={`/product/${item.productId}`}>{thumb}</Link>
+                  ) : (
+                    thumb
+                  )}
+                  <div className="min-w-0 flex-1">
+                    {item.productId ? (
+                      <Link
+                        href={`/product/${item.productId}`}
+                        className="line-clamp-2 text-sm font-semibold text-foreground hover:text-primary"
+                      >
+                        {name}
+                      </Link>
+                    ) : (
+                      <p className="line-clamp-2 text-sm font-semibold text-foreground">
+                        {name}
+                      </p>
+                    )}
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {item.size && (
+                        <>
+                          {pick({ en: 'Size', bn: 'সাইজ' })} {item.size} ·{' '}
+                        </>
+                      )}
+                      {item.quantity} × {price(item.unitPrice)}
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-sm font-semibold text-foreground tabular-nums">
+                    {price(item.unitPrice * item.quantity)}
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
+
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-border bg-muted/40 px-3 py-2.5 sm:px-4">
             <p className="text-xs text-muted-foreground">
               {new Date(order.placedAt).toLocaleDateString(
                 locale === 'bn' ? 'bn-BD' : 'en-US',
                 { year: 'numeric', month: 'short', day: 'numeric' },
               )}{' '}
-              · {order.itemCount} {pick({ en: 'items', bn: 'পণ্য' })}
+              · {pick({ en: 'Order', bn: 'অর্ডার' })} {order.orderNumber}
             </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <span
-              className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                STATUS_STYLES[order.status] ?? ''
-              }`}
-            >
-              {pick(
-                ORDER_STATUS_LABELS[order.status] ?? {
-                  en: order.status,
-                  bn: order.status,
-                },
-              )}
-            </span>
-            <span className="font-semibold text-foreground">
-              {price(order.total)}
-            </span>
+            <div className="flex items-center gap-3">
+              <span
+                className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                  STATUS_STYLES[order.status] ?? ''
+                }`}
+              >
+                {pick(
+                  ORDER_STATUS_LABELS[order.status] ?? {
+                    en: order.status,
+                    bn: order.status,
+                  },
+                )}
+              </span>
+              <span className="text-sm font-bold text-foreground">
+                {pick({ en: 'Total', bn: 'মোট' })} {price(order.total)}
+              </span>
+            </div>
           </div>
         </li>
       ))}

@@ -593,12 +593,36 @@ export async function getOrderByNumber(
   return row ? attachItems(row) : null
 }
 
-export async function getUserOrders(userId: number): Promise<OrderRow[]> {
-  return db
-    .select()
-    .from(orders)
-    .where(eq(orders.userId, userId))
-    .orderBy(desc(orders.placedAt))
+/**
+ * A customer's orders together with their lines — what they bought, not just
+ * an order number. One batch, so the lines cost no extra round trip.
+ */
+export async function getUserOrdersWithItems(userId: number) {
+  const [orderRows, itemRows] = await db.batch([
+    db
+      .select()
+      .from(orders)
+      .where(eq(orders.userId, userId))
+      .orderBy(desc(orders.placedAt)),
+    db
+      .select({
+        orderId: orderItems.orderId,
+        productId: orderItems.productId,
+        name: orderItems.nameSnapshot,
+        image: orderItems.imageSnapshot,
+        quantity: orderItems.quantity,
+        size: orderItems.size,
+        unitPrice: orderItems.unitPrice,
+      })
+      .from(orderItems)
+      .innerJoin(orders, eq(orderItems.orderId, orders.id))
+      .where(eq(orders.userId, userId)),
+  ])
+
+  return orderRows.map((order) => ({
+    ...order,
+    items: itemRows.filter((item) => item.orderId === order.id),
+  }))
 }
 
 /** Kept for the "export everything" path; the admin list uses `getOrdersPage`. */
