@@ -248,6 +248,16 @@ export const productSchema = z.object({
     .boolean()
     .nullish()
     .transform((value) => value ?? false),
+  /** Marks the row for the homepage's Top Products rail. */
+  isTop: z
+    .boolean()
+    .nullish()
+    .transform((value) => value ?? false),
+  /** Marks the row for the homepage's Trending Right Now rail. */
+  isTrending: z
+    .boolean()
+    .nullish()
+    .transform((value) => value ?? false),
   sizes: z
     .array(z.string().trim().min(1).max(32))
     .max(30)

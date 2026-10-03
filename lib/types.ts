@@ -50,6 +50,10 @@ export type Product = {
   badge?: 'new' | 'sale'
   /** Curated by hand from the admin form — drives the homepage's Combo Package rail. */
   isCombo?: boolean
+  /** Curated by hand from the admin form — drives the homepage's Top Products rail. */
+  isTop?: boolean
+  /** Curated by hand from the admin form — drives the homepage's Trending rail. */
+  isTrending?: boolean
   sizes?: string[]
   colors?: ProductColor[]
   /** Per-product selling points — "100% Cotton", "Breathable". */

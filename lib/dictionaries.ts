@@ -281,6 +281,12 @@ const en = {
         'Every piece in the collection — filter by category or sort by price.',
       breadcrumb: 'Shop',
     },
+    preorder: {
+      title: 'Coming Soon',
+      description:
+        'Pre-order open — book a piece now and it ships from its delivery date.',
+      breadcrumb: 'Pre-order',
+    },
     about: {
       title: 'About CP Market',
       description:
@@ -1614,6 +1620,12 @@ const bn: Dictionary = {
       title: 'সব পণ্য',
       description: 'কালেকশনের সব পণ্য — ক্যাটাগরি বা দাম অনুযায়ী সাজিয়ে নিন।',
       breadcrumb: 'শপ',
+    },
+    preorder: {
+      title: 'শীঘ্রই আসছে',
+      description:
+        'প্রি-অর্ডার চলছে — এখনই বুক করুন, ডেলিভারির তারিখ থেকে পাঠানো হবে।',
+      breadcrumb: 'প্রি-অর্ডার',
     },
     about: {
       title: 'CP Market সম্পর্কে',

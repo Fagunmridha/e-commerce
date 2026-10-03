@@ -16,7 +16,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     getRetailCategories(),
   ])
 
-  const staticRoutes = ['', '/shop', '/about', '/contact', '/wishlist'].map(
+  const staticRoutes = ['', '/shop', '/preorder', '/about', '/contact', '/wishlist'].map(
     (path) => ({
       url: `${BASE_URL}${path}`,
       lastModified: new Date(),

@@ -70,6 +70,10 @@ export type ProductInput = {
   badge?: 'new' | 'sale' | null
   /** Marks the row for the homepage's Combo Package rail. */
   isCombo?: boolean | null
+  /** Marks the row for the homepage's Top Products rail. */
+  isTop?: boolean | null
+  /** Marks the row for the homepage's Trending Right Now rail. */
+  isTrending?: boolean | null
   sizes?: string[] | null
   colors?: ProductColor[] | null
   /** Per-product selling points shown on the detail page. */
@@ -131,6 +135,8 @@ export async function upsertProduct(input: ProductInput): Promise<void> {
     catalogueSlug: catalogueCheck.slug,
     badge: data.badge,
     isCombo: data.isCombo,
+    isTop: data.isTop,
+    isTrending: data.isTrending,
     sizes: data.sizes,
     colors: data.colors,
     highlights: data.highlights,

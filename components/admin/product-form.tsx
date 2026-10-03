@@ -131,6 +131,8 @@ export function ProductForm({
     catalogue: product?.catalogue ?? '',
     badge: product?.badge ?? '',
     isCombo: product?.isCombo ?? false,
+    isTop: product?.isTop ?? false,
+    isTrending: product?.isTrending ?? false,
     stock: product?.stock?.toString() ?? '0',
     // Undefined on the type when it is 1 (see lib/products.ts), but the field
     // should read "1" rather than blank.
@@ -255,6 +257,8 @@ export function ProductForm({
       catalogue: form.catalogue || null,
       badge: form.badge ? (form.badge as 'new' | 'sale') : null,
       isCombo: form.isCombo,
+      isTop: form.isTop,
+      isTrending: form.isTrending,
       sizes: form.sizes
         ? form.sizes.split(',').map((s) => s.trim()).filter(Boolean)
         : null,
@@ -500,6 +504,28 @@ export function ProductForm({
               className="size-4 accent-button"
             />
             Show in the homepage Combo Package rail
+          </label>
+        </Field>
+        <Field label="Top Products">
+          <label className="flex h-9 items-center gap-2.5 text-sm">
+            <input
+              type="checkbox"
+              checked={form.isTop}
+              onChange={(e) => set('isTop', e.target.checked)}
+              className="size-4 accent-button"
+            />
+            Show in the homepage Top Products rail
+          </label>
+        </Field>
+        <Field label="Trending Right Now">
+          <label className="flex h-9 items-center gap-2.5 text-sm">
+            <input
+              type="checkbox"
+              checked={form.isTrending}
+              onChange={(e) => set('isTrending', e.target.checked)}
+              className="size-4 accent-button"
+            />
+            Show in the homepage Trending Right Now rail
           </label>
         </Field>
       </div>

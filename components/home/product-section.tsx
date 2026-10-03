@@ -30,7 +30,7 @@ export function ProductSection({
   /** Eager-load the first row's images when the section is above the fold. */
   priority?: boolean
 }) {
-  const rail = useCardRail({ gridBelowSm: 2 })
+  const rail = useCardRail()
   const { t } = useLanguage()
 
   if (products.length === 0) return null
@@ -48,7 +48,9 @@ export function ProductSection({
               <RailItem
                 key={product.id}
                 rail={rail}
-                className="sm:basis-1/2 lg:basis-1/3 xl:basis-1/5"
+                // Just under two cards on phones, so the third peeks in and
+                // the row reads as something to swipe.
+                className="basis-[46%] sm:basis-1/2 lg:basis-1/3 xl:basis-1/5"
               >
                 <ProductCard product={product} priority={priority && index < 4} />
               </RailItem>
@@ -62,7 +64,7 @@ export function ProductSection({
           />
         </div>
 
-        {/* No carousel to page through below sm — the cards are all on screen. */}
+        {/* Phones swipe the row; the peeking card is cue enough without dots. */}
         <RailDots rail={rail} label={title} className="mt-6 hidden sm:flex" />
       </SectionPanel>
     </Reveal>

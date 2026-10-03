@@ -203,6 +203,10 @@ export const products = pgTable('products', {
    * both on sale and a combo pick.
    */
   isCombo: boolean('is_combo').notNull().default(false),
+  /** Hand-picked for the homepage's "Top Products" rail, like `isCombo`. */
+  isTop: boolean('is_top').notNull().default(false),
+  /** Hand-picked for the homepage's "Trending Right Now" rail, like `isCombo`. */
+  isTrending: boolean('is_trending').notNull().default(false),
   sizes: text('sizes').array(),
   /**
    * `[{ name: { en, bn }, hex? }]`. It was `[{ en, bn }]` until migration 0012

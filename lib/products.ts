@@ -114,6 +114,8 @@ function toProduct(
     catalogue: row.catalogueSlug ?? undefined,
     badge: row.badge ?? undefined,
     isCombo: row.isCombo || undefined,
+    isTop: row.isTop || undefined,
+    isTrending: row.isTrending || undefined,
     sizes: row.sizes ?? undefined,
     colors: toColors(row.colors),
     highlights: row.highlights?.length ? row.highlights : undefined,

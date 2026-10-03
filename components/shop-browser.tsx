@@ -20,6 +20,11 @@ import { SortSelect } from '@/components/browse/sort-select'
 import { ViewToggle } from '@/components/browse/view-toggle'
 import { FilterChips, type FilterChip } from '@/components/browse/filter-chips'
 import { cn } from '@/lib/utils'
+import {
+  isHomeSection,
+  sectionProducts,
+  type HomeSection,
+} from '@/lib/home-sections'
 import type { CategorySlug } from '@/lib/types'
 
 type Filter = CategorySlug | 'all'
@@ -44,6 +49,10 @@ export function ShopBrowser({ initialFilter = 'all' }: { initialFilter?: Filter 
   const maxPriceParam = searchParams.get('maxPrice') || ''
   const inStockParam = searchParams.get('inStock') === 'true'
   const viewParam = (searchParams.get('view') as ViewMode) || 'grid'
+  // Set by a homepage row's "View All": narrows the shop to that row's list.
+  // Read straight from the URL — nothing on this page edits it except the chip.
+  const sectionParam = searchParams.get('section')
+  const section = isHomeSection(sectionParam) ? sectionParam : null
 
   // Local state initialized from URL params
   const [filter, setFilter] = useState<Filter>(categoryParam)
@@ -165,7 +174,9 @@ export function ShopBrowser({ initialFilter = 'all' }: { initialFilter?: Filter 
 
   // Filter and sort products logic
   const filteredProducts = useMemo(() => {
-    let list = [...allProducts]
+    let list = section
+      ? sectionProducts(section, allProducts)
+      : [...allProducts]
 
     // Category Filter
     if (filter !== 'all') {
@@ -223,6 +234,7 @@ export function ShopBrowser({ initialFilter = 'all' }: { initialFilter?: Filter 
     return list
   }, [
     allProducts,
+    section,
     filter,
     catalogue,
     searchQuery,
@@ -240,6 +252,7 @@ export function ShopBrowser({ initialFilter = 'all' }: { initialFilter?: Filter 
 
   const activeFiltersCount = useMemo(() => {
     let count = 0
+    if (section) count++
     if (filter !== 'all') count++
     if (catalogue) count++
     if (searchQuery.trim()) count++
@@ -247,7 +260,7 @@ export function ShopBrowser({ initialFilter = 'all' }: { initialFilter?: Filter 
     if (maxPrice !== '') count++
     if (inStockOnly) count++
     return count
-  }, [filter, catalogue, searchQuery, minPrice, maxPrice, inStockOnly])
+  }, [section, filter, catalogue, searchQuery, minPrice, maxPrice, inStockOnly])
 
   const categoryOptions = [
     { value: 'all' as Filter, label: t.shop.all },
@@ -289,7 +302,22 @@ export function ShopBrowser({ initialFilter = 'all' }: { initialFilter?: Filter 
    * has — and how each reads back as a sentence — is the page's business; the
    * component owns only how a chip looks and where "clear all" sits.
    */
+  const sectionTitles: Record<HomeSection, string> = {
+    top: t.home.topTitle,
+    trending: t.home.popularTitle,
+    new: t.home.newTitle,
+    combo: t.home.comboTitle,
+  }
+
   const filterChips: FilterChip[] = [
+    section && {
+      key: 'section',
+      label: sectionTitles[section],
+      onClear: () => {
+        setVisibleCount(ITEMS_PER_PAGE)
+        updateQueryParams({ section: null })
+      },
+    },
     filter !== 'all' && {
       key: 'category',
       label: `${t.catalogue.category}: ${categoryOptions.find((c) => c.value === filter)?.label ?? filter}`,
