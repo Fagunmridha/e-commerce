@@ -1349,6 +1349,8 @@ const en = {
     sidebarPromoCta: 'Shop now',
     heroEyebrow: '{name} Collection',
     heroCta: 'Shop {name}',
+    /** The phone hero's one-line tagline, in place of the longer description. */
+    heroTagline: 'The best product within your budget',
   },
   meta: {
     suffix: '| CP Market',
@@ -2593,6 +2595,7 @@ const bn: Dictionary = {
     sidebarPromoCta: 'এখনই দেখুন',
     heroEyebrow: '{name} কালেকশন',
     heroCta: '{name} কিনুন',
+    heroTagline: 'আপনার বাজেটের মধ্যে সেরা পণ্য',
   },
   meta: {
     suffix: '| CP Market',

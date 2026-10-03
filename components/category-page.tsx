@@ -129,48 +129,58 @@ export function CategoryPage({ slug }: { slug: CategorySlug }) {
 
         {/* The hero: an eyebrow + heading + tagline + CTA on one side, the
             category's own photo on the other, sharing one panel rather than
-            sitting as two disconnected boxes. Below `lg` they stack instead
-            of squeezing the desktop split into a narrow column. */}
+            sitting as two disconnected boxes. Below `lg` the photo fills the
+            whole panel behind the copy instead, so a phone gets one compact
+            banner rather than a text block stacked on a tall image. */}
         <div className="relative mt-4 overflow-hidden rounded-2xl bg-gradient-to-br from-secondary to-background lg:grid lg:h-[21rem] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
-          <div className="relative z-10 flex flex-col justify-center gap-3 px-6 py-8 sm:px-8 sm:py-10 lg:px-10 lg:py-0">
+          <div className="relative z-10 flex flex-col justify-center gap-2 px-5 py-7 sm:gap-3 sm:px-8 sm:py-10 lg:px-10 lg:py-0">
             <span className="text-xs font-bold tracking-[0.15em] text-primary uppercase">
               {t.category.heroEyebrow.replace('{name}', heading)}
             </span>
-            <h1 className="text-3xl font-bold tracking-tight text-balance text-foreground sm:text-4xl">
+            <h1 className="text-2xl font-bold tracking-tight text-balance text-foreground sm:text-4xl">
               {heading}
             </h1>
+            {/* Phones get a short tagline that fits over the photo; the
+                category's own description returns on the desktop split. */}
+            <p className="max-w-[16rem] text-xs text-foreground/85 sm:max-w-sm sm:text-sm lg:hidden [text-shadow:0_0_2px_rgb(255_255_255),0_0_8px_rgb(255_255_255/0.9)]">
+              {t.category.heroTagline}
+            </p>
             {description && (
-              <p className="max-w-sm text-sm text-muted-foreground sm:text-base">
+              <p className="hidden max-w-sm text-base text-muted-foreground lg:block">
                 {description}
               </p>
             )}
-            <div className="mt-1 flex flex-wrap items-center gap-4">
+            {/* Desktop only: on a phone the products start right below the
+                banner, so a button scrolling to them adds nothing. */}
+            <div className="mt-1 hidden flex-wrap items-center gap-4 lg:flex">
               <a
                 href="#category-products"
-                className="inline-flex h-11 shrink-0 items-center justify-center rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-card transition-all hover:-translate-y-0.5 hover:shadow-card-hover"
+                className="inline-flex h-10 shrink-0 items-center justify-center rounded-full bg-primary px-5 text-sm sm:h-11 sm:px-6 font-semibold text-primary-foreground shadow-card transition-all hover:-translate-y-0.5 hover:shadow-card-hover"
               >
                 {t.category.heroCta.replace('{name}', heading)}
               </a>
-              <span className="text-xs text-muted-foreground">
+              {/* Desktop only: on a phone it sat on the photo beside the button. */}
+              <span className="hidden text-xs text-muted-foreground lg:inline">
                 {all.length} {t.category.itemsFound}
               </span>
             </div>
           </div>
 
           {hasPhoto(category.image) && (
-            <div className="relative h-56 sm:h-72 lg:h-full">
+            <div className="absolute inset-0 lg:relative lg:inset-auto lg:h-full">
               <Image
                 src={category.image}
                 alt=""
                 fill
                 sizes="(max-width: 1024px) 100vw, 55vw"
-                className="object-cover object-[50%_12%]"
+                className="object-cover object-[70%_15%] lg:object-[50%_12%]"
               />
               {/* Blends the photo into the panel instead of butting a hard
-                  rectangle against it — horizontal on the side-by-side
-                  desktop layout, vertical once the two stack. */}
+                  rectangle against it. On the desktop split that is a narrow
+                  edge fade; below `lg` the copy sits on the photo, so the
+                  wash runs across from the left to keep it legible. */}
               <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-24 bg-gradient-to-r from-secondary to-transparent lg:block" />
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-secondary to-transparent lg:hidden" />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-secondary/90 from-10% via-secondary/50 via-40% to-secondary/0 to-65% lg:hidden" />
             </div>
           )}
         </div>
