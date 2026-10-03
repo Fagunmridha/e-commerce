@@ -12,7 +12,6 @@ import {
 } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { ColorSwatch, isSwatchable } from '@/components/color-swatch'
 import { useLanguage } from '@/components/language-provider'
 import { advancePct, formatShipDate, splitPayment } from '@/lib/preorder'
 import { DEFAULT_ZONE, getShippingCost } from '@/lib/currency'
@@ -21,7 +20,6 @@ import type { Product } from '@/lib/types'
 
 export type BookingSeed = {
   size?: string
-  colorEn?: string
   quantity?: number
 }
 
@@ -51,7 +49,6 @@ export function BookingSheet({
   const { t, pick, locale, price } = useLanguage()
 
   const [size, setSize] = useState<string | undefined>()
-  const [colorIndex, setColorIndex] = useState(0)
   const [quantity, setQuantity] = useState(1)
   const [agreed, setAgreed] = useState(false)
   /**
@@ -66,17 +63,11 @@ export function BookingSheet({
   // choose a size twice.
   useEffect(() => {
     if (!product) return
-    const colors = product.colors ?? []
-    const seededColor = seed?.colorEn
-      ? colors.findIndex((color) => color.name.en === seed.colorEn)
-      : -1
-
     setShown(product)
     setSize(seed?.size ?? product.sizes?.[0])
-    setColorIndex(seededColor >= 0 ? seededColor : 0)
     setQuantity(Math.max(product.moq ?? 1, seed?.quantity ?? product.moq ?? 1))
     setAgreed(false)
-  }, [product, seed?.size, seed?.colorEn, seed?.quantity])
+  }, [product, seed?.size, seed?.quantity])
 
   if (!shown) return null
 
@@ -84,9 +75,6 @@ export function BookingSheet({
   const remaining = shown.stock
   const minQuantity = shown.moq ?? 1
   const booked = shown.preorderBooked ?? 0
-  const colors = shown.colors ?? []
-  const selectedColor = colors[colorIndex]
-  const swatchable = isSwatchable(shown.colors)
 
   const goods = shown.price * quantity
   const pct = advancePct(shown)
@@ -103,7 +91,6 @@ export function BookingSheet({
   const confirm = () => {
     const params = new URLSearchParams({ p: shown.id, q: String(quantity) })
     if (size) params.set('size', size)
-    if (selectedColor) params.set('color', selectedColor.name.en)
     router.push(`/preorder/checkout?${params.toString()}`)
   }
 
@@ -162,44 +149,6 @@ export function BookingSheet({
               <dd>{t.home.comingLimited.replace('{count}', String(remaining))}</dd>
             </div>
           </dl>
-
-          {colors.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-foreground">
-                {t.product.color}:{' '}
-                <span className="font-normal">
-                  {selectedColor ? pick(selectedColor.name) : ''}
-                </span>
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {colors.map((color, index) =>
-                  swatchable ? (
-                    <ColorSwatch
-                      key={color.name.en}
-                      hex={color.hex!}
-                      label={pick(color.name)}
-                      selected={colorIndex === index}
-                      onSelect={() => setColorIndex(index)}
-                    />
-                  ) : (
-                    <button
-                      key={color.name.en}
-                      type="button"
-                      onClick={() => setColorIndex(index)}
-                      className={cn(
-                        'rounded-md border px-4 py-2 text-sm font-medium transition-colors',
-                        colorIndex === index
-                          ? 'border-primary bg-accent text-primary'
-                          : 'border-border hover:border-primary',
-                      )}
-                    >
-                      {pick(color.name)}
-                    </button>
-                  ),
-                )}
-              </div>
-            </div>
-          )}
 
           {shown.sizes && shown.sizes.length > 0 && (
             <div className="space-y-2">

@@ -14,7 +14,6 @@ import { Rating } from '@/components/rating'
 import { ProductHelp } from '@/components/product-help'
 import { LoadingOverlay } from '@/components/loading-overlay'
 import { useLanguage } from '@/components/language-provider'
-import { ColorSwatch, isSwatchable } from '@/components/color-swatch'
 import { DeliveryFields } from '@/components/checkout/delivery-fields'
 import { LandingGallery } from '@/components/landing/landing-gallery'
 import { LandingSteps, LandingTrust } from '@/components/landing/landing-assurance'
@@ -55,12 +54,9 @@ export function ProductLanding({
   const router = useRouter()
   const { t, pick, price } = useLanguage()
   const [selectedSize, setSelectedSize] = useState(product.sizes?.[0] ?? '')
-  const [selectedColorIndex, setSelectedColorIndex] = useState(0)
   const [submitting, setSubmitting] = useState(false)
 
   const name = pick(product.name)
-  const selectedColor = product.colors?.[selectedColorIndex]
-  const swatchable = isSwatchable(product.colors)
 
   // A wholesaler's listing can carry a minimum, and `createOrder` rejects
   // anything under it. Starting at the minimum rather than at 1 keeps that
@@ -120,7 +116,6 @@ export function ProductLanding({
             productId: product.id,
             quantity,
             size: selectedSize || undefined,
-            colorEn: selectedColor?.name.en,
           },
         ],
       })
@@ -236,44 +231,6 @@ export function ProductLanding({
                     </li>
                   ))}
                 </ul>
-              )}
-
-              {product.colors && product.colors.length > 0 && (
-                <div className="space-y-2.5">
-                  <p className="text-sm font-semibold text-foreground">
-                    {t.product.color}:{' '}
-                    <span className="font-normal">
-                      {selectedColor ? pick(selectedColor.name) : ''}
-                    </span>
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {product.colors.map((color, index) =>
-                      swatchable ? (
-                        <ColorSwatch
-                          key={color.name.en}
-                          hex={color.hex!}
-                          label={pick(color.name)}
-                          selected={selectedColorIndex === index}
-                          onSelect={() => setSelectedColorIndex(index)}
-                        />
-                      ) : (
-                        <button
-                          key={color.name.en}
-                          type="button"
-                          onClick={() => setSelectedColorIndex(index)}
-                          className={cn(
-                            'rounded-md border px-4 py-2 text-sm font-medium transition-colors',
-                            selectedColorIndex === index
-                              ? 'border-primary bg-accent text-primary'
-                              : 'border-border hover:border-primary',
-                          )}
-                        >
-                          {pick(color.name)}
-                        </button>
-                      ),
-                    )}
-                  </div>
-                </div>
               )}
 
               {product.sizes && product.sizes.length > 0 && (

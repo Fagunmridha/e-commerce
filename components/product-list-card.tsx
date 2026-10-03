@@ -43,7 +43,6 @@ export function ProductListCard({
       productId: id,
       quantity: 1,
       size: product.sizes?.[0],
-      colorEn: product.colors?.[0]?.name.en,
     })
     toast.success(t.product.added, { description: label })
   }

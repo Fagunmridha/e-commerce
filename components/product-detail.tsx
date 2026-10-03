@@ -8,7 +8,6 @@ import { Check, ChevronRight, Heart, Minus, Plus, Share2, Truck } from 'lucide-r
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Rating } from '@/components/rating'
-import { ColorSwatch, isSwatchable } from '@/components/color-swatch'
 import { BookingSheet } from '@/components/preorder/booking-sheet'
 import { PreorderBanner } from '@/components/preorder/preorder-banner'
 import { useLanguage } from '@/components/language-provider'
@@ -58,7 +57,6 @@ export function ProductDetail({
 
   const [selectedImage, setSelectedImage] = useState(0)
   const [selectedSize, setSelectedSize] = useState(product.sizes?.[0] ?? '')
-  const [selectedColorIndex, setSelectedColorIndex] = useState(0)
   // Non-null while the booking sheet is open. Only ever set for a pre-order.
   const [booking, setBooking] = useState<Product | null>(null)
   // Wholesale listings are sold in lots, so the picker opens at the minimum
@@ -69,10 +67,6 @@ export function ProductDetail({
   const name = pick(product.name)
   const category = getCategory(product.category)
   const categoryName = category ? pick(category.name) : product.category
-  const selectedColor = product.colors?.[selectedColorIndex]
-  // `hex!` below is safe only because this is `every(c => c.hex)`. Keep the two
-  // together.
-  const swatchable = isSwatchable(product.colors)
   const isFavorited = isWishlisted(product.id)
 
   /**
@@ -93,7 +87,6 @@ export function ProductDetail({
     productId: product.id,
     quantity,
     size: selectedSize || undefined,
-    colorEn: selectedColor?.name.en,
   }
 
   const addToBag = () => {
@@ -295,43 +288,6 @@ export function ProductDetail({
             </p>
           )}
 
-          {product.colors && product.colors.length > 0 && (
-            <div className="space-y-2.5">
-              <p className="text-sm font-semibold text-foreground">
-                {t.product.color}:{' '}
-                <span className="font-normal">
-                  {selectedColor ? pick(selectedColor.name) : ''}
-                </span>
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {product.colors.map((color, index) =>
-                  swatchable ? (
-                    <ColorSwatch
-                      key={color.name.en}
-                      hex={color.hex!}
-                      label={pick(color.name)}
-                      selected={selectedColorIndex === index}
-                      onSelect={() => setSelectedColorIndex(index)}
-                    />
-                  ) : (
-                    <button
-                      key={color.name.en}
-                      onClick={() => setSelectedColorIndex(index)}
-                      className={cn(
-                        'rounded-md border px-4 py-2 text-sm font-medium transition-colors',
-                        selectedColorIndex === index
-                          ? 'border-primary bg-accent text-primary'
-                          : 'border-border hover:border-primary',
-                      )}
-                    >
-                      {pick(color.name)}
-                    </button>
-                  ),
-                )}
-              </div>
-            </div>
-          )}
-
           {product.sizes && product.sizes.length > 0 && (
             <div className="space-y-2.5">
               <p className="text-sm font-semibold text-foreground">
@@ -398,14 +354,17 @@ export function ProductDetail({
             </div>
           </div>
 
-          <div className="flex flex-col gap-2 sm:flex-row">
+          {/* Phones: the two CTAs side by side with share as a square icon at
+              the end. A `flex-col` stack here used to squash them, since
+              `flex-1` in a column shrinks height rather than width. */}
+          <div className="grid grid-cols-[1fr_1fr_auto] gap-2 sm:flex sm:flex-row">
             {/* A pre-order gets one CTA, not three. `addToBag` and `buyNow` are
                 unreachable here by design — both end at a checkout that rejects
                 pre-ordered lines. */}
             {isPreorder ? (
               <Button
                 size="lg"
-                className="flex-1"
+                className="col-span-2 flex-1"
                 onClick={() => setBooking(product)}
                 disabled={soldOut}
               >
@@ -415,7 +374,7 @@ export function ProductDetail({
               <>
                 <Button
                   size="lg"
-                  className="flex-1"
+                  className="min-w-0 flex-1 px-3 sm:px-6"
                   onClick={addToBag}
                   disabled={soldOut}
                 >
@@ -424,7 +383,7 @@ export function ProductDetail({
                 <Button
                   size="lg"
                   variant="secondary"
-                  className="flex-1"
+                  className="min-w-0 flex-1 px-3 sm:px-6"
                   onClick={buyNow}
                   disabled={soldOut}
                 >
@@ -435,7 +394,7 @@ export function ProductDetail({
             <Button
               variant="outline"
               size="lg"
-              className="sm:w-auto"
+              className="aspect-square has-[>svg]:px-0 sm:aspect-auto sm:w-auto sm:has-[>svg]:px-4"
               onClick={onShare}
             >
               <Share2 className="size-4" />
@@ -565,7 +524,6 @@ export function ProductDetail({
         }}
         seed={{
           size: selectedSize || undefined,
-          colorEn: selectedColor?.name.en,
           quantity,
         }}
       />

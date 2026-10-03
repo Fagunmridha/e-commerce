@@ -14,7 +14,6 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Rating } from '@/components/rating'
-import { ColorSwatch, isSwatchable } from '@/components/color-swatch'
 import { useLanguage } from '@/components/language-provider'
 import { useStore } from '@/components/store-provider'
 import { cn } from '@/lib/utils'
@@ -37,12 +36,8 @@ export function ProductQuickView({
   const { t, pick, price: formatPrice } = useLanguage()
   const { addToCart, isWishlisted, toggleWishlist } = useStore()
   const [size, setSize] = useState<string | undefined>(product.sizes?.[0])
-  const [colorEn, setColorEn] = useState<string | undefined>(
-    product.colors?.[0]?.name.en,
-  )
 
   const label = pick(product.name)
-  const swatchable = isSwatchable(product.colors)
   const favorited = isWishlisted(product.id)
   const soldOut = product.stock <= 0
   const discount = product.oldPrice
@@ -50,7 +45,7 @@ export function ProductQuickView({
     : 0
 
   const onAdd = () => {
-    addToCart({ productId: product.id, quantity: 1, size, colorEn })
+    addToCart({ productId: product.id, quantity: 1, size })
     toast.success(t.product.added, { description: label })
     onOpenChange(false)
   }
@@ -129,37 +124,6 @@ export function ProductQuickView({
                       {option}
                     </button>
                   ))}
-                </div>
-              </fieldset>
-            )}
-
-            {product.colors && product.colors.length > 0 && (
-              <fieldset>
-                <legend className="mb-2.5 text-xs font-bold tracking-[0.14em] text-muted-foreground uppercase">
-                  {t.product.color}
-                </legend>
-                <div className="flex flex-wrap gap-2">
-                  {product.colors.map((option) =>
-                    swatchable ? (
-                      <ColorSwatch
-                        key={option.name.en}
-                        hex={option.hex!}
-                        label={pick(option.name)}
-                        selected={colorEn === option.name.en}
-                        onSelect={() => setColorEn(option.name.en)}
-                      />
-                    ) : (
-                      <button
-                        key={option.name.en}
-                        type="button"
-                        onClick={() => setColorEn(option.name.en)}
-                        aria-pressed={colorEn === option.name.en}
-                        className={chip(colorEn === option.name.en)}
-                      >
-                        {pick(option.name)}
-                      </button>
-                    ),
-                  )}
                 </div>
               </fieldset>
             )}
