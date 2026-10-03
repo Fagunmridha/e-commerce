@@ -132,8 +132,8 @@ export function CategoryPage({ slug }: { slug: CategorySlug }) {
             sitting as two disconnected boxes. Below `lg` the photo fills the
             whole panel behind the copy instead, so a phone gets one compact
             banner rather than a text block stacked on a tall image. */}
-        <div className="relative mt-4 overflow-hidden rounded-2xl bg-gradient-to-br from-secondary to-background lg:grid lg:h-[21rem] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
-          <div className="relative z-10 flex flex-col justify-center gap-2 px-5 py-7 sm:gap-3 sm:px-8 sm:py-10 lg:px-10 lg:py-0">
+        <div className="relative mt-4 overflow-hidden rounded-2xl bg-gradient-to-br from-secondary to-background lg:grid lg:h-[24rem] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+          <div className="relative z-10 flex min-h-[12rem] flex-col justify-center gap-2 px-5 py-7 sm:min-h-[16rem] sm:gap-3 sm:px-8 sm:py-10 lg:min-h-0 lg:px-10 lg:py-0">
             <span className="text-xs font-bold tracking-[0.15em] text-primary uppercase">
               {t.category.heroEyebrow.replace('{name}', heading)}
             </span>
