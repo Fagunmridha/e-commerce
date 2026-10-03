@@ -374,6 +374,7 @@ export function ProductDetail({
               <>
                 <Button
                   size="lg"
+                  variant="secondary"
                   className="min-w-0 flex-1 px-3 sm:px-6"
                   onClick={addToBag}
                   disabled={soldOut}
@@ -382,7 +383,6 @@ export function ProductDetail({
                 </Button>
                 <Button
                   size="lg"
-                  variant="secondary"
                   className="min-w-0 flex-1 px-3 sm:px-6"
                   onClick={buyNow}
                   disabled={soldOut}
